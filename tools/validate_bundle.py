@@ -30,7 +30,7 @@ Usage::
     python3 tools/validate_bundle.py --root /tmp/pkg  # validate a copy of the package
 
 The report timestamp comes from ``--timestamp``, then from
-``$HOMESTEAD_VALIDATION_TIMESTAMP``, then from the real clock. No clock is
+``$CHAOS_VALIDATION_TIMESTAMP``, then from the real clock. No clock is
 faked.
 """
 
@@ -794,7 +794,7 @@ def note_unknown_extensions(report: Report, documents: dict[str, Any]) -> None:
 def resolve_timestamp(argument: str | None) -> str:
     if argument:
         return argument
-    from_environment = os.environ.get("HOMESTEAD_VALIDATION_TIMESTAMP")
+    from_environment = os.environ.get("CHAOS_VALIDATION_TIMESTAMP")
     if from_environment:
         return from_environment
     return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -864,7 +864,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--strict", action="store_true", help="Treat warnings as errors.")
     parser.add_argument(
         "--timestamp",
-        help="Report timestamp. Falls back to $HOMESTEAD_VALIDATION_TIMESTAMP, then the current UTC time.",
+        help="Report timestamp. Falls back to $CHAOS_VALIDATION_TIMESTAMP, then the current UTC time.",
     )
     parser.add_argument(
         "--root",

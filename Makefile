@@ -11,11 +11,11 @@ PYTHON      ?= python3
 PIP         ?= $(PYTHON) -m pip
 PYTEST      ?= $(PYTHON) -m pytest
 RUFF        ?= $(PYTHON) -m ruff
-TWIN        ?= PYTHONPATH=src $(PYTHON) -m homestead_twin.cli
+TWIN        ?= PYTHONPATH=src $(PYTHON) -m chaos.cli
 COMPOSE     ?= docker compose
 COMPOSE_FILE ?= deploy/docker-compose.yml
 COMPOSE_SECONDARY ?= deploy/docker-compose.secondary.yml
-IMAGE       ?= homestead-twin:local
+IMAGE       ?= chaos:local
 HOST        ?= 127.0.0.1
 PORT        ?= 8000
 
@@ -52,7 +52,7 @@ test: ## Run the test suite
 	$(PYTEST) -q
 
 test-cov: ## Run the test suite with coverage (needs pytest-cov)
-	$(PYTEST) --cov=homestead_twin --cov-report=term-missing
+	$(PYTEST) --cov=chaos --cov-report=term-missing
 
 lint: ## Check formatting and lint rules (ruff)
 	$(RUFF) check src tests

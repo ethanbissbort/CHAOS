@@ -7,7 +7,7 @@ Every component is a small, explicit, deterministic physical model. It exposes
 
 The catalogue exists because the simulator must not invent telemetry. A point
 is publishable for an asset only if the machine-readable design package says so.
-Following ``homestead_twin.registry.points``, the point set of an asset is the
+Following ``chaos.registry.points``, the point set of an asset is the
 union of three sources (SDD section 43):
 
 1. the asset class's ``default_points`` in ``asset_class_dictionary.yaml``
@@ -30,8 +30,8 @@ from typing import Any
 
 import yaml
 
-from homestead_twin.config import DATA_DIR
-from homestead_twin.envelope import CommandEnvelope
+from chaos.config import DATA_DIR
+from chaos.envelope import CommandEnvelope
 
 # --- publishing cadence ---------------------------------------------------
 

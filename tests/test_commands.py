@@ -15,12 +15,12 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
-from homestead_twin.commands.interlocks import (
+from chaos.commands.interlocks import (
     BINDING_NOT_COMMISSIONED,
     PHYSICAL_CONTROL_DISABLED,
     reset_global_registry,
 )
-from homestead_twin.commands.manager import (
+from chaos.commands.manager import (
     CommandManager,
     CommandRequest,
     CommandStateError,
@@ -30,18 +30,18 @@ from homestead_twin.commands.manager import (
     UnknownTargetError,
     new_command_id,
 )
-from homestead_twin.commands.modes import ModeManager
-from homestead_twin.commands.service import CommandDispatchService, ack_subscription
-from homestead_twin.config import Settings
-from homestead_twin.envelope import CommandAckEnvelope, parse_command
-from homestead_twin.models.commands import AuditLogEntry, Command
-from homestead_twin.models.registry import Asset, AssetClass, Point, PointBinding, PointDefinition
-from homestead_twin.models.telemetry import CurrentState
+from chaos.commands.modes import ModeManager
+from chaos.commands.service import CommandDispatchService, ack_subscription
+from chaos.config import Settings
+from chaos.envelope import CommandAckEnvelope, parse_command
+from chaos.models.commands import AuditLogEntry, Command
+from chaos.models.registry import Asset, AssetClass, Point, PointBinding, PointDefinition
+from chaos.models.telemetry import CurrentState
 
 SITE_ID = "site.site.primary.01"
 ASSET_ID = "water.pump.orchard.01"
 POINT_ID = f"{ASSET_ID}/start"
-COMMAND_TOPIC = "homestead/water/orchard/pump_01/cmd/start"
+COMMAND_TOPIC = "chaos/water/orchard/pump_01/cmd/start"
 ACK_TOPIC = f"{COMMAND_TOPIC}/ack"
 NOW = dt.datetime(2026, 8, 7, 12, 0, tzinfo=dt.UTC)
 
@@ -634,10 +634,10 @@ def test_maintenance_blocks_the_ems_but_a_maintainer_may_override(pump, bus, con
 
 
 def test_ack_subscription_matches_the_command_ack_topic():
-    from homestead_twin.mqtt import topic_matches
+    from chaos.mqtt import topic_matches
 
-    assert topic_matches(ack_subscription("homestead"), ACK_TOPIC)
-    assert not topic_matches(ack_subscription("homestead"), COMMAND_TOPIC)
+    assert topic_matches(ack_subscription("chaos"), ACK_TOPIC)
+    assert not topic_matches(ack_subscription("chaos"), COMMAND_TOPIC)
 
 
 def test_service_records_acknowledgements_arriving_on_the_bus(session_factory, bus, control_settings):
@@ -735,11 +735,11 @@ def test_service_start_and_stop_are_clean(session_factory, bus, control_settings
     # Restarting must not double-subscribe.
     service.start()
     service.stop()
-    assert len([f for f, _ in bus.subscriptions if f == ack_subscription("homestead")]) == 1
+    assert len([f for f, _ in bus.subscriptions if f == ack_subscription("chaos")]) == 1
 
 
 def test_service_matches_the_runtime_background_service_protocol(session_factory, bus, control_settings):
-    from homestead_twin.runtime import BackgroundService
+    from chaos.runtime import BackgroundService
 
     service = CommandDispatchService(session_factory, bus, control_settings)
     assert isinstance(service, BackgroundService)
@@ -754,7 +754,7 @@ def test_service_matches_the_runtime_background_service_protocol(session_factory
 @pytest.fixture()
 def control_client(control_settings, engine, session_factory, bus) -> TestClient:
     """A client whose app has physical control enabled."""
-    from homestead_twin.api.app import create_app
+    from chaos.api.app import create_app
 
     app = create_app(control_settings, bus=bus, start_services=False, init_db=False)
     app.state.engine = engine

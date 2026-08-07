@@ -277,7 +277,7 @@ An MQTT username, an SNMPv3 user or a Home Assistant entity ID is a **binding**,
 not an identity (SDD 25.3 rule 7). Record them as `ExternalIdentifier` rows
 against the asset (`id_type: mqtt_username`, `snmp_v3_user`, `ha_entity_id`), so
 they survive in the same place as the equipment they belong to and are captured
-by `homestead-twin backup`. A spreadsheet of device credentials is a spreadsheet
+by `chaos backup`. A spreadsheet of device credentials is a spreadsheet
 that will be wrong within a year.
 
 Secrets themselves are never stored in the registry, never in Git, and never in

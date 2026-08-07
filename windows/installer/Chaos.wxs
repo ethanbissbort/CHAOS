@@ -137,7 +137,7 @@
     -->
     <Property Id="ARPCOMMENTS"
               Value="Operator data (database, logs, backups and local config) lives in %ProgramData%\$(var.ChaosProductName) and is NOT removed by uninstall." />
-    <Property Id="ARPHELPLINK" Value="https://github.com/ethanbissbort/homestead-twin" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/ethanbissbort/chaos" />
     <Property Id="ARPPRODUCTICON" Value="ChaosIcon" />
     <!-- ARPNOMODIFY is set by WixUI_Minimal; setting it again here is a
          duplicate-symbol error at link time. -->
@@ -192,20 +192,20 @@
         <Environment Id="EnvChaosPython" Name="CHAOS_PYTHON" Value="[INSTALLFOLDER]$(var.ChaosPythonExeRelPath)" Action="set" Part="all" System="yes" />
         <Environment Id="EnvChaosWeb"    Name="CHAOS_WEB_ROOT" Value="[INSTALLFOLDER]app\web" Action="set" Part="all" System="yes" />
 
-        <!-- The Python side. HOMESTEAD_DATA_DIR's parent is what
-             homestead_twin.cli.workspace_root() anchors on, so pointing it at
+        <!-- The Python side. CHAOS_DATA_DIR's parent is what
+             chaos.cli.workspace_root() anchors on, so pointing it at
              <install>\app\data is what makes `validate` and `load-all` work
              offline with no repository checkout, exactly as they do in the
              container image. -->
-        <Environment Id="EnvDataDir"   Name="HOMESTEAD_DATA_DIR"   Value="[INSTALLFOLDER]app\data"    Action="set" Part="all" System="yes" />
-        <Environment Id="EnvSchemaDir" Name="HOMESTEAD_SCHEMA_DIR" Value="[INSTALLFOLDER]app\schemas" Action="set" Part="all" System="yes" />
+        <Environment Id="EnvDataDir"   Name="CHAOS_DATA_DIR"   Value="[INSTALLFOLDER]app\data"    Action="set" Part="all" System="yes" />
+        <Environment Id="EnvSchemaDir" Name="CHAOS_SCHEMA_DIR" Value="[INSTALLFOLDER]app\schemas" Action="set" Part="all" System="yes" />
 
         <!-- Loopback only. The Python backend is reached through the .NET
              gateway; it has no business listening on the LAN. The firewall rule
              opens the gateway's port and nothing else, but a service that binds
              0.0.0.0 is one firewall mistake away from being exposed, so the
              default is corrected here as well. -->
-        <Environment Id="EnvApiHost" Name="HOMESTEAD_API_HOST" Value="127.0.0.1" Action="set" Part="all" System="yes" />
+        <Environment Id="EnvApiHost" Name="CHAOS_API_HOST" Value="127.0.0.1" Action="set" Part="all" System="yes" />
       </Component>
 
     </ComponentGroup>

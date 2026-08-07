@@ -214,7 +214,7 @@ The audit record is written **before** dispatch, so a command that was issued an
 then lost in the network is still on the record.
 
 Two gates stand in front of physical actuation: the global
-`HOMESTEAD_ALLOW_PHYSICAL_CONTROL`, and the per-binding
+`CHAOS_ALLOW_PHYSICAL_CONTROL`, and the per-binding
 `automatic_control_allowed` that only commissioning can set. A command against an
 un-commissioned binding is refused with the interlock that refused it. See
 `docs/commissioning.md`.

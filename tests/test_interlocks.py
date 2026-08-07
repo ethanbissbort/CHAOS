@@ -11,7 +11,7 @@ import datetime as dt
 
 import pytest
 
-from homestead_twin.commands.interlocks import (
+from chaos.commands.interlocks import (
     ASSET_IN_MAINTENANCE,
     ASSET_NOT_OPERATIONAL,
     BINDING_NOT_COMMISSIONED,
@@ -36,11 +36,11 @@ from homestead_twin.commands.interlocks import (
     point_not_control_capable,
     role_at_least,
 )
-from homestead_twin.commands.manager import CommandRequest
-from homestead_twin.config import Settings
-from homestead_twin.models.commands import Command
-from homestead_twin.models.registry import Asset, AssetClass, Point, PointBinding, PointDefinition
-from homestead_twin.models.telemetry import CurrentState
+from chaos.commands.manager import CommandRequest
+from chaos.config import Settings
+from chaos.models.commands import Command
+from chaos.models.registry import Asset, AssetClass, Point, PointBinding, PointDefinition
+from chaos.models.telemetry import CurrentState
 
 ASSET_ID = "water.pump.orchard.01"
 POINT_ID = f"{ASSET_ID}/start"

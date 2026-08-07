@@ -11,6 +11,9 @@ public enum HostUrlSource
 
     /// <summary>A <c>--host</c> command-line argument.</summary>
     CommandLine = 2,
+
+    /// <summary>The address the operator set on the Settings page.</summary>
+    Settings = 3,
 }
 
 /// <summary>Outcome of resolving the gateway address.</summary>
@@ -46,6 +49,76 @@ public static class HostUrlResolver
         }
 
         return new HostResolution(HostEndpoints.Default, HostUrlSource.Default, null);
+    }
+
+    /// <summary>
+    /// Resolves with the operator's saved settings behind the per-launch
+    /// overrides.
+    /// </summary>
+    /// <remarks>
+    /// Precedence, and why: <c>--host</c> then <c>CHAOS_HOST_URL</c> then the
+    /// Settings page then the built-in default. The command line and the
+    /// environment are things somebody did to THIS launch — a shortcut for a
+    /// second node, a one-off check — so they win over the standing preference
+    /// without overwriting it. The launcher says which one is in force, so an
+    /// operator whose Settings address appears to be ignored can see why.
+    /// </remarks>
+    public static HostResolution Resolve(
+        string? commandLineValue,
+        string? environmentValue,
+        ShellSettings? settings)
+    {
+        if (!string.IsNullOrWhiteSpace(commandLineValue))
+        {
+            return Build(commandLineValue!, HostUrlSource.CommandLine, "--host");
+        }
+
+        if (!string.IsNullOrWhiteSpace(environmentValue))
+        {
+            return Build(environmentValue!, HostUrlSource.Environment, EnvironmentVariable);
+        }
+
+        if (settings is not null)
+        {
+            var uri = settings.TryComposeGatewayUri();
+            if (uri is not null)
+            {
+                return new HostResolution(HostEndpoints.For(uri), HostUrlSource.Settings, null);
+            }
+
+            return new HostResolution(
+                HostEndpoints.Default,
+                HostUrlSource.Default,
+                $"The gateway address saved in Settings ('{settings.HostAddress}' port "
+                + $"{settings.HostPort}) is not usable, so the shell is using {HostEndpoints.Default}. "
+                + "Open Settings to correct it.");
+        }
+
+        return new HostResolution(HostEndpoints.Default, HostUrlSource.Default, null);
+    }
+
+    /// <summary>
+    /// One line naming where the address in force came from, for the launcher.
+    /// </summary>
+    public static string DescribeSource(HostResolution resolution)
+    {
+        ArgumentNullException.ThrowIfNull(resolution);
+
+        return resolution.Source switch
+        {
+            HostUrlSource.CommandLine =>
+                $"Using {resolution.Endpoints.BaseUri} from the --host argument this shell was "
+                + "started with, which overrides the address in Settings for this launch only.",
+
+            HostUrlSource.Environment =>
+                $"Using {resolution.Endpoints.BaseUri} from the {EnvironmentVariable} environment "
+                + "variable, which overrides the address in Settings for this launch only.",
+
+            HostUrlSource.Settings =>
+                $"Using {resolution.Endpoints.BaseUri} from Settings.",
+
+            _ => $"Using the built-in default {resolution.Endpoints.BaseUri}; no address has been set.",
+        };
     }
 
     /// <summary>

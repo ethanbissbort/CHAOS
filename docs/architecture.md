@@ -145,7 +145,7 @@ Python 3.11, FastAPI, SQLAlchemy 2.0, PostgreSQL + PostGIS (SQLite supported).
 
 ### 8.2 MQTT broker — implemented
 
-Eclipse Mosquitto via `deploy/docker-compose.yml`. `homestead_twin/mqtt.py`
+Eclipse Mosquitto via `deploy/docker-compose.yml`. `chaos/mqtt.py`
 provides two interchangeable implementations behind one `MessageBus` protocol:
 `PahoBus` for real brokers, `InMemoryBus` for tests, the simulator's offline
 mode and bench testing.
@@ -179,7 +179,7 @@ SDD open decision 22.3 (InfluxDB versus TimescaleDB) is **unresolved** — see
 `docs/design-decisions/DD-002-historian-selection.md`, which is still *proposed,
 awaiting owner ratification* — so neither is deployed. The platform writes a
 relational historian instead: `telemetry_samples` in PostgreSQL, selected by
-`HOMESTEAD_HISTORIAN_BACKEND=sql`.
+`CHAOS_HISTORIAN_BACKEND=sql`.
 
 This is a real limitation, not a finished choice. It is adequate for
 commissioning and for the secondary node; it is not adequate for years of
@@ -201,7 +201,7 @@ definitions; only the energy path has been exercised end to end.
 | Home Assistant for fast operational controls | Not built |
 | Dedicated wall-display views | Not built |
 
-There is also a built-in operator UI at `/ui` (`src/homestead_twin/web/`) that is
+There is also a built-in operator UI at `/ui` (`src/chaos/web/`) that is
 not in the SDD. It exists so the platform is usable on a node with nothing but a
 browser and no Grafana.
 
@@ -230,7 +230,7 @@ Automated configuration backup from network devices is **not built**.
 
 ## 5. Subsystems in detail
 
-### Registry (`homestead_twin/registry/`)
+### Registry (`chaos/registry/`)
 
 `load_package(session, data_dir=None)` reads the four design-package documents
 and upserts them, recording a `ConfigurationRevision` for the load. It is
@@ -244,7 +244,7 @@ commissioning verifies the real address (SDD 47) — which is why the platform
 dashboard's "Point bindings by status" panel is the honest measure of how much of
 the property is wired up rather than merely modelled.
 
-### Ingest (`homestead_twin/ingest/`)
+### Ingest (`chaos/ingest/`)
 
 `bus message → TopicResolver → TelemetryWriter → current_state + telemetry_samples`.
 
@@ -254,9 +254,9 @@ unambiguously), and nothing is dropped silently. Anything unresolvable becomes a
 `IngestDeadLetter` with a reason, because a silently discarded message during
 commissioning looks exactly like a dead sensor.
 
-`retention.py` implements SDD 16.4 and is driven by `homestead-twin retention`.
+`retention.py` implements SDD 16.4 and is driven by `chaos retention`.
 
-### Energy management (`homestead_twin/ems/`)
+### Energy management (`chaos/ems/`)
 
 The ten-state machine of SDD 30.7, load-tier shedding (31–32), restoration (33),
 generator coordination (34), black-start sequencing (35) and power-budget leases
@@ -268,7 +268,7 @@ exactly one EMS on the property.
 
 **Never run against real plant.** SDD 49 item 8 requires prototyping against
 simulated MQTT telemetry before enabling physical control, and that is where this
-is. `HOMESTEAD_ALLOW_PHYSICAL_CONTROL` defaults to `false`.
+is. `CHAOS_ALLOW_PHYSICAL_CONTROL` defaults to `false`.
 
 The authoritative energy design is still an open conflict (SDD 30.2, open
 decision 22.1; analysis in
@@ -276,7 +276,7 @@ decision 22.1; analysis in
 12 kW / 40 kWh baseline versus 45 kWdc / 800 kWh revision. The register preserves
 both. No threshold in the EMS assumes either is correct.
 
-### Alarms (`homestead_twin/alarms/`)
+### Alarms (`chaos/alarms/`)
 
 Definitions load from `data/alarm_definitions.yaml` (40 definitions). The
 evaluator runs against current state; correlation groups related alarms into
@@ -284,21 +284,21 @@ incidents so one power-container outage does not produce hundreds of independent
 notifications (SDD 14.2).
 
 Notification backends: `log` is implemented. `email`, `push` and `voice` (CUCM)
-are named in `HOMESTEAD_NOTIFICATION_BACKENDS` and in SDD FR-007 — check
+are named in `CHAOS_NOTIFICATION_BACKENDS` and in SDD FR-007 — check
 `alarms/notify.py` for which are actually wired before relying on one.
 
-### Commands (`homestead_twin/commands/`)
+### Commands (`chaos/commands/`)
 
 `POST /api/v1/commands` → interlock evaluation → audit record → MQTT dispatch →
 acknowledgement or expiry. Every command carries who, why, under which operating
 mode, an idempotency key and a TTL (SDD 5.7, 10.3, FR-004).
 
 Two independent gates stand in front of physical actuation:
-`HOMESTEAD_ALLOW_PHYSICAL_CONTROL` (global) and the per-binding
+`CHAOS_ALLOW_PHYSICAL_CONTROL` (global) and the per-binding
 `automatic_control_allowed` flag, which `maintenance/commissioning.py` will only
 set once the SDD 19 sequence has passed for that asset.
 
-### Maintenance (`homestead_twin/maintenance/`)
+### Maintenance (`chaos/maintenance/`)
 
 Plans, due-work generation, work orders, inspections, calibrations, spare parts,
 and the twelve-step commissioning record. `commissioning.may_enable_automatic_control`
@@ -330,7 +330,7 @@ worse than a missing dashboard.
 
 **Worth knowing:** role is enforced for the EMS only. On a secondary node the
 command-dispatch service is still registered whenever MQTT is enabled, so
-`HOMESTEAD_ALLOW_PHYSICAL_CONTROL=false` is the thing standing between the
+`CHAOS_ALLOW_PHYSICAL_CONTROL=false` is the thing standing between the
 secondary node and a second source of commands.
 `deploy/docker-compose.secondary.yml` hard-codes it rather than reading it from
 `.env`. `docs/secondary-control-node.md` explains why.

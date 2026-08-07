@@ -22,8 +22,8 @@ from collections import Counter
 from collections.abc import Sequence
 from typing import Any
 
-from homestead_twin.config import Settings
-from homestead_twin.mqtt import InMemoryBus, Message, PahoBus
+from chaos.config import Settings
+from chaos.mqtt import InMemoryBus, Message, PahoBus
 from simulator.clock import format_duration, parse_duration
 from simulator.scenarios import ScenarioRunner, get_scenario, scenario_names
 from simulator.site import SimulatedSite

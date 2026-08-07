@@ -16,7 +16,7 @@ on (SDD sections 5.5, 6).
 **Daily (2 minutes)**
 
 ```sh
-homestead-twin status
+chaos status
 ```
 
 Look at four things: active alarms, `ingest_dead_letters`, the EMS state and its
@@ -28,7 +28,7 @@ properly, not noise.
 
 - Confirm the nightly backup ran: `ls -lt /var/backups/homestead | head`, then
   read the newest `MANIFEST` for `failures : 0`.
-- Confirm the secondary node's replica is current: run `homestead-twin status`
+- Confirm the secondary node's replica is current: run `chaos status`
   there and compare counts with the primary.
 - Skim the platform dashboard's "Point bindings by status" panel. Anything still
   `tbd` is un-commissioned, whatever the wiring looks like.
@@ -65,10 +65,10 @@ platform is required for a black start, the black start design is wrong.
 | 1–4 | Verify isolation and safety; energise BMS/inverter control power; close the battery contactor via native precharge; start the master inverter group | **None.** Do not attempt any of this from the API |
 | 5 | Energise the critical control/communications bus | None |
 | 6 | Start the secondary control node, core switch/router, minimum MQTT and time services | Start the secondary stack: `make secondary-up`. NTP first — see section 6 |
-| 7 | Validate battery, inverter, frequency and critical-bus measurements | Read them at the equipment. Then, once ingest is up, cross-check against `homestead-twin status` and the energy dashboard |
+| 7 | Validate battery, inverter, frequency and critical-bus measurements | Read them at the equipment. Then, once ingest is up, cross-check against `chaos status` and the energy dashboard |
 | 8 | Energise minimum refrigeration, water protection, greenhouse survival and security loads, staggered | Manual. SDD 33.2 forbids simultaneous restoration; the EMS is not running yet |
 | 9 | Start the generator if reserve or battery limits require it | At the generator controller |
-| 10 | Start primary rack services once the critical bus and container environment are stable | `make up`, then `homestead-twin status` |
+| 10 | Start primary rack services once the critical bus and container environment are stable | `make up`, then `chaos status` |
 | 11 | Reconcile actual asset states with the digital twin | Section 1.1 below |
 
 ### 1.1 State reconciliation (SDD 35.4)
@@ -78,7 +78,7 @@ platform is required for a black start, the black start design is wrong.
 After the primary stack is up:
 
 ```sh
-homestead-twin status
+chaos status
 ```
 
 1. **Expire stale commands.** Anything in `pending` or `dispatched` from before
@@ -106,7 +106,7 @@ unattended after a black start (SDD 35.3).
 **Symptom:** points stale; a last-will `availability` message arrived; alarms
 firing for one asset group.
 
-1. Is it the gateway or the network? `homestead-twin status` — if `ingest` counts
+1. Is it the gateway or the network? `chaos status` — if `ingest` counts
    are still rising for other assets, the broker and ingest are fine.
 2. Check the broker: `docker compose -f deploy/docker-compose.yml logs mosquitto | tail -50`.
    A gateway that reconnects in a loop is usually a credential or ACL problem, not
@@ -139,7 +139,7 @@ access. What continues: ingest, EMS, alarms, dashboards, commands, local
 notification.
 
 SDD MVP criterion 4 requires critical alarms to work during internet loss. If
-`HOMESTEAD_NOTIFICATION_BACKENDS` is only `log` and `email`, that criterion is
+`CHAOS_NOTIFICATION_BACKENDS` is only `log` and `email`, that criterion is
 **not met** — a log line is not an alert. Local voice (CUCM) or an independent
 device path is needed. Currently unresolved; see `docs/architecture.md`.
 
@@ -178,7 +178,7 @@ a power event, a comms failure, a gateway reboot.
 
    ```sh
    docker compose -f deploy/docker-compose.yml exec twin \
-     env HOMESTEAD_NOTIFICATION_BACKENDS=log homestead-twin status   # inspect only
+     env CHAOS_NOTIFICATION_BACKENDS=log chaos status   # inspect only
    ```
 
    Changing it for real means editing `deploy/.env` and recreating the service.
@@ -186,7 +186,7 @@ a power event, a comms failure, a gateway reboot.
 5. **Afterwards**, review. A flood is usually an alarm-design failure: missing
    dead-band, missing on-delay, or an alarm on a derived value that should have
    been an alarm on its input. Fix `data/alarm_definitions.yaml`, then
-   `homestead-twin load-all`.
+   `chaos load-all`.
 
 ### Suppression during planned work
 
@@ -208,7 +208,7 @@ a subsystem gets left in maintenance mode for three weeks.
 
 ```sh
 deploy/backup/backup.sh                    # full set
-homestead-twin backup                      # registry + config only, portable
+chaos backup                      # registry + config only, portable
 ```
 
 The full set contains `postgres.dump`, `twin-registry.tar.gz`,
@@ -223,7 +223,7 @@ and offline/off-property.
 ### 4.2 Verifying
 
 ```sh
-cd /var/backups/homestead/<timestamp>
+cd /var/backups/chaos/<timestamp>
 sha256sum -c SHA256SUMS
 cat MANIFEST                      # failures : 0
 tar tzf twin-registry.tar.gz | head
@@ -242,7 +242,7 @@ $COMPOSE exec -T postgres psql -U "$POSTGRES_USER" -d homestead \
 $COMPOSE exec -T postgres pg_restore -U "$POSTGRES_USER" -d homestead \
   --no-owner --no-privileges < postgres.dump
 $COMPOSE start twin
-$COMPOSE exec twin homestead-twin status             # counts vs. MANIFEST
+$COMPOSE exec twin chaos status             # counts vs. MANIFEST
 ```
 
 ### 4.4 Rebuilding from the design package instead
@@ -251,9 +251,9 @@ Faster, and often better: the design package in Git is the source of truth for
 registry content. History is not recoverable this way.
 
 ```sh
-homestead-twin init-db
-homestead-twin load-all
-homestead-twin status
+chaos init-db
+chaos load-all
+chaos status
 ```
 
 ### 4.5 Restoring onto a machine with nothing
@@ -284,7 +284,7 @@ SDD 16.4:
 
 | Class | Policy |
 |---|---|
-| Raw high-frequency telemetry | 90 days (`HOMESTEAD_HISTORIAN_RAW_RETENTION_DAYS`) |
+| Raw high-frequency telemetry | 90 days (`CHAOS_HISTORIAN_RAW_RETENTION_DAYS`) |
 | Downsampled 1-minute | 2 years |
 | Downsampled hourly/daily | Indefinite |
 | Alarm and command audit | **Indefinite — never pruned** |
@@ -292,15 +292,15 @@ SDD 16.4:
 | Camera footage | Separate policy, outside this platform |
 
 ```sh
-homestead-twin retention --dry-run       # default; computes and rolls back
-homestead-twin retention --apply
+chaos retention --dry-run       # default; computes and rolls back
+chaos retention --apply
 ```
 
 Schedule daily:
 
 ```
-30 3 * * * docker compose -f /srv/homestead-twin/deploy/docker-compose.yml \
-             exec -T twin homestead-twin retention --apply
+30 3 * * * docker compose -f /srv/chaos/deploy/docker-compose.yml \
+             exec -T twin chaos retention --apply
 ```
 
 Two things worth knowing. The dry run rolls the transaction back, so an
@@ -341,9 +341,9 @@ Do not skip to this section.
 2. `POST /api/v1/commissioning/bindings/{point_id}` sets
    `automatic_control_allowed` for that binding. The platform refuses if the
    prerequisites have not passed.
-3. Only then set `HOMESTEAD_ALLOW_PHYSICAL_CONTROL=true` in `deploy/.env` and
+3. Only then set `CHAOS_ALLOW_PHYSICAL_CONTROL=true` in `deploy/.env` and
    recreate the `twin` service.
-4. Verify: `homestead-twin status` shows `physical control : ENABLED`.
+4. Verify: `chaos status` shows `physical control : ENABLED`.
 5. Issue one command, watch it acknowledge, and read the audit record before
    issuing a second.
 
@@ -353,11 +353,11 @@ To revoke, in an emergency:
 # Fastest: revoke at the broker. Application state is irrelevant if the
 # command cannot leave the bus.
 docker compose -f deploy/docker-compose.yml exec mosquitto \
-  sh -c 'sed -i "s|^topic write homestead/+/+/+/cmd/+|# REVOKED &|" /mosquitto/config/local/acl'
+  sh -c 'sed -i "s|^topic write chaos/+/+/+/cmd/+|# REVOKED &|" /mosquitto/config/local/acl'
 docker compose -f deploy/docker-compose.yml kill -s HUP mosquitto
 
 # Then, properly:
-# set HOMESTEAD_ALLOW_PHYSICAL_CONTROL=false in deploy/.env and recreate `twin`.
+# set CHAOS_ALLOW_PHYSICAL_CONTROL=false in deploy/.env and recreate `twin`.
 ```
 
 Then find out why, and write it down.

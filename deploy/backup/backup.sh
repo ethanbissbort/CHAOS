@@ -10,7 +10,7 @@
 # What this script produces, per run, under $BACKUP_DIR/<UTC timestamp>/:
 #
 #   postgres.dump           pg_dump custom format (registry + historian + audit)
-#   twin-registry.tar.gz    `homestead-twin backup`: registry as JSON, redacted
+#   twin-registry.tar.gz    `chaos backup`: registry as JSON, redacted
 #                           settings, and the machine-readable design package.
 #                           Readable without PostgreSQL, which matters when the
 #                           thing you are restoring onto is a laptop.
@@ -26,7 +26,7 @@
 #   BACKUP_DIR=/mnt/usb deploy/backup/backup.sh
 #
 # Cron (daily 02:15 local):
-#   15 2 * * * /srv/homestead-twin/deploy/backup/backup.sh >> /var/log/homestead-backup.log 2>&1
+#   15 2 * * * /srv/chaos/deploy/backup/backup.sh >> /var/log/homestead-backup.log 2>&1
 #
 # ---------------------------------------------------------------------------
 # OFFSITE AND OFFLINE COPIES -- READ THIS
@@ -88,7 +88,7 @@ note "started_at   : $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 note "host         : $(hostname)"
 note "repo         : $REPO_DIR"
 note "compose_file : $COMPOSE_FILE"
-note "node_role    : ${HOMESTEAD_NODE_ROLE:-primary}"
+note "node_role    : ${CHAOS_NODE_ROLE:-primary}"
 note ""
 
 # ---------------------------------------------------------------------------
@@ -115,17 +115,17 @@ fi
 # without Docker and without this repository: JSON tables plus the design
 # package. It contains no credentials.
 log "Exporting registry and configuration..."
-if $COMPOSE exec -T twin homestead-twin backup --output /app/var/backups \
+if $COMPOSE exec -T twin chaos backup --output /app/var/backups \
      > "$TARGET/twin-backup.log" 2>&1; then
   LATEST=$($COMPOSE exec -T twin sh -c 'ls -1t /app/var/backups/*.tar.gz 2>/dev/null | head -1' | tr -d '\r')
   if [ -n "$LATEST" ]; then
     $COMPOSE exec -T twin cat "$LATEST" > "$TARGET/twin-registry.tar.gz"
     note "twin-registry.tar.gz: $(wc -c < "$TARGET/twin-registry.tar.gz") bytes (from $LATEST)"
   else
-    fail "homestead-twin backup produced no archive"
+    fail "chaos backup produced no archive"
   fi
 else
-  fail "homestead-twin backup (see twin-backup.log)"
+  fail "chaos backup (see twin-backup.log)"
 fi
 
 # ---------------------------------------------------------------------------

@@ -3,7 +3,7 @@ using Chaos.Host.Configuration;
 namespace Chaos.Host.Web;
 
 /// <summary>
-/// Finds the operator console assets (<c>src/homestead_twin/web/</c>).
+/// Finds the operator console assets (<c>src/chaos/web/</c>).
 /// </summary>
 /// <remarks>
 /// <para>
@@ -15,7 +15,7 @@ namespace Chaos.Host.Web;
 /// <item><description><c>Chaos:WebRootPath</c>, absolute or relative to the content root.</description></item>
 /// <item><description><c>&lt;content root&gt;/web</c> — the packaged layout, assets copied next to the executable.</description></item>
 /// <item><description><c>&lt;executable directory&gt;/web</c> — when the content root differs, e.g. a Windows Service started from <c>C:\Windows\System32</c>.</description></item>
-/// <item><description><c>src/homestead_twin/web</c> found by walking up from the content root — the development repository layout.</description></item>
+/// <item><description><c>src/chaos/web</c> found by walking up from the content root — the development repository layout.</description></item>
 /// </list>
 /// <para>
 /// Every candidate is recorded. When nothing is found the result says so
@@ -25,7 +25,7 @@ namespace Chaos.Host.Web;
 public static class WebRootResolver
 {
     /// <summary>Relative path to the console assets inside the Python repository.</summary>
-    public const string RepositoryRelativePath = "src/homestead_twin/web";
+    public const string RepositoryRelativePath = "src/chaos/web";
 
     private const int MaxAncestorLevels = 8;
 

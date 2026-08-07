@@ -2,11 +2,11 @@
 #
 # One image serves both node roles (SDD section 16.1): the primary node in the
 # power container and the physically separate secondary control node. Role is
-# chosen at runtime through HOMESTEAD_NODE_ROLE, never by building a second
+# chosen at runtime through CHAOS_NODE_ROLE, never by building a second
 # image -- a divergent secondary image is a secondary node you cannot trust.
 #
 # Build from the repository root:
-#   docker build -f deploy/Dockerfile -t homestead-twin:local .
+#   docker build -f deploy/Dockerfile -t chaos:local .
 
 # --- Stage 1: build a self-contained virtualenv ----------------------------
 FROM python:3.11-slim-bookworm AS builder
@@ -32,16 +32,16 @@ RUN pip install --upgrade pip setuptools wheel \
 # --- Stage 2: runtime ------------------------------------------------------
 FROM python:3.11-slim-bookworm AS runtime
 
-LABEL org.opencontainers.image.title="homestead-twin" \
+LABEL org.opencontainers.image.title="chaos" \
       org.opencontainers.image.description="Homestead Digital Twin and Master Control Platform" \
       org.opencontainers.image.licenses="Apache-2.0" \
-      org.opencontainers.image.source="https://github.com/ethanbissbort/homestead-twin"
+      org.opencontainers.image.source="https://github.com/ethanbissbort/chaos"
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/opt/venv/bin:$PATH" \
-    HOMESTEAD_API_HOST=0.0.0.0 \
-    HOMESTEAD_API_PORT=8000
+    CHAOS_API_HOST=0.0.0.0 \
+    CHAOS_API_PORT=8000
 
 # curl is the healthcheck client; tini reaps the uvicorn worker so a stopped
 # container does not leave the MQTT session hanging until keepalive expiry.
@@ -59,7 +59,7 @@ COPY --from=builder /opt/venv /opt/venv
 WORKDIR /app
 
 # The machine-readable design package and the validator travel with the image so
-# that `homestead-twin load-all` and `homestead-twin validate` work offline on a
+# that `chaos load-all` and `chaos validate` work offline on a
 # node with no repository checkout.
 COPY --chown=homestead:homestead data/ /app/data/
 COPY --chown=homestead:homestead schemas/ /app/schemas/
@@ -72,11 +72,11 @@ RUN mkdir -p /app/var/backups && chown -R homestead:homestead /app/var
 
 USER homestead
 
-# HOMESTEAD_DATA_DIR/SCHEMA_DIR default to <package root>/../../data, which
+# CHAOS_DATA_DIR/SCHEMA_DIR default to <package root>/../../data, which
 # resolves to /app/data because the source tree is copied in.
-ENV HOMESTEAD_DATA_DIR=/app/data \
-    HOMESTEAD_SCHEMA_DIR=/app/schemas \
-    HOMESTEAD_DATABASE_URL=sqlite:////app/var/homestead.db
+ENV CHAOS_DATA_DIR=/app/data \
+    CHAOS_SCHEMA_DIR=/app/schemas \
+    CHAOS_DATABASE_URL=sqlite:////app/var/homestead.db
 
 EXPOSE 8000
 VOLUME ["/app/var"]
@@ -84,7 +84,7 @@ VOLUME ["/app/var"]
 # /health is unauthenticated by design: it reports liveness, version and node
 # role only. It never exposes telemetry, credentials or control state.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-    CMD curl -fsS "http://127.0.0.1:${HOMESTEAD_API_PORT}/health" || exit 1
+    CMD curl -fsS "http://127.0.0.1:${CHAOS_API_PORT}/health" || exit 1
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["homestead-twin", "serve"]
+CMD ["chaos", "serve"]

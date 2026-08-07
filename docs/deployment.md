@@ -16,7 +16,7 @@ physical control), `docs/secondary-control-node.md`,
 | **Primary** | The 20-foot power/utilities/battery/server container, on the R740xd | `deploy/docker-compose.yml` | PostgreSQL+PostGIS, Mosquitto, twin API, Prometheus, Grafana |
 | **Secondary** | A physically separate structure (SDD 22.13, undecided) | `deploy/docker-compose.secondary.yml` | PostgreSQL replica, Mosquitto (bridge), twin API in secondary role, Grafana |
 
-Both run the same image. Role is chosen at runtime by `HOMESTEAD_NODE_ROLE`.
+Both run the same image. Role is chosen at runtime by `CHAOS_NODE_ROLE`.
 
 Everything in the primary stack shares one physical failure domain. SDD section
 16.1 requires the design to assume it is gone; read
@@ -30,7 +30,7 @@ No PostgreSQL, no broker, no containers. The platform runs on SQLite and the
 in-memory bus — which is also SDD 19 step 1, bench test.
 
 ```sh
-git clone <repo> && cd homestead-twin
+git clone <repo> && cd chaos
 python3 -m venv .venv && . .venv/bin/activate
 make install                      # pip install -e ".[dev]"
 
@@ -53,18 +53,18 @@ a real broker with `--broker` / `--port` once one is running.
 
 ### Environment
 
-Every setting in `src/homestead_twin/config.py` is overridable as
-`HOMESTEAD_<FIELD>`, and a `.env` in the working directory is read automatically.
+Every setting in `src/chaos/config.py` is overridable as
+`CHAOS_<FIELD>`, and a `.env` in the working directory is read automatically.
 
 | Variable | Default | Notes |
 |---|---|---|
-| `HOMESTEAD_NODE_ROLE` | `primary` | `primary` or `secondary` |
-| `HOMESTEAD_DATABASE_URL` | `sqlite:///var/homestead.db` | PostgreSQL needs the `postgres` extra |
-| `HOMESTEAD_MQTT_ENABLED` | `true` | `false` runs the API with no bus and no background services |
-| `HOMESTEAD_ALLOW_PHYSICAL_CONTROL` | `false` | The safety gate. See section 6 |
-| `HOMESTEAD_EMS_ENABLED` | `true` | Ignored on a secondary node |
-| `HOMESTEAD_HISTORIAN_RAW_RETENTION_DAYS` | `90` | SDD 16.4 |
-| `HOMESTEAD_NOTIFICATION_BACKENDS` | `log` | Comma separated: `log,email,push,voice` |
+| `CHAOS_NODE_ROLE` | `primary` | `primary` or `secondary` |
+| `CHAOS_DATABASE_URL` | `sqlite:///var/homestead.db` | PostgreSQL needs the `postgres` extra |
+| `CHAOS_MQTT_ENABLED` | `true` | `false` runs the API with no bus and no background services |
+| `CHAOS_ALLOW_PHYSICAL_CONTROL` | `false` | The safety gate. See section 6 |
+| `CHAOS_EMS_ENABLED` | `true` | Ignored on a secondary node |
+| `CHAOS_HISTORIAN_RAW_RETENTION_DAYS` | `90` | SDD 16.4 |
+| `CHAOS_NOTIFICATION_BACKENDS` | `log` | Comma separated: `log,email,push,voice` |
 
 ---
 
@@ -116,10 +116,10 @@ make logs
 ```sh
 COMPOSE="docker compose -f deploy/docker-compose.yml"
 
-$COMPOSE exec twin homestead-twin validate     # design package intact
-$COMPOSE exec twin homestead-twin init-db      # idempotent
-$COMPOSE exec twin homestead-twin load-all     # registry + loads + alarms
-$COMPOSE exec twin homestead-twin status
+$COMPOSE exec twin chaos validate     # design package intact
+$COMPOSE exec twin chaos init-db      # idempotent
+$COMPOSE exec twin chaos load-all     # registry + loads + alarms
+$COMPOSE exec twin chaos status
 ```
 
 `init-db` also runs at API startup (`create_app(init_db=True)`), so this is
@@ -136,7 +136,7 @@ Sanity check:
 
 ```sh
 $COMPOSE logs mosquitto | grep -i "denied\|error"
-$COMPOSE exec twin homestead-twin status        # mqtt line should show auth=yes
+$COMPOSE exec twin chaos status        # mqtt line should show auth=yes
 ```
 
 ---
@@ -149,7 +149,7 @@ Full treatment in `docs/secondary-control-node.md`. Short version:
 cp deploy/.env.example deploy/.env
 # Set every SECONDARY_* value to something DIFFERENT from the primary's.
 make secondary-up
-docker compose -f deploy/docker-compose.secondary.yml exec twin homestead-twin status
+docker compose -f deploy/docker-compose.secondary.yml exec twin chaos status
 ```
 
 Confirm the output says `node role: secondary`, `physical control : disabled`,
@@ -160,7 +160,7 @@ Confirm the output says `node role: secondary`, `physical control : disabled`,
 ## 5. The container image
 
 ```sh
-make build            # docker build -f deploy/Dockerfile -t homestead-twin:local .
+make build            # docker build -f deploy/Dockerfile -t chaos:local .
 ```
 
 Multi-stage: stage 1 builds a virtualenv with the `postgres` extra; stage 2 is
@@ -170,7 +170,7 @@ Multi-stage: stage 1 builds a virtualenv with the `postgres` extra; stage 2 is
   plant; it has no business running as uid 0.
 - `HEALTHCHECK` polls `/health`, which reports liveness, version and node role
   and nothing else — no telemetry, no credentials, no control state.
-- `data/`, `schemas/` and `tools/` are copied in, so `homestead-twin validate`
+- `data/`, `schemas/` and `tools/` are copied in, so `chaos validate`
   and `load-all` work offline with no repository checkout.
 - `/app/var` is a volume: SQLite fallback database and local backups.
 
@@ -181,13 +181,13 @@ non-root and reaches `healthy`.
 
 ## 6. The safety gate
 
-`HOMESTEAD_ALLOW_PHYSICAL_CONTROL` defaults to `false` and should stay there
+`CHAOS_ALLOW_PHYSICAL_CONTROL` defaults to `false` and should stay there
 until the subsystem you intend to control has passed all twelve steps of the SDD
 section 19 sequence and has the commissioning records to show for it.
 
 Two independent gates exist:
 
-1. **Global** — `HOMESTEAD_ALLOW_PHYSICAL_CONTROL`.
+1. **Global** — `CHAOS_ALLOW_PHYSICAL_CONTROL`.
 2. **Per binding** — `point_bindings.automatic_control_allowed`, which
    `maintenance/commissioning.py` will only set once steps 1–8 and step 9 have
    passed for that asset.
@@ -204,7 +204,7 @@ See `docs/commissioning.md`.
 
 ```sh
 # Portable registry + configuration archive (SDD 16.1 mitigation 3):
-docker compose -f deploy/docker-compose.yml exec twin homestead-twin backup
+docker compose -f deploy/docker-compose.yml exec twin chaos backup
 
 # Full backup set: pg_dump + registry + Mosquitto + Grafana + configs:
 deploy/backup/backup.sh
@@ -213,7 +213,7 @@ deploy/backup/backup.sh
 Schedule the second one:
 
 ```
-15 2 * * * /srv/homestead-twin/deploy/backup/backup.sh >> /var/log/homestead-backup.log 2>&1
+15 2 * * * /srv/chaos/deploy/backup/backup.sh >> /var/log/homestead-backup.log 2>&1
 ```
 
 A backup written to a disk inside the power container is not a backup — it is a
@@ -229,15 +229,15 @@ SDD 16.4: raw high-frequency telemetry 90 days; downsampled 1-minute data 2
 years; hourly/daily indefinitely; alarm and command audit indefinitely.
 
 ```sh
-homestead-twin retention --dry-run       # default; rolls back
-homestead-twin retention --apply
+chaos retention --dry-run       # default; rolls back
+chaos retention --apply
 ```
 
 Schedule daily, off-peak:
 
 ```
-30 3 * * * docker compose -f /srv/homestead-twin/deploy/docker-compose.yml \
-             exec -T twin homestead-twin retention --apply
+30 3 * * * docker compose -f /srv/chaos/deploy/docker-compose.yml \
+             exec -T twin chaos retention --apply
 ```
 
 ---
@@ -248,8 +248,8 @@ Schedule daily, off-peak:
 git pull
 make build
 make up                                          # recreates changed services
-docker compose -f deploy/docker-compose.yml exec twin homestead-twin init-db
-docker compose -f deploy/docker-compose.yml exec twin homestead-twin status
+docker compose -f deploy/docker-compose.yml exec twin chaos init-db
+docker compose -f deploy/docker-compose.yml exec twin chaos status
 ```
 
 **There are no schema migrations yet.** The platform uses SQLAlchemy
@@ -266,10 +266,10 @@ Take a backup before every upgrade. `make backup` is one command.
 
 | Symptom | Check |
 |---|---|
-| `twin` restarts repeatedly | `make logs`. Usually the database URL or a missing `HOMESTEAD_MQTT_USERNAME` |
-| Healthcheck never goes healthy | `docker inspect --format '{{json .State.Health}}' <container>`. `/health` binds to `HOMESTEAD_API_PORT` |
-| No telemetry arriving | `homestead-twin status` → `ingest_dead_letters` count. Then the platform dashboard's dead-letter panel, then the broker log for `Denied PUBLISH` |
-| `status` shows zero assets | `homestead-twin load-all` has not run, or ran against a different database |
+| `twin` restarts repeatedly | `make logs`. Usually the database URL or a missing `CHAOS_MQTT_USERNAME` |
+| Healthcheck never goes healthy | `docker inspect --format '{{json .State.Health}}' <container>`. `/health` binds to `CHAOS_API_PORT` |
+| No telemetry arriving | `chaos status` → `ingest_dead_letters` count. Then the platform dashboard's dead-letter panel, then the broker log for `Denied PUBLISH` |
+| `status` shows zero assets | `chaos load-all` has not run, or ran against a different database |
 | Grafana panels empty | Correct — the platform writes nothing until ingest runs. Check the datasource first: Connections → Data sources → homestead-pg → Save & test |
 | Prometheus shows one target | Correct. See `deploy/prometheus/prometheus.yml`; every other job is commented out |
 | `psycopg` import error | `pip install -e ".[postgres]"`, or use the container image, which includes it |
@@ -278,7 +278,7 @@ Take a backup before every upgrade. `make backup` is one command.
 The CLI is designed to be usable on a node with nothing else working:
 
 ```sh
-homestead-twin status            # role, database, counts, EMS state, alarms
-homestead-twin status --json     # same, machine readable
-homestead-twin --log-level DEBUG status
+chaos status            # role, database, counts, EMS state, alarms
+chaos status --json     # same, machine readable
+chaos --log-level DEBUG status
 ```

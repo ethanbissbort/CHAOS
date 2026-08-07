@@ -256,7 +256,7 @@
       "type": "stat",
       "id": 31,
       "title": "Registry contents",
-      "description": "Zero here means the design package has not been loaded: run 'homestead-twin load-all'.",
+      "description": "Zero here means the design package has not been loaded: run 'chaos load-all'.",
       "datasource": { "type": "postgres", "uid": "homestead-pg" },
       "gridPos": { "h": 5, "w": 10, "x": 0, "y": 34 },
       "options": {

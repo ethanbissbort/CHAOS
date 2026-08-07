@@ -12,7 +12,7 @@
 # 0.0.0.0 without a firewall in front would put an unauthenticated Grafana and a
 # control API on every VLAN; SDD section 15.1 is deny-by-default.
 
-name: homestead-twin
+name: chaos
 
 x-restart: &restart
   restart: unless-stopped
@@ -94,7 +94,7 @@ services:
     build:
       context: ..
       dockerfile: deploy/Dockerfile
-    image: ${TWIN_IMAGE:-homestead-twin:local}
+    image: ${TWIN_IMAGE:-chaos:local}
     <<: [*restart, *logging]
     depends_on:
       postgres:
@@ -103,29 +103,29 @@ services:
         condition: service_started
     environment:
       TZ: ${TZ:-America/Toronto}
-      HOMESTEAD_NODE_ROLE: primary
-      HOMESTEAD_SITE_ID: ${HOMESTEAD_SITE_ID:-site.site.primary.01}
-      HOMESTEAD_TIMEZONE: ${TZ:-America/Toronto}
-      HOMESTEAD_DATABASE_URL: >-
+      CHAOS_NODE_ROLE: primary
+      CHAOS_SITE_ID: ${CHAOS_SITE_ID:-site.site.primary.01}
+      CHAOS_TIMEZONE: ${TZ:-America/Toronto}
+      CHAOS_DATABASE_URL: >-
         postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-homestead}
-      HOMESTEAD_MQTT_HOST: mosquitto
-      HOMESTEAD_MQTT_PORT: 1883
-      HOMESTEAD_MQTT_USERNAME: ${HOMESTEAD_MQTT_USERNAME:?set a per-service MQTT identity}
-      HOMESTEAD_MQTT_PASSWORD: ${HOMESTEAD_MQTT_PASSWORD:?set a per-service MQTT secret}
-      HOMESTEAD_MQTT_TLS: ${HOMESTEAD_MQTT_TLS:-false}
-      HOMESTEAD_MQTT_CLIENT_ID: homestead-twin-primary
-      HOMESTEAD_MQTT_BASE_TOPIC: ${HOMESTEAD_MQTT_BASE_TOPIC:-homestead}
-      HOMESTEAD_MQTT_ENABLED: ${HOMESTEAD_MQTT_ENABLED:-true}
-      HOMESTEAD_HISTORIAN_BACKEND: ${HOMESTEAD_HISTORIAN_BACKEND:-sql}
-      HOMESTEAD_HISTORIAN_RAW_RETENTION_DAYS: ${HOMESTEAD_HISTORIAN_RAW_RETENTION_DAYS:-90}
+      CHAOS_MQTT_HOST: mosquitto
+      CHAOS_MQTT_PORT: 1883
+      CHAOS_MQTT_USERNAME: ${CHAOS_MQTT_USERNAME:?set a per-service MQTT identity}
+      CHAOS_MQTT_PASSWORD: ${CHAOS_MQTT_PASSWORD:?set a per-service MQTT secret}
+      CHAOS_MQTT_TLS: ${CHAOS_MQTT_TLS:-false}
+      CHAOS_MQTT_CLIENT_ID: chaos-primary
+      CHAOS_MQTT_BASE_TOPIC: ${CHAOS_MQTT_BASE_TOPIC:-homestead}
+      CHAOS_MQTT_ENABLED: ${CHAOS_MQTT_ENABLED:-true}
+      CHAOS_HISTORIAN_BACKEND: ${CHAOS_HISTORIAN_BACKEND:-sql}
+      CHAOS_HISTORIAN_RAW_RETENTION_DAYS: ${CHAOS_HISTORIAN_RAW_RETENTION_DAYS:-90}
       # Physical control stays off until the subsystem has passed the SDD
       # section 19 commissioning sequence. Changing this is a deliberate act.
-      HOMESTEAD_ALLOW_PHYSICAL_CONTROL: ${HOMESTEAD_ALLOW_PHYSICAL_CONTROL:-false}
-      HOMESTEAD_EMS_ENABLED: ${HOMESTEAD_EMS_ENABLED:-true}
-      HOMESTEAD_ALARM_ENGINE_ENABLED: ${HOMESTEAD_ALARM_ENGINE_ENABLED:-true}
-      HOMESTEAD_NOTIFICATION_BACKENDS: ${HOMESTEAD_NOTIFICATION_BACKENDS:-log}
-      HOMESTEAD_API_HOST: 0.0.0.0
-      HOMESTEAD_API_PORT: 8000
+      CHAOS_ALLOW_PHYSICAL_CONTROL: ${CHAOS_ALLOW_PHYSICAL_CONTROL:-false}
+      CHAOS_EMS_ENABLED: ${CHAOS_EMS_ENABLED:-true}
+      CHAOS_ALARM_ENGINE_ENABLED: ${CHAOS_ALARM_ENGINE_ENABLED:-true}
+      CHAOS_NOTIFICATION_BACKENDS: ${CHAOS_NOTIFICATION_BACKENDS:-log}
+      CHAOS_API_HOST: 0.0.0.0
+      CHAOS_API_PORT: 8000
     volumes:
       - twin-var:/app/var
     ports:
@@ -183,11 +183,11 @@ services:
       GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
       GF_NEWS_NEWS_FEED_ENABLED: "false"
       # Consumed by the provisioned PostgreSQL datasource.
-      HOMESTEAD_PG_HOST: postgres:5432
-      HOMESTEAD_PG_DB: ${POSTGRES_DB:-homestead}
-      HOMESTEAD_PG_USER: ${GRAFANA_PG_USER:-${POSTGRES_USER}}
-      HOMESTEAD_PG_PASSWORD: ${GRAFANA_PG_PASSWORD:-${POSTGRES_PASSWORD}}
-      HOMESTEAD_PROMETHEUS_URL: http://prometheus:9090
+      CHAOS_PG_HOST: postgres:5432
+      CHAOS_PG_DB: ${POSTGRES_DB:-homestead}
+      CHAOS_PG_USER: ${GRAFANA_PG_USER:-${POSTGRES_USER}}
+      CHAOS_PG_PASSWORD: ${GRAFANA_PG_PASSWORD:-${POSTGRES_PASSWORD}}
+      CHAOS_PROMETHEUS_URL: http://prometheus:9090
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
@@ -212,4 +212,4 @@ volumes:
 
 networks:
   default:
-    name: homestead-twin
+    name: chaos

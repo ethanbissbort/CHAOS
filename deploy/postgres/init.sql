@@ -5,7 +5,7 @@
 -- statement is IF NOT EXISTS.
 --
 -- Ordering note: this executes BEFORE the application has created any tables.
--- `homestead-twin init-db` (SQLAlchemy `create_all`) owns the schema. Anything
+-- `chaos init-db` (SQLAlchemy `create_all`) owns the schema. Anything
 -- here that touches an application table is therefore written as a DO block
 -- that checks for the table first, so a fresh database and an existing one both
 -- succeed. See SDD sections 8.1 and 40.
@@ -115,7 +115,7 @@ BEGIN
 
     COMMENT ON TABLE telemetry_samples IS
       'Relational historian (SDD 40.1). Raw samples are pruned per SDD 16.4 '
-      '(default 90 days) by `homestead-twin retention --apply`. If this table '
+      '(default 90 days) by `chaos retention --apply`. If this table '
       'becomes the bottleneck, resolve open design decision 22.3 and move to '
       'TimescaleDB or InfluxDB rather than growing it.';
   END IF;

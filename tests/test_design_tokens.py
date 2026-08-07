@@ -34,7 +34,7 @@ from pathlib import Path
 
 import pytest
 
-WEB = Path(__file__).resolve().parents[1] / "src" / "homestead_twin" / "web"
+WEB = Path(__file__).resolve().parents[1] / "src" / "chaos" / "web"
 TOKENS_CSS = WEB / "tokens.css"
 STYLES_CSS = WEB / "styles.css"
 APP_JS = WEB / "app.js"
@@ -448,7 +448,7 @@ def test_every_rack_legend_bucket_has_a_category_token() -> None:
     """The rack elevation paints straight from the payload:
     ``var(--cat-bucket-${device.category})``. Every bucket the API can return
     has to resolve, or a device silently loses its fill."""
-    rack = pytest.importorskip("homestead_twin.api.routers.rack")
+    rack = pytest.importorskip("chaos.api.routers.rack")
     buckets = set(rack.CATEGORY_LABELS) | set(rack.CATEGORIES.values()) | {rack.DEFAULT_CATEGORY}
     missing = [name for name in sorted(buckets) if f"--cat-bucket-{name}" not in DARK]
     assert not missing, f"rack legend buckets with no --cat-bucket-* token: {missing}"
@@ -456,7 +456,7 @@ def test_every_rack_legend_bucket_has_a_category_token() -> None:
 
 def test_every_sdd_domain_has_a_category_token() -> None:
     """Same promise for anything colouring by subsystem instead of by class."""
-    overview = pytest.importorskip("homestead_twin.api.routers.overview")
+    overview = pytest.importorskip("chaos.api.routers.overview")
     missing = [name for name, _ in overview.DOMAINS if f"--cat-domain-{name}" not in DARK]
     assert not missing, f"SDD 25.4 domains with no --cat-domain-* token: {missing}"
 

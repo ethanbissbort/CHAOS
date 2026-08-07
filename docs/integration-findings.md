@@ -73,7 +73,7 @@ value already means "no result."
 **Severity: medium — produces recurring noise**
 
 The EMS publishes the site energy state to
-`homestead/site/primary/site_01/energy_state` every tick (SDD section 13
+`chaos/site/primary/site_01/energy_state` every tick (SDD section 13
 requires the EMS to publish a state that subsystems consume). `energy_state` is
 not in `data/point_dictionary.yaml`, so ingest dead-letters it on every
 evaluation.

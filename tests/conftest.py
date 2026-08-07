@@ -11,10 +11,10 @@ from fastapi.testclient import TestClient
 from sqlalchemy import StaticPool, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from homestead_twin import db as db_module
-from homestead_twin.config import Settings
-from homestead_twin.models.base import Base
-from homestead_twin.mqtt import InMemoryBus
+from chaos import db as db_module
+from chaos.config import Settings
+from chaos.models.base import Base
+from chaos.mqtt import InMemoryBus
 
 
 @pytest.fixture()
@@ -38,7 +38,7 @@ def engine():
         poolclass=StaticPool,
         future=True,
     )
-    import homestead_twin.models  # noqa: F401  (register mappers)
+    import chaos.models  # noqa: F401  (register mappers)
 
     Base.metadata.create_all(engine)
     try:
@@ -71,7 +71,7 @@ def bus() -> InMemoryBus:
 
 @pytest.fixture()
 def app(settings, engine, session_factory, bus):
-    from homestead_twin.api.app import create_app
+    from chaos.api.app import create_app
 
     application = create_app(settings, bus=bus, start_services=False, init_db=False)
     # Bind the app to the test engine rather than the configured database.
@@ -99,7 +99,7 @@ def admin_headers() -> dict[str, str]:
 @pytest.fixture()
 def loaded_registry(db_session):
     """Load the v0.3 machine-readable package into the test database."""
-    from homestead_twin.registry.loader import load_package
+    from chaos.registry.loader import load_package
 
     result = load_package(db_session)
     db_session.commit()

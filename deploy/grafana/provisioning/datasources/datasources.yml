@@ -30,11 +30,11 @@ datasources:
     access: proxy
     orgId: 1
     isDefault: true
-    url: ${HOMESTEAD_PG_HOST}
-    user: ${HOMESTEAD_PG_USER}
-    database: ${HOMESTEAD_PG_DB}
+    url: ${CHAOS_PG_HOST}
+    user: ${CHAOS_PG_USER}
+    database: ${CHAOS_PG_DB}
     secureJsonData:
-      password: ${HOMESTEAD_PG_PASSWORD}
+      password: ${CHAOS_PG_PASSWORD}
     jsonData:
       # Compose-internal traffic on the private bridge network. Set to
       # verify-full with a CA once PostgreSQL is reached across a VLAN.
@@ -54,13 +54,13 @@ datasources:
     access: proxy
     orgId: 1
     isDefault: false
-    # Both compose files set HOMESTEAD_PROMETHEUS_URL explicitly. Grafana's
+    # Both compose files set CHAOS_PROMETHEUS_URL explicitly. Grafana's
     # provisioning interpolation has no shell-style defaults, so an unset
     # variable would be substituted as an empty string.
     #
     # The secondary control node has no Prometheus; it points this at an
     # unreachable host so the datasource reports down rather than pretending.
-    url: ${HOMESTEAD_PROMETHEUS_URL}
+    url: ${CHAOS_PROMETHEUS_URL}
     jsonData:
       httpMethod: POST
       timeInterval: 30s

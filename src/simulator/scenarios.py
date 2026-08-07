@@ -32,8 +32,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from homestead_twin import topics
-from homestead_twin.envelope import CommandEnvelope
+from chaos import topics
+from chaos.envelope import CommandEnvelope
 from simulator.clock import parse_duration
 from simulator.components.battery import BatteryConfig
 from simulator.components.generator import GENERATOR_ASSET, GeneratorConfig

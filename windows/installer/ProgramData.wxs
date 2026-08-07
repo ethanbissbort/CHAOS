@@ -48,7 +48,7 @@
         <CreateFolder />
       </Component>
 
-      <!-- The SQLite database lives here. HOMESTEAD_DATABASE_URL points at
+      <!-- The SQLite database lives here. CHAOS_DATABASE_URL points at
            db\homestead.db; see docs/windows-deployment.md. -->
       <Component Id="ChaosDataDbDir" Directory="CHAOSDATADB" Permanent="yes"
                  Guid="69BEEB53-5ED0-4717-BC03-E195374DE2AD">
@@ -73,7 +73,7 @@
               Source="!(bindpath.Installer)\config\chaos.host.json" KeyPath="yes" />
       </Component>
 
-      <!-- HOMESTEAD_* overrides for the Python backend. Ships fully commented
+      <!-- CHAOS_* overrides for the Python backend. Ships fully commented
            out: the defaults come from the registry and from what the supervisor
            passes to the child process. This file is for the operator who needs
            to change one thing on one node. -->

@@ -16,12 +16,12 @@ import datetime as dt
 
 import pytest
 
-from homestead_twin import topics
-from homestead_twin.envelope import TelemetryEnvelope
-from homestead_twin.ingest.service import IngestService
-from homestead_twin.ingest.writer import TelemetryWriter
-from homestead_twin.models.registry import Asset, AssetClass, Point, PointBinding, PointDefinition
-from homestead_twin.models.telemetry import CurrentState, IngestDeadLetter
+from chaos import topics
+from chaos.envelope import TelemetryEnvelope
+from chaos.ingest.service import IngestService
+from chaos.ingest.writer import TelemetryWriter
+from chaos.models.registry import Asset, AssetClass, Point, PointBinding, PointDefinition
+from chaos.models.telemetry import CurrentState, IngestDeadLetter
 
 T0 = dt.datetime(2026, 8, 7, 12, 0, 0, tzinfo=dt.UTC)
 
@@ -132,7 +132,7 @@ def seeded(db_session, settings):
     writer.mark_stale(db_session, T0 + seconds(3600))
     db_session.add(
         IngestDeadLetter(
-            topic="homestead/energy/power_container/battery_bank_99/soc_pct",
+            topic="chaos/energy/power_container/battery_bank_99/soc_pct",
             payload='{"value": 1}',
             reason="unresolved_topic: not bound to a point",
         )

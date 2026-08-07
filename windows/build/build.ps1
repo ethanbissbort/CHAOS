@@ -22,7 +22,7 @@
 
     ORDER MATTERS in one place only: -Task stage lays down app\ (data, schemas,
     tools, web) BEFORE building the Python runtime, because the runtime's final
-    verification step runs `homestead-twin validate` against that payload.  The
+    verification step runs `chaos validate` against that payload.  The
     stage task handles this for you.
 
     WHAT NEEDS WHAT
@@ -227,7 +227,7 @@ function Invoke-Stage {
     # reaching into the Python tree.  Both copies come from the same source in
     # the same build, so they cannot drift.
     Copy-ChaosTree `
-        -Source (Join-Path (Join-Path (Join-Path $paths.Repo 'src') 'homestead_twin') 'web') `
+        -Source (Join-Path (Join-Path (Join-Path $paths.Repo 'src') 'chaos') 'web') `
         -Destination (Join-Path $appDir 'web')
 
     # __pycache__ from a developer's checkout must not ship.
@@ -250,7 +250,7 @@ function Invoke-Stage {
 
     # 4. An operator CLI shim.
     #
-    #    homestead-twin resolves its workspace from HOMESTEAD_DATA_DIR's parent,
+    #    chaos resolves its workspace from CHAOS_DATA_DIR's parent,
     #    which is <install root>\app.  That is under Program Files and therefore
     #    read-only, so `backup` with no --output would try to write there.  This
     #    shim sets the environment the CLI needs and sends backups to ProgramData.
@@ -261,16 +261,16 @@ function Invoke-Stage {
         'setlocal'
         'set "CHAOS_HOME=%~dp0"'
         'if not defined CHAOS_DATA set "CHAOS_DATA=%ProgramData%\Project CHAOS"'
-        'set "HOMESTEAD_DATA_DIR=%~dp0app\data"'
-        'set "HOMESTEAD_SCHEMA_DIR=%~dp0app\schemas"'
-        'if not defined HOMESTEAD_DATABASE_URL set "HOMESTEAD_DATABASE_URL=sqlite:///%CHAOS_DATA:\=/%/db/homestead.db"'
+        'set "CHAOS_DATA_DIR=%~dp0app\data"'
+        'set "CHAOS_SCHEMA_DIR=%~dp0app\schemas"'
+        'if not defined CHAOS_DATABASE_URL set "CHAOS_DATABASE_URL=sqlite:///%CHAOS_DATA:\=/%/db/homestead.db"'
         'set "PYTHONUTF8=1"'
         'if /i "%~1"=="backup" ('
         '  shift'
         '  if not exist "%CHAOS_DATA%\backups" mkdir "%CHAOS_DATA%\backups"'
-        '  "%~dp0python\Scripts\homestead-twin.exe" backup --output "%CHAOS_DATA%\backups" %1 %2 %3 %4 %5 %6 %7 %8'
+        '  "%~dp0python\Scripts\chaos.exe" backup --output "%CHAOS_DATA%\backups" %1 %2 %3 %4 %5 %6 %7 %8'
         ') else ('
-        '  "%~dp0python\Scripts\homestead-twin.exe" %*'
+        '  "%~dp0python\Scripts\chaos.exe" %*'
         ')'
         'endlocal & exit /b %ERRORLEVEL%'
     )
@@ -281,8 +281,8 @@ function Invoke-Stage {
     $mustExist = @(
         $layout.HostExe
         $layout.PythonExeRelPath
-        'python\Scripts\homestead-twin.exe'
-        'python\Lib\site-packages\homestead_twin\web\annunciator.html'
+        'python\Scripts\chaos.exe'
+        'python\Lib\site-packages\chaos\web\annunciator.html'
         'app\data\alarm_definitions.yaml'
         'app\schemas\alarm_definitions.schema.json'
         'app\tools\validate_bundle.py'
@@ -390,18 +390,18 @@ function Invoke-Smoke {
     Write-ChaosStep 'Preparing a scratch database (offline, from the staged payload)'
     $chaosCmd = Join-Path $paths.Stage 'chaos.cmd'
     $saved = @{
-        Data = $env:CHAOS_DATA; Db = $env:HOMESTEAD_DATABASE_URL
-        ApiHost = $env:HOMESTEAD_API_HOST; ApiPort = $env:HOMESTEAD_API_PORT
-        Mqtt = $env:HOMESTEAD_MQTT_ENABLED; Home = $env:CHAOS_HOME; Web = $env:CHAOS_WEB_ROOT
+        Data = $env:CHAOS_DATA; Db = $env:CHAOS_DATABASE_URL
+        ApiHost = $env:CHAOS_API_HOST; ApiPort = $env:CHAOS_API_PORT
+        Mqtt = $env:CHAOS_MQTT_ENABLED; Home = $env:CHAOS_HOME; Web = $env:CHAOS_WEB_ROOT
     }
     try {
         $env:CHAOS_DATA              = $scratch
         $env:CHAOS_HOME              = $paths.Stage
         $env:CHAOS_WEB_ROOT          = (Join-Path (Join-Path $paths.Stage $layout.AppDirName) 'web')
-        $env:HOMESTEAD_DATABASE_URL  = $dbUrl
-        $env:HOMESTEAD_API_HOST      = '127.0.0.1'
-        $env:HOMESTEAD_API_PORT      = "$($layout.LoopbackPort)"
-        $env:HOMESTEAD_MQTT_ENABLED  = 'false'
+        $env:CHAOS_DATABASE_URL  = $dbUrl
+        $env:CHAOS_API_HOST      = '127.0.0.1'
+        $env:CHAOS_API_PORT      = "$($layout.LoopbackPort)"
+        $env:CHAOS_MQTT_ENABLED  = 'false'
 
         Invoke-ChaosNative -FilePath $chaosCmd -What 'chaos.cmd validate' -Arguments @('validate')
         Invoke-ChaosNative -FilePath $chaosCmd -What 'chaos.cmd init-db'  -Arguments @('init-db')
@@ -480,10 +480,10 @@ function Invoke-Smoke {
         $env:CHAOS_DATA             = $saved.Data
         $env:CHAOS_HOME             = $saved.Home
         $env:CHAOS_WEB_ROOT         = $saved.Web
-        $env:HOMESTEAD_DATABASE_URL = $saved.Db
-        $env:HOMESTEAD_API_HOST     = $saved.ApiHost
-        $env:HOMESTEAD_API_PORT     = $saved.ApiPort
-        $env:HOMESTEAD_MQTT_ENABLED = $saved.Mqtt
+        $env:CHAOS_DATABASE_URL = $saved.Db
+        $env:CHAOS_API_HOST     = $saved.ApiHost
+        $env:CHAOS_API_PORT     = $saved.ApiPort
+        $env:CHAOS_MQTT_ENABLED = $saved.Mqtt
     }
 }
 

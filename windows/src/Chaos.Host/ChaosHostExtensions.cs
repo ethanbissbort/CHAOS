@@ -4,6 +4,7 @@ using Chaos.Host.Endpoints;
 using Chaos.Host.Health;
 using Chaos.Host.Proxy;
 using Chaos.Host.Routing;
+using Chaos.Host.Setup;
 using Chaos.Host.Web;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -89,9 +90,14 @@ public static class ChaosHostExtensions
 
         // Order is deliberate:
         //  1. validate the manifest - refuse to start on a route that would 404;
-        //  2. start the backend (if a supervisor is registered);
-        //  3. start polling the backend.
+        //  2. start first-run setup, so a fresh machine is being prepared while
+        //     the backend is starting rather than after it has already failed
+        //     against an empty database. It does not block startup - see
+        //     SetupHostedService - so the shell can poll /host/setup and watch;
+        //  3. start the backend (if a supervisor is registered);
+        //  4. start polling the backend.
         builder.Services.AddHostedService<RouteOwnershipStartupCheck>();
+        builder.Services.AddPlatformSetup();
         builder.Services.TryAddSingleton<IBackendSupervisor, NullBackendSupervisor>();
         builder.Services.AddHostedService<Supervision.BackendSupervisorHost>();
         builder.Services.AddHostedService<BackendHealthMonitor>();

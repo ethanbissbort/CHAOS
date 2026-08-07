@@ -29,7 +29,7 @@ public sealed record BackendRuntimeDescriptor
     /// <summary>Absolute path to the interpreter.</summary>
     public required string Executable { get; init; }
 
-    /// <summary>Interpreter arguments before the CLI's own (e.g. <c>-m homestead_twin.cli</c>).</summary>
+    /// <summary>Interpreter arguments before the CLI's own (e.g. <c>-m chaos.cli</c>).</summary>
     public required IReadOnlyList<string> BaseArguments { get; init; }
 
     public required string WorkingDirectory { get; init; }

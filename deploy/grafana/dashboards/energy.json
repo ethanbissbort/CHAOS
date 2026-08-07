@@ -391,7 +391,7 @@
       "type": "table",
       "id": 21,
       "title": "Load schedule by tier",
-      "description": "From power_load_profiles, populated by the EMS load-schedule loader. Tier 0 is physical protection and is never shed; tier 4 is opportunistic surplus. Rows are empty until data/load_schedule.yaml has been loaded (homestead-twin load-all).",
+      "description": "From power_load_profiles, populated by the EMS load-schedule loader. Tier 0 is physical protection and is never shed; tier 4 is opportunistic surplus. Rows are empty until data/load_schedule.yaml has been loaded (chaos load-all).",
       "datasource": { "type": "postgres", "uid": "homestead-pg" },
       "gridPos": { "h": 9, "w": 12, "x": 0, "y": 24 },
       "options": { "showHeader": true, "cellHeight": "sm" },

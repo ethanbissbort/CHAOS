@@ -20,7 +20,7 @@
 #   host_structure, hardware, independent_power, replication_method, services.
 # See docs/secondary-control-node.md.
 
-name: homestead-twin-secondary
+name: chaos-secondary
 
 x-restart: &restart
   restart: unless-stopped
@@ -37,7 +37,7 @@ services:
   # This is a *replica*, not a second source of truth. The design package marks
   # `replication_method` TBD; SDD 16.2 asks only for "replicated PostgreSQL
   # backups", so the shipped default is restore-from-backup (pull a dump with
-  # deploy/backup/backup.sh, or `homestead-twin backup` + `load-all`).
+  # deploy/backup/backup.sh, or `chaos backup` + `load-all`).
   # Streaming replication is a valid upgrade -- record the decision first.
   postgres:
     image: postgis/postgis:16-3.4
@@ -101,7 +101,7 @@ services:
     build:
       context: ..
       dockerfile: deploy/Dockerfile
-    image: ${TWIN_IMAGE:-homestead-twin:local}
+    image: ${TWIN_IMAGE:-chaos:local}
     <<: [*restart, *logging]
     depends_on:
       postgres:
@@ -113,8 +113,8 @@ services:
 
       # Role. runtime.build_services refuses to start the energy manager when
       # node_role is 'secondary' -- there is exactly one EMS on the property.
-      HOMESTEAD_NODE_ROLE: secondary
-      HOMESTEAD_EMS_ENABLED: "false"
+      CHAOS_NODE_ROLE: secondary
+      CHAOS_EMS_ENABLED: "false"
 
       # HARD-CODED, deliberately not overridable from .env.
       #
@@ -122,33 +122,33 @@ services:
       # command-dispatch service is still registered whenever MQTT is enabled.
       # This flag is therefore the single thing standing between the secondary
       # node and a second source of physical commands. Leave it false.
-      HOMESTEAD_ALLOW_PHYSICAL_CONTROL: "false"
+      CHAOS_ALLOW_PHYSICAL_CONTROL: "false"
 
-      HOMESTEAD_SITE_ID: ${HOMESTEAD_SITE_ID:-site.site.primary.01}
-      HOMESTEAD_TIMEZONE: ${TZ:-America/Toronto}
-      HOMESTEAD_DATABASE_URL: >-
+      CHAOS_SITE_ID: ${CHAOS_SITE_ID:-site.site.primary.01}
+      CHAOS_TIMEZONE: ${TZ:-America/Toronto}
+      CHAOS_DATABASE_URL: >-
         postgresql+psycopg://${POSTGRES_USER}:${SECONDARY_POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-homestead}
 
-      HOMESTEAD_MQTT_HOST: mosquitto
-      HOMESTEAD_MQTT_PORT: 1883
-      HOMESTEAD_MQTT_USERNAME: ${SECONDARY_MQTT_USERNAME:?set a distinct MQTT identity for the secondary node}
-      HOMESTEAD_MQTT_PASSWORD: ${SECONDARY_MQTT_PASSWORD:?set a distinct MQTT secret for the secondary node}
-      HOMESTEAD_MQTT_TLS: ${HOMESTEAD_MQTT_TLS:-false}
-      HOMESTEAD_MQTT_CLIENT_ID: homestead-twin-secondary
-      HOMESTEAD_MQTT_BASE_TOPIC: ${HOMESTEAD_MQTT_BASE_TOPIC:-homestead}
-      HOMESTEAD_MQTT_ENABLED: "true"
+      CHAOS_MQTT_HOST: mosquitto
+      CHAOS_MQTT_PORT: 1883
+      CHAOS_MQTT_USERNAME: ${SECONDARY_MQTT_USERNAME:?set a distinct MQTT identity for the secondary node}
+      CHAOS_MQTT_PASSWORD: ${SECONDARY_MQTT_PASSWORD:?set a distinct MQTT secret for the secondary node}
+      CHAOS_MQTT_TLS: ${CHAOS_MQTT_TLS:-false}
+      CHAOS_MQTT_CLIENT_ID: chaos-secondary
+      CHAOS_MQTT_BASE_TOPIC: ${CHAOS_MQTT_BASE_TOPIC:-homestead}
+      CHAOS_MQTT_ENABLED: "true"
 
       # Alarms and notification are the point of this node (SDD 16.1
       # mitigation 4: essential alerts can originate independently).
-      HOMESTEAD_ALARM_ENGINE_ENABLED: "true"
-      HOMESTEAD_NOTIFICATION_BACKENDS: ${SECONDARY_NOTIFICATION_BACKENDS:-log}
+      CHAOS_ALARM_ENGINE_ENABLED: "true"
+      CHAOS_NOTIFICATION_BACKENDS: ${SECONDARY_NOTIFICATION_BACKENDS:-log}
 
-      HOMESTEAD_HISTORIAN_BACKEND: sql
+      CHAOS_HISTORIAN_BACKEND: sql
       # Shorter raw retention: this is a low-power node with limited storage.
-      HOMESTEAD_HISTORIAN_RAW_RETENTION_DAYS: ${SECONDARY_RAW_RETENTION_DAYS:-14}
+      CHAOS_HISTORIAN_RAW_RETENTION_DAYS: ${SECONDARY_RAW_RETENTION_DAYS:-14}
 
-      HOMESTEAD_API_HOST: 0.0.0.0
-      HOMESTEAD_API_PORT: 8000
+      CHAOS_API_HOST: 0.0.0.0
+      CHAOS_API_PORT: 8000
     volumes:
       - secondary-twin-var:/app/var
     ports:
@@ -183,13 +183,13 @@ services:
       GF_ANALYTICS_REPORTING_ENABLED: "false"
       GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
       GF_NEWS_NEWS_FEED_ENABLED: "false"
-      HOMESTEAD_PG_HOST: postgres:5432
-      HOMESTEAD_PG_DB: ${POSTGRES_DB:-homestead}
-      HOMESTEAD_PG_USER: ${POSTGRES_USER}
-      HOMESTEAD_PG_PASSWORD: ${SECONDARY_POSTGRES_PASSWORD}
+      CHAOS_PG_HOST: postgres:5432
+      CHAOS_PG_DB: ${POSTGRES_DB:-homestead}
+      CHAOS_PG_USER: ${POSTGRES_USER}
+      CHAOS_PG_PASSWORD: ${SECONDARY_POSTGRES_PASSWORD}
       # No Prometheus on this node; the provisioned datasource is marked
       # optional and will simply report unreachable.
-      HOMESTEAD_PROMETHEUS_URL: ${SECONDARY_PROMETHEUS_URL:-http://prometheus.invalid:9090}
+      CHAOS_PROMETHEUS_URL: ${SECONDARY_PROMETHEUS_URL:-http://prometheus.invalid:9090}
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
@@ -213,4 +213,4 @@ volumes:
 
 networks:
   default:
-    name: homestead-twin-secondary
+    name: chaos-secondary

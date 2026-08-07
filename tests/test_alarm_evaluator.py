@@ -14,7 +14,7 @@ import datetime as dt
 
 import pytest
 
-from homestead_twin.alarms.definitions import (
+from chaos.alarms.definitions import (
     DEFAULT_DEFINITIONS_PATH,
     definition_meta,
     load_document,
@@ -22,17 +22,17 @@ from homestead_twin.alarms.definitions import (
     validate_document,
     validate_schema,
 )
-from homestead_twin.alarms.evaluator import (
+from chaos.alarms.evaluator import (
     AlarmEvaluator,
     AlarmTransitionError,
     SuppressionReason,
     as_utc,
     derive_reset,
 )
-from homestead_twin.models.alarms import SEVERITIES, Alarm, AlarmDefinition
-from homestead_twin.models.commands import OperatingMode
-from homestead_twin.models.registry import Asset, AssetClass, Point, PointDefinition
-from homestead_twin.models.telemetry import CurrentState
+from chaos.models.alarms import SEVERITIES, Alarm, AlarmDefinition
+from chaos.models.commands import OperatingMode
+from chaos.models.registry import Asset, AssetClass, Point, PointDefinition
+from chaos.models.telemetry import CurrentState
 
 T0 = dt.datetime(2026, 8, 7, 12, 0, 0, tzinfo=dt.UTC)
 
@@ -663,7 +663,7 @@ def test_state_changes_are_published_to_the_alarm_topic(db_session, evaluator, b
     published = [m for m in bus.published if "/alarm/" in m.topic]
     assert published
     topic = published[-1].topic
-    assert topic == "homestead/energy/power_container/battery_bank_01/alarm/battery_soc_low"
+    assert topic == "chaos/energy/power_container/battery_bank_01/alarm/battery_soc_low"
 
     import json
 

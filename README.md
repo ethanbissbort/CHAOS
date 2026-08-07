@@ -31,7 +31,7 @@ Three consequences run through everything here:
 Nothing external required — SQLite and an in-process message bus.
 
 ```sh
-git clone <repo> && cd homestead-twin
+git clone <repo> && cd chaos
 python3 -m venv .venv && . .venv/bin/activate
 make install            # pip install -e ".[dev]"
 
@@ -125,8 +125,8 @@ data/            machine-readable design package (YAML + JSON mirrors)
 schemas/         JSON Schema Draft 2020-12 for each data document
 tools/           validate_bundle.py — schema and cross-reference validation
 
-src/homestead_twin/
-  config.py      every HOMESTEAD_* setting
+src/chaos/
+  config.py      every CHAOS_* setting
   db.py          engine, sessions, create_all
   models/        SQLAlchemy: registry, telemetry, energy, alarms, commands, maintenance
   topics.py      MQTT topic conventions (SDD 10.1, 26.2)
@@ -141,7 +141,7 @@ src/homestead_twin/
   maintenance/   plans, work orders, commissioning records
   api/           FastAPI app and routers
   web/           built-in operator UI
-  cli.py         homestead-twin
+  cli.py         chaos
 
 src/simulator/   simulated site: solar, battery, inverter, generator, loads, weather
 
@@ -172,7 +172,7 @@ it is validated in CI before anything loads it.
 ```
 data/*.yaml  ──validate──▶  schemas/*.schema.json
      │
-     └──homestead-twin load-all──▶  PostgreSQL registry  ──▶  API, EMS, alarms, UI
+     └──chaos load-all──▶  PostgreSQL registry  ──▶  API, EMS, alarms, UI
 ```
 
 The package deliberately **does not invent** IP addresses, MAC addresses, serial
@@ -189,7 +189,7 @@ Where the design contradicts itself — most importantly the 12 kW / 40 kWh vers
 
 ## CLI
 
-`homestead-twin` is the operator interface on a node with no browser. Subsystems
+`chaos` is the operator interface on a node with no browser. Subsystems
 import lazily, so it keeps working on a partially deployed node.
 
 | Command | Purpose |
@@ -208,9 +208,9 @@ import lazily, so it keeps working on a partially deployed node.
 Exit codes: `0` success, `1` failure, `2` usage error, `3` subsystem unavailable.
 
 ```sh
-homestead-twin status --json | jq .active_alarms
-homestead-twin export --include registry,alarms --format yaml -o registry.yaml
-homestead-twin backup --output /mnt/offsite/
+chaos status --json | jq .active_alarms
+chaos export --include registry,alarms --format yaml -o registry.yaml
+chaos backup --output /mnt/offsite/
 ```
 
 ---

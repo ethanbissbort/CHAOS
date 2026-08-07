@@ -19,7 +19,7 @@
   hand-maintained file list to forget.
 
   data\, schemas\ and tools\ ship for the same reason the container image copies
-  them to /app: `homestead-twin validate` and `homestead-twin load-all` have to
+  them to /app: `chaos validate` and `chaos load-all` have to
   work offline on a node with no repository checkout. That is the difference
   between a commissioning engineer being able to reload the registry on the
   property and having to bring a laptop with a git clone on it.

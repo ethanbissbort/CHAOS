@@ -18,20 +18,20 @@ import datetime as dt
 import pytest
 from sqlalchemy import func, select
 
-from homestead_twin.ems.service import EnergyManagerService
-from homestead_twin.ingest.service import IngestService
-from homestead_twin.models.energy import EnergyStateSnapshot, PowerLoadProfile
-from homestead_twin.models.registry import Asset, Point, PointBinding
-from homestead_twin.models.telemetry import CurrentState, IngestDeadLetter, TelemetrySample
-from homestead_twin.mqtt import InMemoryBus
+from chaos.ems.service import EnergyManagerService
+from chaos.ingest.service import IngestService
+from chaos.models.energy import EnergyStateSnapshot, PowerLoadProfile
+from chaos.models.registry import Asset, Point, PointBinding
+from chaos.models.telemetry import CurrentState, IngestDeadLetter, TelemetrySample
+from chaos.mqtt import InMemoryBus
 from simulator.site import SimulatedSite
 
 
 @pytest.fixture()
 def platform(session_factory, db_session, settings):
     """Registry + load schedule loaded, ingest wired to an in-process broker."""
-    from homestead_twin.ems.loader import load_schedule
-    from homestead_twin.registry.loader import load_package
+    from chaos.ems.loader import load_schedule
+    from chaos.registry.loader import load_package
 
     load_package(db_session)
     load_schedule(db_session)
@@ -139,7 +139,7 @@ def test_ems_evaluates_against_simulated_telemetry(platform, session_factory, se
     reading past its staleness window and the EMS would correctly -- but
     uselessly -- report that nothing is observable.
     """
-    from homestead_twin.ems import RecordingCommandPort
+    from chaos.ems import RecordingCommandPort
 
     site, session, bus = platform["site"], platform["session"], platform["bus"]
 
@@ -180,7 +180,7 @@ def test_ems_evaluates_against_simulated_telemetry(platform, session_factory, se
 
 def test_no_physical_control_is_dispatched_by_default(platform, session_factory, settings):
     """The platform must not actuate anything while control is disabled."""
-    from homestead_twin.models.commands import Command
+    from chaos.models.commands import Command
 
     site, session, bus = platform["site"], platform["session"], platform["bus"]
     assert settings.allow_physical_control is False

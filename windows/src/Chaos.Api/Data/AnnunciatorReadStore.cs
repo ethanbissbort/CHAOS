@@ -24,7 +24,7 @@ public interface IAnnunciatorReadStore
 /// <para>
 /// The SQL is hand-written, read-only and ANSI: no provider-specific syntax, no
 /// ORM, no migrations. It mirrors, statement for statement, what
-/// <c>src/homestead_twin/api/routers/annunciator.py</c> issues through
+/// <c>src/chaos/api/routers/annunciator.py</c> issues through
 /// SQLAlchemy — including the ORDER BY clauses, because ordering is part of this
 /// endpoint's contract (an engraved window does not move between polls).
 /// </para>
@@ -37,7 +37,7 @@ public sealed class AnnunciatorReadStore : IAnnunciatorReadStore
 {
     /// <summary>
     /// Alarm states that count as open but not yet pending — mirrors
-    /// <c>ACTIVE_STATES</c> in <c>homestead_twin/alarms/evaluator.py</c>.
+    /// <c>ACTIVE_STATES</c> in <c>chaos/alarms/evaluator.py</c>.
     /// </summary>
     private static readonly string[] ActiveStates = ["active", "acknowledged", "mitigated"];
 

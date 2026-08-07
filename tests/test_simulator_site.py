@@ -1,7 +1,7 @@
 """Site-level tests: wiring, energy balance, publishing and command handling.
 
 These exercise the contract the rest of the platform depends on -- that every
-topic is a ``homestead_twin.topics`` topic for a real register asset, that every
+topic is a ``chaos.topics`` topic for a real register asset, that every
 payload is a documented envelope, and that a command always gets an answer.
 """
 
@@ -13,14 +13,14 @@ import json
 import pytest
 import yaml
 
-from homestead_twin import topics
-from homestead_twin.envelope import (
+from chaos import topics
+from chaos.envelope import (
     CommandEnvelope,
     parse_availability,
     parse_command_ack,
     parse_telemetry,
 )
-from homestead_twin.mqtt import InMemoryBus
+from chaos.mqtt import InMemoryBus
 from simulator.clock import RealTimePacer, SteppedPacer
 from simulator.components.base import load_catalog
 from simulator.components.battery import BatteryConfig

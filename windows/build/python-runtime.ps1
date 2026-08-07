@@ -14,12 +14,15 @@
 
         download embeddable zip  -> verify SHA-256 -> extract
         rewrite pythonXY._pth    -> enable site and Lib\site-packages
+        write sitecustomize.py   -> shut the per-user site directory out; see ISOLATION
         bootstrap pip            -> from a hash-pinned wheel, no get-pip.py
-        pip install              -> requirements.txt, then the homestead_twin package
+        pip install              -> requirements.txt, then the chaos package,
+                                    WHEELS ONLY; see NATIVE WHEELS below
         copy the web assets      -> they are NOT in the wheel; see WEB ASSETS below
+        relocate the launchers   -> Scripts\*.exe must survive the MSI; see RELOCATION
         prune                    -> build-only packages, debug symbols
         precompile               -> .pyc, because Program Files is read-only at runtime
-        verify                   -> imports, CLI, offline validate, UI assets present
+        verify                   -> verify-runtime.py, then the offline validate
 
     INTEGRITY.  Every download is pinned by SHA-256 in python-runtime.lock.json and
     checked before use.  There is no switch to skip the check.  The digests in that
@@ -27,9 +30,40 @@
     Windows release manager; the procedure is written down in the lock file so it
     can be repeated rather than trusted.
 
-    WEB ASSETS.  src/homestead_twin/web/ is not a Python package (no __init__.py)
+    ISOLATION.  A ._pth file makes CPython ignore PYTHONPATH and the registry, but
+    it CANNOT switch off the per-user site directory
+    (%APPDATA%\Python\Python311\site-packages).  Left alone, that directory is on
+    sys.path -- which means (a) at BUILD time pip sees whatever the person at the
+    keyboard once installed with `pip install --user` and skips those packages, so
+    the shipped tree is silently incomplete, and (b) at RUN time those same
+    packages shadow the ones the product ships.  Verified, not assumed: on a build
+    machine with idna and certifi in the user site, pip installed neither into the
+    tree and the resulting runtime imported them from the developer's profile.  So
+    the script writes a sitecustomize.py before pip runs, and verify-runtime.py
+    asserts the user site is gone.
+
+    NATIVE WHEELS.  pydantic-core, greenlet (via SQLAlchemy), rpds-py, PyYAML,
+    httptools, watchfiles and websockets are compiled.  Every install below passes
+    --only-binary=:all: so pip must use a cp311 win_amd64 wheel and fails loudly if
+    one does not exist.  Without it pip falls back to building an sdist, and that
+    fails in a way nobody can read: pip's default build isolation hands the build
+    backend to the child interpreter through PYTHONPATH, which THIS interpreter
+    ignores (that is what a ._pth file does), and its alternative venv-based
+    isolation needs `python -m venv`, which the embeddable distribution does not
+    ship at all.  A wheels-only policy is the only mode that works here.
+
+    RELOCATION.  pip writes an absolute interpreter path into every console-script
+    .exe it creates, taken from the interpreter running pip -- i.e. the STAGING
+    path.  The MSI then moves the tree to %ProgramFiles%, and every launcher dies
+    with "Fatal error in launcher: Unable to create process using ...".  Nothing
+    catches it before a customer does, because in the staging tree the path is
+    still valid.  relocate-launchers.py rewrites each shebang to the launcher's
+    own documented relative form; see that file for the reference to the C code
+    that implements it.
+
+    WEB ASSETS.  src/chaos/web/ is not a Python package (no __init__.py)
     and pyproject.toml declares no package-data, so `pip install .` does NOT ship
-    it.  But homestead_twin/api/app.py computes WEB_DIR as
+    it.  But chaos/api/app.py computes WEB_DIR as
     <package dir>/../web and only mounts /ui if that directory exists.  This
     script therefore copies the web tree into site-packages explicitly and then
     asserts WEB_DIR resolves to a real annunciator.html.  Without that step the
@@ -152,6 +186,34 @@ if (-not (Test-Path $pythonExe)) {
 # and site-packages all need site, so the path file is rewritten rather than
 # patched: writing it whole means the shipped configuration is visible in this
 # script instead of being the result of a regex against an upstream file.
+#
+# What a ._pth file actually does, from CPython 3.11.9 Modules/getpath.py:
+#
+#     if pth_dir:                      # a ._pth was found next to the executable
+#         use_environment = 0          # PYTHONPATH and PYTHONHOME are DISCARDED
+#         home = pth_dir
+#         pythonpath = []
+#     ...
+#     if pth:
+#         config['isolated'] = 1
+#         config['use_environment'] = 0
+#         config['site_import'] = 0    # unless a line says exactly "import site"
+#         config['safe_path'] = 1
+#
+# Two consequences worth writing down because both are invisible at run time:
+#
+#   1. PYTHONPATH IS IGNORED.  Nothing can inject a path into this interpreter
+#      through the environment.  That is the behaviour we want -- but it also
+#      means the supervisor's development-layout code path
+#      (PythonRuntimeResolver.TryEmbedded, which sets PYTHONPATH=<install
+#      root>\app\src when that directory exists) would have no effect here.  The
+#      staged tree must therefore NOT contain app\src; there is a check for that
+#      at the end of this script.
+#   2. Env vars that are not about the path still work.  PYTHONUNBUFFERED,
+#      PYTHONIOENCODING and PYTHONDONTWRITEBYTECODE -- all three set by
+#      BackendSupervisor.BuildStartSpec -- are read before getpath runs and are
+#      honoured.  Verified by running a real 3.11 interpreter under a ._pth file,
+#      not inferred from the documentation.
 $pth = Get-ChildItem -Path $Destination -Filter 'python*._pth' | Select-Object -First 1
 if (-not $pth) {
     Stop-Chaos -Message "No python*._pth found in $Destination." -Hint 'Expected in every embeddable distribution.'
@@ -168,7 +230,7 @@ if (-not (Test-Path (Join-Path $Destination $stdlibZip))) {
     ''
     '# Written by windows/build/python-runtime.ps1.'
     '# site is enabled deliberately: without it there is no site-packages, so no'
-    '# homestead_twin, no uvicorn and no entry-point scripts. The tree stays'
+    '# chaos, no uvicorn and no entry-point scripts. The tree stays'
     '# isolated from any other Python on the machine because a ._pth file'
     '# suppresses PYTHONPATH and the registry install path.'
     'import site'
@@ -213,25 +275,25 @@ $requirements = Join-Path $paths.Repo 'requirements.txt'
 Invoke-ChaosNative -FilePath $pythonExe -What 'pip install -r requirements.txt' `
     -Arguments ($pipArgsCommon + @('-r', $requirements))
 
-Write-ChaosStep 'Installing the homestead_twin package'
+Write-ChaosStep 'Installing the chaos package'
 $target = $paths.Repo
 if ($IncludePostgres) { $target = "$($paths.Repo)[postgres]" }
-Invoke-ChaosNative -FilePath $pythonExe -What 'pip install homestead-twin' `
+Invoke-ChaosNative -FilePath $pythonExe -What 'pip install chaos' `
     -Arguments ($pipArgsCommon + @('--no-build-isolation', $target))
 
 # --- web assets ------------------------------------------------------------
 
 Write-ChaosStep 'Installing the operator UI assets'
 $sitePackages = Join-Path $Destination 'Lib\site-packages'
-$pkgWeb  = Join-Path (Join-Path $sitePackages 'homestead_twin') 'web'
-$srcWeb  = Join-Path (Join-Path (Join-Path $paths.Repo 'src') 'homestead_twin') 'web'
+$pkgWeb  = Join-Path (Join-Path $sitePackages 'chaos') 'web'
+$srcWeb  = Join-Path (Join-Path (Join-Path $paths.Repo 'src') 'chaos') 'web'
 
 if (-not (Test-Path $srcWeb)) {
     Stop-Chaos -Message "Missing $srcWeb" -Hint 'The operator UI source is part of the repository.'
 }
 if (Test-Path $pkgWeb) { Remove-Item -LiteralPath $pkgWeb -Recurse -Force }
 Copy-Item -LiteralPath $srcWeb -Destination $pkgWeb -Recurse -Force
-Write-ChaosDetail "copied web/ into site-packages\homestead_twin\ (it is not in the wheel)"
+Write-ChaosDetail "copied web/ into site-packages\chaos\ (it is not in the wheel)"
 
 # --- prune -----------------------------------------------------------------
 
@@ -307,20 +369,20 @@ $haveApp = (Test-Path $stagedData) -and (Test-Path $stagedSchemas) -and (Test-Pa
 
 Invoke-ChaosNative -FilePath $pythonExe -What 'import check' -Arguments @('-c', @'
 import importlib, sys
-mods = ["homestead_twin", "homestead_twin.cli", "homestead_twin.api.app",
+mods = ["chaos", "chaos.cli", "chaos.api.app",
         "simulator", "fastapi", "uvicorn", "sqlalchemy", "pydantic",
         "pydantic_settings", "yaml", "jsonschema", "paho.mqtt.client", "httpx"]
 for m in mods:
     importlib.import_module(m)
-import homestead_twin
-print("homestead_twin", homestead_twin.__version__, "on Python", sys.version.split()[0])
+import chaos
+print("chaos", chaos.__version__, "on Python", sys.version.split()[0])
 '@)
 
 # The single most valuable check here: WEB_DIR is computed relative to the
 # INSTALLED package, so this proves /ui will actually mount at runtime.
 Invoke-ChaosNative -FilePath $pythonExe -What 'operator UI asset check' -Arguments @('-c', @'
 import sys
-from homestead_twin.api.app import WEB_DIR
+from chaos.api.app import WEB_DIR
 missing = [n for n in ("index.html", "annunciator.html", "annunciator.js", "app.js", "styles.css")
            if not (WEB_DIR / n).is_file()]
 if missing or not WEB_DIR.is_dir():
@@ -328,12 +390,12 @@ if missing or not WEB_DIR.is_dir():
 print("web assets OK:", WEB_DIR)
 '@)
 
-$homesteadExe = Join-Path $Destination 'Scripts\homestead-twin.exe'
+$homesteadExe = Join-Path $Destination 'Scripts\chaos.exe'
 if (-not (Test-Path $homesteadExe)) {
     Stop-Chaos -Message "Console script missing: $homesteadExe" `
                -Hint 'The CLI is the operator interface on a node with no browser; it must be installed.'
 }
-Invoke-ChaosNative -FilePath $homesteadExe -What 'homestead-twin --version' -Arguments @('--version')
+Invoke-ChaosNative -FilePath $homesteadExe -What 'chaos --version' -Arguments @('--version')
 
 if ($haveApp) {
     # Offline design-package validation, exactly as it works in the container
@@ -341,21 +403,21 @@ if ($haveApp) {
     # so that `validate` and `load-all` need no repository checkout.
     Write-ChaosDetail 'running an offline design-package validation against the staged payload'
     $saved = @{
-        Data   = $env:HOMESTEAD_DATA_DIR
-        Schema = $env:HOMESTEAD_SCHEMA_DIR
+        Data   = $env:CHAOS_DATA_DIR
+        Schema = $env:CHAOS_SCHEMA_DIR
     }
     try {
-        $env:HOMESTEAD_DATA_DIR   = $stagedData
-        $env:HOMESTEAD_SCHEMA_DIR = $stagedSchemas
-        Invoke-ChaosNative -FilePath $homesteadExe -What 'homestead-twin validate' -Arguments @('validate')
+        $env:CHAOS_DATA_DIR   = $stagedData
+        $env:CHAOS_SCHEMA_DIR = $stagedSchemas
+        Invoke-ChaosNative -FilePath $homesteadExe -What 'chaos validate' -Arguments @('validate')
     }
     finally {
-        $env:HOMESTEAD_DATA_DIR   = $saved.Data
-        $env:HOMESTEAD_SCHEMA_DIR = $saved.Schema
+        $env:CHAOS_DATA_DIR   = $saved.Data
+        $env:CHAOS_SCHEMA_DIR = $saved.Schema
     }
 }
 else {
-    Write-ChaosWarning "app payload not staged yet, so 'homestead-twin validate' was not exercised."
+    Write-ChaosWarning "app payload not staged yet, so 'chaos validate' was not exercised."
     Write-ChaosWarning "Run build.ps1 -Task stage (which stages app\ first, then this script) to check it."
 }
 

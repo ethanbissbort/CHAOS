@@ -17,7 +17,7 @@ from typing import ClassVar
 import pytest
 import yaml
 
-from homestead_twin import cli
+from chaos import cli
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -184,7 +184,7 @@ def test_status_on_a_database_without_tables(db_url, capsys):
 
 
 def test_secondary_node_status_notes_that_the_ems_is_suppressed(initialised_db, capsys, monkeypatch):
-    monkeypatch.setenv("HOMESTEAD_NODE_ROLE", "secondary")
+    monkeypatch.setenv("CHAOS_NODE_ROLE", "secondary")
     assert run("--database-url", initialised_db, "status", "--json") == cli.EXIT_OK
     payload = json.loads(capsys.readouterr().out)
     assert payload["node_role"] == "secondary"
@@ -200,7 +200,7 @@ def test_secondary_node_status_notes_that_the_ems_is_suppressed(initialised_db, 
 def test_export_json_to_stdout(initialised_db, capsys):
     assert run("--database-url", initialised_db, "export") == cli.EXIT_OK
     payload = json.loads(capsys.readouterr().out)
-    assert payload["kind"] == "homestead-twin-export"
+    assert payload["kind"] == "chaos-export"
     assert payload["groups"] == ["registry"]
     assert "assets" in payload["tables"]
     assert payload["tables_absent"] == []
@@ -278,7 +278,7 @@ def test_backup_writes_a_portable_archive(initialised_db, tmp_path, capsys):
     assert any(name.startswith("design-package/data/") for name in names)
     assert any(name.startswith("design-package/schemas/") for name in names)
 
-    assert manifest["kind"] == "homestead-twin-backup"
+    assert manifest["kind"] == "chaos-backup"
     assert manifest["node_role"] == "primary"
     assert "row_counts" in manifest
     # History is opt-in because it dominates archive size.
@@ -355,7 +355,7 @@ def assert_ok_or_unavailable(rc: int, err: str, module: str) -> None:
 def test_load_registry(initialised_db, capsys):
     rc = run("--database-url", initialised_db, "load-registry")
     captured = capsys.readouterr()
-    assert_ok_or_unavailable(rc, captured.err, "homestead_twin.registry.loader")
+    assert_ok_or_unavailable(rc, captured.err, "chaos.registry.loader")
     if rc == cli.EXIT_OK:
         assert "Registry loaded." in captured.out
         assert "assets" in captured.out
@@ -373,7 +373,7 @@ def test_load_all_with_skip_missing(initialised_db, capsys):
 def test_retention_dry_run(initialised_db, capsys):
     rc = run("--database-url", initialised_db, "retention", "--dry-run")
     captured = capsys.readouterr()
-    assert_ok_or_unavailable(rc, captured.err, "homestead_twin.ingest.retention")
+    assert_ok_or_unavailable(rc, captured.err, "chaos.ingest.retention")
     if rc == cli.EXIT_OK:
         assert "dry run" in captured.out.lower()
         assert "nothing committed" in captured.out
@@ -382,7 +382,7 @@ def test_retention_dry_run(initialised_db, capsys):
 def test_retention_apply(initialised_db, capsys):
     rc = run("--database-url", initialised_db, "retention", "--apply")
     captured = capsys.readouterr()
-    assert_ok_or_unavailable(rc, captured.err, "homestead_twin.ingest.retention")
+    assert_ok_or_unavailable(rc, captured.err, "chaos.ingest.retention")
     if rc == cli.EXIT_OK:
         assert "Retention applied." in captured.out
 
@@ -436,7 +436,7 @@ def test_simulate_forwards_arguments_verbatim(monkeypatch):
 def test_resolve_subsystem_raises_a_typed_error_for_a_missing_module():
     with pytest.raises(cli.SubsystemUnavailable) as excinfo:
         cli.resolve_subsystem(
-            "homestead_twin.definitely_not_a_module",
+            "chaos.definitely_not_a_module",
             ("load",),
             subsystem="Nonexistent",
             hint="install it",
@@ -448,13 +448,13 @@ def test_resolve_subsystem_raises_a_typed_error_for_a_missing_module():
 
 def test_resolve_subsystem_raises_when_the_callable_is_absent():
     with pytest.raises(cli.SubsystemUnavailable) as excinfo:
-        cli.resolve_subsystem("homestead_twin.topics", ("no_such_function",), subsystem="Topics")
+        cli.resolve_subsystem("chaos.topics", ("no_such_function",), subsystem="Topics")
     assert "exposes none of" in str(excinfo.value)
 
 
 def test_resolve_subsystem_returns_the_module_when_no_candidates_are_given():
-    module = cli.resolve_subsystem("homestead_twin.topics", subsystem="Topics")
-    assert module.DEFAULT_BASE == "homestead"
+    module = cli.resolve_subsystem("chaos.topics", subsystem="Topics")
+    assert module.DEFAULT_BASE == "chaos"
 
 
 def test_call_loader_passes_data_dir_only_when_accepted():

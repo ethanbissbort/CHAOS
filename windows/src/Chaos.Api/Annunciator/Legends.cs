@@ -7,7 +7,7 @@ namespace Chaos.Api.Annunciator;
 /// </summary>
 /// <remarks>
 /// Port of <c>LEGENDS</c> and <c>engrave()</c> in
-/// <c>src/homestead_twin/api/routers/annunciator.py</c>. On a real panel these
+/// <c>src/chaos/api/routers/annunciator.py</c>. On a real panel these
 /// are cut by someone who thought about what an operator needs to read at three
 /// metres in bad light; they are not a mechanical transform of a sentence, which
 /// is why the hand-cut table exists and the generator is only a fallback for

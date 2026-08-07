@@ -1,6 +1,6 @@
 # Acknowledgements
 
-Project CHAOS (`homestead-twin`) is licensed under Apache-2.0. It contains no
+Project CHAOS (`chaos`) is licensed under Apache-2.0. It contains no
 third-party code, but its operator console borrows ideas — and in one case a
 technique — from two MIT-licensed projects. This file records what was taken
 from where, both because the MIT licence asks for attribution to travel with
@@ -20,7 +20,7 @@ is influence, described precisely enough that a reader can go and check.
 
 ### What was drawn from it
 
-`src/homestead_twin/web/tokens.css` follows the structure and the stated
+`src/chaos/web/tokens.css` follows the structure and the stated
 philosophy of Reticle's `src/styles/base.css`:
 
 - **A single explicit token layer, no Tailwind, no build pipeline.** Reticle's
@@ -47,7 +47,7 @@ philosophy of Reticle's `src/styles/base.css`:
   and `--focus-halo`, and of the rule that every interactive element keeps a
   visible focus state.
 
-Chrome details in `src/homestead_twin/web/styles.css` follow Reticle's
+Chrome details in `src/chaos/web/styles.css` follow Reticle's
 `chrome.css`, `inspector.css`, `node.css`, `canvas.css` and `terminal.css`:
 
 - the flat panel + 1px hairline + radius treatment for cards

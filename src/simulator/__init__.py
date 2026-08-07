@@ -7,7 +7,7 @@ simulated telemetry before any physical control is enabled. This package is that
 rig.
 
 The simulator owns no wire format. Topics come from
-:mod:`homestead_twin.topics` and payloads from :mod:`homestead_twin.envelope`,
+:mod:`chaos.topics` and payloads from :mod:`chaos.envelope`,
 so anything the simulator publishes is by construction something the ingest
 pipeline can resolve.
 

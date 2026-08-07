@@ -34,7 +34,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from homestead_twin.envelope import CommandEnvelope
+from chaos.envelope import CommandEnvelope
 from simulator.clock import hour_of_day
 from simulator.components.base import (
     CommandOutcome,

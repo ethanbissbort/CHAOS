@@ -29,11 +29,11 @@ from pathlib import Path
 import pytest
 import yaml
 
-from homestead_twin.api.routers.overview import STATUS_EXPLANATIONS
-from homestead_twin.api.routers.rack import CATEGORIES, load_layout
-from homestead_twin.models.telemetry import CurrentState
+from chaos.api.routers.overview import STATUS_EXPLANATIONS
+from chaos.api.routers.rack import CATEGORIES, load_layout
+from chaos.models.telemetry import CurrentState
 
-UI = "src/homestead_twin/web"
+UI = "src/chaos/web"
 LAYOUT_PATH = Path("data/rack_layout.yaml")
 
 
@@ -239,7 +239,7 @@ def test_open_fields_are_carried_per_device_not_summarised_away(rack, layout_doc
 def _first_point_id(db_session, asset_id):
     from sqlalchemy import select
 
-    from homestead_twin.models.registry import Point
+    from chaos.models.registry import Point
 
     point = db_session.scalars(select(Point).where(Point.asset_id == asset_id)).first()
     assert point is not None, f"{asset_id} has no points in the loaded package"
@@ -338,8 +338,8 @@ def test_the_status_vocabulary_is_the_platforms_not_a_parallel_one(rack):
 def test_active_alarms_are_joined_to_their_device(rack, db_session):
     from sqlalchemy import select
 
-    from homestead_twin.alarms.definitions import sync_definitions
-    from homestead_twin.models.alarms import Alarm, AlarmDefinition
+    from chaos.alarms.definitions import sync_definitions
+    from chaos.models.alarms import Alarm, AlarmDefinition
 
     sync_definitions(db_session, strict=False)
     db_session.commit()

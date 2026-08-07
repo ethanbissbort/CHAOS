@@ -12,9 +12,9 @@ from __future__ import annotations
 
 import pytest
 
-from homestead_twin import topics
-from homestead_twin.envelope import parse_availability, parse_command_ack, parse_telemetry
-from homestead_twin.mqtt import InMemoryBus
+from chaos import topics
+from chaos.envelope import parse_availability, parse_command_ack, parse_telemetry
+from chaos.mqtt import InMemoryBus
 from simulator.clock import SteppedPacer, parse_duration
 from simulator.scenarios import (
     Scenario,

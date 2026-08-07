@@ -65,6 +65,18 @@ internal sealed class ChaosHostOptionsValidator : IValidateOptions<ChaosHostOpti
             failures.Add($"Chaos:BackendHealthPath must be an absolute path starting with '/'; got '{options.BackendHealthPath}'.");
         }
 
+        RequirePositive(failures, nameof(ChaosHostOptions.SetupTimeout), options.SetupTimeout);
+        RequirePositive(failures, nameof(ChaosHostOptions.SetupProbeTimeout), options.SetupProbeTimeout);
+        RequirePositive(failures, nameof(ChaosHostOptions.SetupCommandTimeout), options.SetupCommandTimeout);
+
+        if (options.SetupTimeout < options.SetupCommandTimeout)
+        {
+            failures.Add(
+                $"Chaos:SetupTimeout ({options.SetupTimeout}) must be at least Chaos:SetupCommandTimeout "
+              + $"({options.SetupCommandTimeout}); otherwise the run budget expires mid-import and the operator "
+              + "is told setup timed out when in fact it was never given time to run.");
+        }
+
         return failures.Count == 0
             ? ValidateOptionsResult.Success
             : ValidateOptionsResult.Fail(failures);

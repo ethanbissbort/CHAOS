@@ -14,10 +14,10 @@ import json
 
 import pytest
 
-from homestead_twin import topics
-from homestead_twin.envelope import AvailabilityEnvelope, EventEnvelope, TelemetryEnvelope
-from homestead_twin.ingest.resolver import TopicResolver
-from homestead_twin.ingest.retention import (
+from chaos import topics
+from chaos.envelope import AvailabilityEnvelope, EventEnvelope, TelemetryEnvelope
+from chaos.ingest.resolver import TopicResolver
+from chaos.ingest.retention import (
     DOWNSAMPLE_SOURCE_PREFIX,
     apply_retention,
     bucket_start,
@@ -25,8 +25,8 @@ from homestead_twin.ingest.retention import (
     downsample_source,
     interval_seconds,
 )
-from homestead_twin.ingest.service import IngestService
-from homestead_twin.ingest.writer import (
+from chaos.ingest.service import IngestService
+from chaos.ingest.writer import (
     ENUM_VIOLATION,
     OUT_OF_ORDER,
     OUT_OF_PHYSICAL_RANGE,
@@ -37,7 +37,7 @@ from homestead_twin.ingest.writer import (
     TelemetryWriter,
     as_utc,
 )
-from homestead_twin.models.registry import (
+from chaos.models.registry import (
     Asset,
     AssetClass,
     Point,
@@ -45,7 +45,7 @@ from homestead_twin.models.registry import (
     PointDefinition,
     PointSampleIndex,
 )
-from homestead_twin.models.telemetry import CurrentState, IngestDeadLetter, TelemetrySample
+from chaos.models.telemetry import CurrentState, IngestDeadLetter, TelemetrySample
 
 T0 = dt.datetime(2026, 8, 7, 12, 0, 0, tzinfo=dt.UTC)
 
@@ -193,7 +193,7 @@ def test_resolver_derives_topic_for_point_without_explicit_binding(db_session, s
     stats = resolver.refresh(db_session)
 
     derived = topics.telemetry_topic(BATTERY, "soc_pct")
-    assert derived == "homestead/energy/power_container/battery_bank_01/soc_pct"
+    assert derived == "chaos/energy/power_container/battery_bank_01/soc_pct"
     assert resolver.resolve(derived) == soc_point.point_id
     assert stats.derived_topics == 1
     assert stats.explicit_bindings == 0
@@ -215,7 +215,7 @@ def test_resolver_returns_none_for_unknown_topic(db_session, soc_point):
     resolver = TopicResolver()
     resolver.refresh(db_session)
 
-    assert resolver.resolve("homestead/energy/power_container/battery_bank_09/soc_pct") is None
+    assert resolver.resolve("chaos/energy/power_container/battery_bank_09/soc_pct") is None
     assert resolver.resolve("totally/unrelated/topic") is None
 
 
@@ -226,7 +226,7 @@ def test_resolver_maps_availability_and_asset_prefix(db_session, soc_point):
     availability = topics.availability_topic(BATTERY)
     assert resolver.resolve_availability(availability) == BATTERY
     assert resolver.resolve_asset(topics.event_topic(BATTERY, "opened")) == BATTERY
-    assert resolver.resolve_availability("homestead/x/y/z/availability") is None
+    assert resolver.resolve_availability("chaos/x/y/z/availability") is None
 
 
 def test_resolver_refresh_picks_up_new_points(db_session, registry, soc_point):
@@ -576,7 +576,7 @@ def started(service: IngestService) -> IngestService:
 
 
 def test_service_matches_the_runtime_contract(service):
-    from homestead_twin.runtime import BackgroundService
+    from chaos.runtime import BackgroundService
 
     assert service.name == "ingest"
     assert isinstance(service, BackgroundService)
@@ -612,7 +612,7 @@ def test_service_subscribes_to_explicit_binding_topics_outside_the_base(db_sessi
 def test_unknown_topic_is_dead_lettered(db_session, bus, service, soc_point):
     started(service)
     bus.publish(
-        "homestead/energy/power_container/battery_bank_99/soc_pct",
+        "chaos/energy/power_container/battery_bank_99/soc_pct",
         envelope("energy.battery_bank.power_container.99/soc_pct", 12.0).to_payload(),
     )
 
@@ -983,7 +983,7 @@ def test_retention_deletes_raw_rows_that_never_named_a_source(db_session, writer
 
 def _registry_loader_available() -> bool:
     try:
-        return importlib.util.find_spec("homestead_twin.registry.loader") is not None
+        return importlib.util.find_spec("chaos.registry.loader") is not None
     except ModuleNotFoundError:
         return False
 

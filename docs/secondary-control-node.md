@@ -34,7 +34,7 @@ The five required mitigations, and where each is handled:
 |---:|---|---|
 | 1 | Local controllers continue safe subsystem operation without the server rack | Level 1 hardware. Not software — see section 3 |
 | 2 | A small secondary control node in a separate structure | **This document** |
-| 3 | Critical configuration and asset data replicated outside the container | `homestead-twin backup`, `deploy/backup/backup.sh` |
+| 3 | Critical configuration and asset data replicated outside the container | `chaos backup`, `deploy/backup/backup.sh` |
 | 4 | Essential alerts can originate from independent local devices | Partly this node; partly NetBotz native email — see section 7 |
 | 5 | Battery and server zones physically separated with independent monitoring | Physical design. SDD open decision 22.12 |
 | 6 | The secondary node provides a reduced dashboard, MQTT bridge, and emergency communications | **This document** |
@@ -49,7 +49,7 @@ The five required mitigations, and where each is handled:
 |---|---|---|
 | `postgres` | Local replica of the registry, configuration and recent history | Own password. Restore target, not a second source of truth |
 | `mosquitto` | Full local broker, plus an optional inbound-only bridge to the primary | Bridge pulls telemetry in; nothing flows out |
-| `twin` | The same image, `HOMESTEAD_NODE_ROLE=secondary` | EMS off. `HOMESTEAD_ALLOW_PHYSICAL_CONTROL` hard-coded `false`. Shorter raw retention (14 days) |
+| `twin` | The same image, `CHAOS_NODE_ROLE=secondary` | EMS off. `CHAOS_ALLOW_PHYSICAL_CONTROL` hard-coded `false`. Shorter raw retention (14 days) |
 | `grafana` | Reduced read-only dashboard | Viewer default role. No Prometheus datasource |
 
 Same image, different environment. Building a separate image for the secondary
@@ -111,7 +111,7 @@ This is the section to read before relying on this node.
 
 - **Run the EMS.** `runtime.build_services` refuses to start the energy manager
   when `node_role` is `secondary`. Deliberate: see section 4.
-- **Issue commands.** `HOMESTEAD_ALLOW_PHYSICAL_CONTROL` is hard-coded `false`.
+- **Issue commands.** `CHAOS_ALLOW_PHYSICAL_CONTROL` is hard-coded `false`.
 - **Recover the plant.** Black start is a Level 0/1 sequence executed at the
   equipment (SDD 35.2: "At least one local controller can execute the sequence
   without the primary server rack"). This node watches and records.
@@ -164,8 +164,8 @@ them what it knows.
 | Mechanism | Enforces |
 |---|---|
 | `runtime.build_services` skips `EnergyManagerService` when `settings.is_secondary` | No EMS. This is in the platform, not the deployment |
-| `HOMESTEAD_EMS_ENABLED: "false"` in the compose file | Belt and braces |
-| `HOMESTEAD_ALLOW_PHYSICAL_CONTROL: "false"`, hard-coded, not read from `.env` | No commands |
+| `CHAOS_EMS_ENABLED: "false"` in the compose file | Belt and braces |
+| `CHAOS_ALLOW_PHYSICAL_CONTROL: "false"`, hard-coded, not read from `.env` | No commands |
 | MQTT ACL: `svc-twin-secondary` has no write on `cmd/` or `setpoint/` | Enforced at the broker, independently of the application |
 | MQTT bridge has no `out` rule for the command namespace | Nothing crosses even if the application misbehaves |
 
@@ -176,7 +176,7 @@ battery.
 **One gap worth stating.** `runtime.build_services` suppresses only the EMS on a
 secondary node; `CommandDispatchService` is still registered whenever MQTT is
 enabled. The application-level protection is therefore
-`HOMESTEAD_ALLOW_PHYSICAL_CONTROL=false`, backed by the broker ACL. That is why
+`CHAOS_ALLOW_PHYSICAL_CONTROL=false`, backed by the broker ACL. That is why
 the compose file hard-codes the flag rather than defaulting it, and why the ACL
 denial is not treated as belt-and-braces but as a primary control.
 
@@ -193,14 +193,14 @@ the requirement.
 
 ```
 primary:  deploy/backup/backup.sh          (nightly)
-            -> pg_dump + homestead-twin backup + configs
+            -> pg_dump + chaos backup + configs
 secondary: pull the backup set, pg_restore into the local replica
 ```
 
 - **RPO:** one backup interval. Nightly by default; hourly if the storage budget
   allows.
 - **RTO for observation:** zero — the replica is always mounted and readable.
-- **Verification:** `homestead-twin status` on the secondary shows counts; compare
+- **Verification:** `chaos status` on the secondary shows counts; compare
   with the `manifest.json` inside the backup set.
 
 Honest about the trade: a night-old registry is fine (assets change slowly), a
@@ -291,7 +291,7 @@ cp deploy/.env.example deploy/.env
 docker compose -f deploy/docker-compose.secondary.yml --env-file deploy/.env up -d
 
 # Verify the role and that the EMS is suppressed:
-docker compose -f deploy/docker-compose.secondary.yml exec twin homestead-twin status
+docker compose -f deploy/docker-compose.secondary.yml exec twin chaos status
 ```
 
 Expected in `status`:

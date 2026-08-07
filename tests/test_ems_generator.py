@@ -15,9 +15,9 @@ import json
 import pytest
 from test_ems_state_machine import T0, at, make_derived, make_inputs
 
-from homestead_twin.ems import CommandOutcome, RecordingCommandPort
-from homestead_twin.ems.config import EmsConfig
-from homestead_twin.ems.generator import GeneratorCoordinator, GeneratorRuntime
+from chaos.ems import CommandOutcome, RecordingCommandPort
+from chaos.ems.config import EmsConfig
+from chaos.ems.generator import GeneratorCoordinator, GeneratorRuntime
 
 GENERATOR = "energy.generator.site.01"
 
@@ -103,7 +103,7 @@ def test_unavailable_generator_blocks_the_start_and_alarms(coordinator, config, 
     assert "automatic_mode" in decision.blocked_by
     assert not port.requests
 
-    message = bus.last("homestead/energy/site/generator_01/alarm/generator_start_blocked")
+    message = bus.last("chaos/energy/site/generator_01/alarm/generator_start_blocked")
     assert message is not None
     assert json.loads(message.text)["detail"]["severity"] == "major"
 
@@ -186,7 +186,7 @@ def test_full_start_run_stop_cycle(coordinator, config, port, bus):
     assert not coordinator.supporting
     assert [r.value for r in port.commands_for(GENERATOR)] == [True, False]
 
-    stopped = bus.last("homestead/energy/site/generator_01/alarm/generator_stopped")
+    stopped = bus.last("chaos/energy/site/generator_01/alarm/generator_stopped")
     assert stopped is not None
 
 
@@ -236,7 +236,7 @@ def test_rejected_start_request_is_handled(config, settings, bus):
     assert decision.action == "start_failed"
     assert coordinator.runtime.sequence == "failed"
     assert coordinator.runtime.attempts == 1
-    message = bus.last("homestead/energy/site/generator_01/alarm/generator_start_failed")
+    message = bus.last("chaos/energy/site/generator_01/alarm/generator_start_failed")
     assert json.loads(message.text)["detail"]["severity"] == "critical"
 
 
@@ -286,7 +286,7 @@ def test_generator_lost_mid_run_alarms_critically(coordinator, config, bus):
     decision = run(coordinator, low_reserve(generator_state="stopped"), config, at(600))
     assert decision.action == "start_failed"
     assert coordinator.runtime.sequence == "failed"
-    message = bus.last("homestead/energy/site/generator_01/alarm/generator_start_failed")
+    message = bus.last("chaos/energy/site/generator_01/alarm/generator_start_failed")
     assert json.loads(message.text)["detail"]["stage"] == "run"
 
 

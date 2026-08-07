@@ -5,15 +5,15 @@
 * builds the components from a :class:`SiteConfig`,
 * solves an explicit energy balance every step (PV -> inverters -> loads,
   battery, generator),
-* publishes every point as a :class:`~homestead_twin.envelope.TelemetryEnvelope`
+* publishes every point as a :class:`~chaos.envelope.TelemetryEnvelope`
   at the point's configured interval,
 * publishes retained availability on start and ``offline`` on stop, exactly like
   a device with a last will (SDD 8.2), and
 * subscribes to the command topics, applies commands to the owning component and
   answers with ``accepted``/``succeeded`` or ``rejected`` plus a reason.
 
-Every topic comes from :mod:`homestead_twin.topics` and every payload from
-:mod:`homestead_twin.envelope`; the simulator never formats a topic or a JSON
+Every topic comes from :mod:`chaos.topics` and every payload from
+:mod:`chaos.envelope`; the simulator never formats a topic or a JSON
 document itself.
 
 Step order matters and is deliberate::
@@ -36,9 +36,9 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from typing import Any
 
-from homestead_twin import topics
-from homestead_twin.config import Settings, get_settings
-from homestead_twin.envelope import (
+from chaos import topics
+from chaos.config import Settings, get_settings
+from chaos.envelope import (
     AvailabilityEnvelope,
     CommandAckEnvelope,
     CommandEnvelope,
@@ -46,7 +46,7 @@ from homestead_twin.envelope import (
     TelemetryEnvelope,
     parse_command,
 )
-from homestead_twin.mqtt import Message, MessageBus
+from chaos.mqtt import Message, MessageBus
 from simulator.clock import DEFAULT_START, DEFAULT_UTC_OFFSET_H, Pacer, SimClock, build_pacer
 from simulator.components.base import (
     CommandOutcome,
@@ -86,7 +86,7 @@ class SiteConfig:
     seed: int = 1
     start: dt.datetime = DEFAULT_START
     utc_offset_h: float = DEFAULT_UTC_OFFSET_H
-    base_topic: str = "homestead"
+    base_topic: str = "chaos"
 
     weather: WeatherConfig = field(default_factory=WeatherConfig)
     solar: SolarConfig = field(default_factory=SolarConfig)

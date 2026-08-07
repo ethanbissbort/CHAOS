@@ -14,7 +14,7 @@ a paragraph in a document that everyone agrees with and nobody follows.
 
 ## 0. How the platform enforces it
 
-`src/homestead_twin/maintenance/commissioning.py` holds the canonical step list
+`src/chaos/maintenance/commissioning.py` holds the canonical step list
 and the gate:
 
 - Steps **1–8** are prerequisites.
@@ -28,7 +28,7 @@ Two independent switches stand between this platform and physical plant:
 
 | Gate | Scope | Set by |
 |---|---|---|
-| `HOMESTEAD_ALLOW_PHYSICAL_CONTROL` | Whole platform | `deploy/.env` |
+| `CHAOS_ALLOW_PHYSICAL_CONTROL` | Whole platform | `deploy/.env` |
 | `point_bindings.automatic_control_allowed` | One point | `POST /api/v1/commissioning/bindings/{point_id}`, gated on this sequence |
 
 Turning on the global flag does not arm anything that has not been commissioned.
@@ -112,9 +112,9 @@ Exercise the device away from the plant: on a bench, or with the simulator.
 
 - Power it, connect it, read a value, write a value if it is controllable.
 - For a gateway: publish one telemetry message and confirm it lands.
-  `homestead-twin status` → `ingest_dead_letters` should not increment.
+  `chaos status` → `ingest_dead_letters` should not increment.
 - Run the simulator against the subsystem's points:
-  `homestead-twin simulate -- --scenario <name> --offline`.
+  `chaos simulate -- --scenario <name> --offline`.
 
 **Pass:** the device communicates and behaves as the manual describes, with no
 plant attached.
@@ -233,7 +233,7 @@ supervisory control until all eight pass.
 
 The first time the platform commands this equipment.
 
-- Set `HOMESTEAD_ALLOW_PHYSICAL_CONTROL=true` and enable **this one binding**.
+- Set `CHAOS_ALLOW_PHYSICAL_CONTROL=true` and enable **this one binding**.
 - Issue one command through `POST /api/v1/commands`, with a named operator and a
   reason.
 - Confirm: the audit record is written *before* dispatch; the command reaches
@@ -288,7 +288,7 @@ This step is the one that matters at 2am in a storm. Test it as if you mean it.
 
 Capture what "normal" looks like, so a future deviation is visible.
 
-- [ ] Baseline telemetry captured: `homestead-twin export --include state,history --since ...`
+- [ ] Baseline telemetry captured: `chaos export --include state,history --since ...`
 - [ ] Setpoints, dead-bands and timings recorded in the registry, not in someone's head
 - [ ] Manual-override and failure-state records complete for every controlled asset
 - [ ] Binding addresses, protocol and scaling recorded; `binding_status` no longer `tbd`
@@ -296,7 +296,7 @@ Capture what "normal" looks like, so a future deviation is visible.
 - [ ] Photos, wiring notes and vendor documents attached as `Document` rows
 - [ ] `deploy/mosquitto/acl.example` section 4 verification re-run for the new identity
 - [ ] Backup taken and **restored into a scratch database** to prove it works
-- [ ] `homestead-twin backup` archive copied off the property
+- [ ] `chaos backup` archive copied off the property
 
 **Pass:** someone who was not there could operate and troubleshoot this subsystem
 from the record.
@@ -354,7 +354,7 @@ last, because they are the ones that can hurt you.
 | Step 6 "passes" because nothing alarmed | The platform did not notice the loss. That is a fail, not a pass — check `stale_after_s` on the points |
 | Step 7 passes with a sensor reading zero | Zero is plausible. Confirm the quality model marks it bad, rather than the range check accepting it |
 | Step 9 acknowledgement never arrives | The gateway has no ACL grant for `cmd/+/ack`. Check the broker log for `Denied PUBLISH` |
-| Step 10 notification never arrives | `HOMESTEAD_NOTIFICATION_BACKENDS` is `log`. A log line is not an alert |
+| Step 10 notification never arrives | `CHAOS_NOTIFICATION_BACKENDS` is `log`. A log line is not an alert |
 | Everything passes in a day | Steps 6, 7, 8 and 11 require actually breaking things. If nothing was broken, they were not tested |
 
 ---

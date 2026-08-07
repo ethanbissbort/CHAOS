@@ -9,8 +9,8 @@ from __future__ import annotations
 import pytest
 import sqlalchemy as sa
 
-from homestead_twin import topics
-from homestead_twin.models import Asset, ConfigurationRevision
+from chaos import topics
+from chaos.models import Asset, ConfigurationRevision
 
 INVERTER = "energy.inverter.power_container.01"
 SITE = "site.site.primary.01"
