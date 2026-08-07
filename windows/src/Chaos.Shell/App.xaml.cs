@@ -21,6 +21,34 @@ public partial class App : Application
     private ILayoutStore _layoutStore = null!;
     private ShellLayout _layout = ShellLayout.Empty;
 
+    /// <summary>
+    /// Startup state handed over by <see cref="ShellEntryPoint"/> before
+    /// <c>Application.Start</c>. See the parameterless constructor for why this
+    /// exists rather than being passed straight in.
+    /// </summary>
+    internal static ShellStartupOptions? PendingOptions;
+    internal static AppInstance? PendingInstance;
+
+    /// <summary>
+    /// Parameterless constructor, required because the XAML compiler emits its
+    /// own <c>Program.Main</c> into App.g.i.cs that calls <c>new App()</c>.
+    ///
+    /// DISABLE_XAML_GENERATED_MAIN is set in the csproj and StartupObject names
+    /// <see cref="ShellEntryPoint"/>, so that generated Main is not the entry
+    /// point — but it is still COMPILED, and it will not compile against a
+    /// constructor that requires arguments. Rather than keep chasing why the
+    /// constant is ignored, this makes the generated code valid.
+    ///
+    /// It reads the same state the real entry point sets, so the shell behaves
+    /// identically even in the case where the generated Main did run. Falling
+    /// back to defaults would silently start against the wrong gateway.
+    /// </summary>
+    public App()
+        : this(PendingOptions ?? ShellStartupOptions.Default,
+               PendingInstance ?? AppInstance.GetCurrent())
+    {
+    }
+
     public App(ShellStartupOptions options, AppInstance instance)
     {
         _options = options;
