@@ -117,4 +117,52 @@ public sealed record ActivationPayload
     /// <summary>Whether this activation wants the annunciator window.</summary>
     public bool WantsAnnunciator =>
         Target is ActivationTarget.Annunciator or ActivationTarget.Acknowledge;
+
+    /// <summary>
+    /// Renders back to command-line arguments.
+    /// </summary>
+    /// <remarks>
+    /// This is the on-wire form for single-instance activation. WinUI's
+    /// <c>AppInstance.RedirectActivationToAsync</c> carries a launch command
+    /// line and nothing else, so a second launch is delivered to the running
+    /// instance as argv and re-parsed there by <see cref="ShellCommandLine"/>.
+    /// Round-tripping through this method is what makes "chaos-shell
+    /// --annunciator --monitor 2" behave the same whether or not the shell was
+    /// already running.
+    /// </remarks>
+    public IReadOnlyList<string> ToArguments()
+    {
+        var args = new List<string>(6);
+
+        switch (Target)
+        {
+            case ActivationTarget.Annunciator:
+                args.Add("--annunciator");
+                break;
+            case ActivationTarget.Acknowledge:
+                args.Add("--acknowledge");
+                break;
+            case ActivationTarget.Console:
+            default:
+                break;
+        }
+
+        if (!string.IsNullOrWhiteSpace(Monitor))
+        {
+            args.Add("--monitor");
+            args.Add(Monitor!);
+        }
+
+        if (FullScreen)
+        {
+            args.Add("--fullscreen");
+        }
+
+        if (AlwaysOnTop)
+        {
+            args.Add("--always-on-top");
+        }
+
+        return args;
+    }
 }

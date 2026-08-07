@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Shared constants for the Project CHAOS installer.
+
+  Anything that also appears in windows\build\Chaos.Build.psm1 (product name,
+  service name, executable names, the python\ path, the LAN port) is duplicated
+  here on purpose: WiX has no way to read a PowerShell module. The pair is small
+  and both copies are commented, so a change to one that misses the other shows
+  up as a staging check failure in build.ps1 rather than as a service that will
+  not start.
+
+  ChaosVersion is normally supplied on the command line by build.ps1
+  (-d ChaosVersion=<Version from windows\Directory.Build.props>). The fallback
+  below only exists so that `wix build` on its own does something sensible.
+-->
+<Include xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <?define ChaosProductName  = "Project CHAOS" ?>
+  <?define ChaosManufacturer = "Homestead" ?>
+
+  <?ifndef ChaosVersion ?>
+    <?define ChaosVersion = "0.5.0" ?>
+  <?endif?>
+
+  <!-- The Python API surface the gateway is contracted against; kept in step
+       with ChaosPlatformVersion in windows\Directory.Build.props. -->
+  <?define ChaosPlatformVersion = "0.4.0" ?>
+
+  <!-- Executables, flat in the install root. -->
+  <?define ChaosHostExe  = "Chaos.Host.exe" ?>
+  <?define ChaosShellExe = "Chaos.Shell.exe" ?>
+
+  <!-- THE CONTRACT. The supervisor resolves this relative to the install root,
+       i.e. Path.Combine(AppContext.BaseDirectory, "python", "python.exe").
+       Do not move it into a subfolder, do not rename it, do not make it a
+       version-stamped directory. -->
+  <?define ChaosPythonExeRelPath = "python\python.exe" ?>
+
+  <?define ChaosServiceName        = "ChaosHost" ?>
+  <?define ChaosServiceDisplayName = "Project CHAOS Host" ?>
+
+  <!-- The gateway's LAN listener. The Python backend is loopback-only and gets
+       no firewall rule at all. -->
+  <?define ChaosLanPort = "8080" ?>
+
+</Include>

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The LAN firewall rule.
+
+  WHAT THIS OPENS
+  ===============
+  Exactly one inbound TCP port, 8080, the .NET gateway's LAN listener, and only
+  while the active network profile is PRIVATE.
+
+  What it deliberately does not do:
+
+    * No public profile. Ever. If this machine ever finds itself on a network
+      Windows classifies as public — a phone hotspot, a hotel, a misconfigured
+      adapter after a reboot — the control interface must not answer. There is
+      no property to turn this on, because the person who would type it is not
+      the person who understands the consequence.
+    * No domain profile. A homestead is not domain-joined; if that ever changes
+      it is a deliberate edit, not a default.
+    * No rule for the Python backend. The backend listens on 127.0.0.1 only and
+      is reached through the gateway. Opening it would be opening an unauthenticated
+      control API to the LAN.
+    * No outbound rules. Windows allows outbound by default and this product has
+      no business relaxing anything else.
+
+  SCOPE: WHY "any" REMOTE ADDRESS BY DEFAULT
+  ==========================================
+  The obvious tightening is Scope="localSubnet". It is the wrong default HERE:
+  docs/network-and-trust-boundaries.md puts the servers on VLAN 20, and phones
+  and wall displays are not on VLAN 20. localSubnet would silently break the
+  explicit requirement that the web UI stays reachable from phones and wall
+  displays, and it would break it in the least debuggable way possible — works
+  from the server, works from a laptop in the rack, fails from the kitchen.
+
+  So the default is: private profile only, any remote address. On a flat LAN,
+  set CHAOSFIREWALL=private-localsubnet to tighten it:
+
+      msiexec /i ProjectCHAOS-x.y.z-x64.msi CHAOSFIREWALL=private-localsubnet
+      msiexec /i ProjectCHAOS-x.y.z-x64.msi CHAOSFIREWALL=none
+
+  The two rule components are mutually exclusive by condition, so exactly one
+  rule with this name can exist.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:fw="http://wixtoolset.org/schemas/v4/wxs/firewall">
+
+  <?include Chaos.Definitions.wxi ?>
+
+  <?define ChaosFirewallRuleName = "Project CHAOS web interface (LAN)" ?>
+  <?define ChaosFirewallDescription = "Inbound TCP $(var.ChaosLanPort) for the Project CHAOS web interface. Private networks only -- phones, tablets and wall displays on the homestead LAN. Removed when Project CHAOS is uninstalled." ?>
+
+  <Fragment>
+    <!-- Settable on the command line; persisted so a major upgrade keeps the
+         operator's choice instead of quietly widening the rule again. -->
+    <Property Id="CHAOSFIREWALL" Value="private-any" Secure="yes" />
+    <SetProperty Id="CHAOSFIREWALL" Value="private-any" After="AppSearch"
+                 Condition="NOT CHAOSFIREWALL" Sequence="both" />
+
+    <ComponentGroup Id="ChaosFirewall">
+
+      <!-- Default: private profile, any remote address on that network. -->
+      <Component Id="ChaosFirewallPrivateAny" Directory="INSTALLFOLDER"
+                 Guid="A9043CF1-B9BE-42DB-8755-03E1492BA817"
+                 Condition="CHAOSFIREWALL = &quot;private-any&quot;">
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ChaosProductName)\State"
+                       Name="FirewallRule" Type="string" Value="private-any" KeyPath="yes" />
+        <fw:FirewallException Id="ChaosLanHttpAny"
+                              Name="$(var.ChaosFirewallRuleName)"
+                              Description="$(var.ChaosFirewallDescription)"
+                              Port="$(var.ChaosLanPort)"
+                              Protocol="tcp"
+                              Profile="private"
+                              Scope="any"
+                              Outbound="no"
+                              IgnoreFailure="no" />
+      </Component>
+
+      <!-- Tightened: private profile, local subnet only. Correct on a flat LAN,
+           wrong the moment the phones live on their own VLAN. -->
+      <Component Id="ChaosFirewallPrivateLocalSubnet" Directory="INSTALLFOLDER"
+                 Guid="BF317B32-31DF-4951-A961-865A207717F0"
+                 Condition="CHAOSFIREWALL = &quot;private-localsubnet&quot;">
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ChaosProductName)\State"
+                       Name="FirewallRule" Type="string" Value="private-localsubnet" KeyPath="yes" />
+        <fw:FirewallException Id="ChaosLanHttpLocalSubnet"
+                              Name="$(var.ChaosFirewallRuleName)"
+                              Description="$(var.ChaosFirewallDescription)"
+                              Port="$(var.ChaosLanPort)"
+                              Protocol="tcp"
+                              Profile="private"
+                              Scope="localSubnet"
+                              Outbound="no"
+                              IgnoreFailure="no" />
+      </Component>
+
+      <!-- CHAOSFIREWALL=none installs neither, and the LAN interface is then
+           reachable only from the machine itself until an administrator adds a
+           rule by hand. Documented in docs/windows-deployment.md. -->
+
+    </ComponentGroup>
+  </Fragment>
+</Wix>

@@ -42,7 +42,17 @@
       Npgsql is deliberately NOT referenced here because this leg cannot test
       it — see IChaosConnectionFactory.
     -->
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.11" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.10" />
+
+    <!--
+      Microsoft.Data.Sqlite 10.0.10 still resolves SQLitePCLRaw 2.1.6, whose
+      bundled e_sqlite3 carries a high-severity advisory (GHSA-2m69-gcr7-jv3q).
+      Pinned forward to the patched 2.1 build rather than suppressed: this
+      assembly reads the database of a system that runs freeze protection, and
+      NU1903 is exactly the warning you do not turn off.
+      Revisit when Microsoft.Data.Sqlite ships against a patched baseline.
+    -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.12" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Tests target the same $(ChaosTargetFramework) as the library and run on any
+    OS. Policy tests use an injectable clock and a fake process launcher, so no
+    test sleeps out a real backoff. The one test that launches the real Python
+    backend finds a free port and skips itself, loudly, when Python or its
+    dependencies are missing.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>$(ChaosTargetFramework)</TargetFramework>
+    <RootNamespace>Chaos.Host.Supervisor.Tests</RootNamespace>
+    <AssemblyName>Chaos.Host.Supervisor.Tests</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Chaos.Host.Supervisor\Chaos.Host.Supervisor.csproj" />
+  </ItemGroup>
+
+</Project>

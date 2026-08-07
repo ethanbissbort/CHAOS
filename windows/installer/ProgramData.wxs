@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Operator data: %ProgramData%\Project CHAOS\
+
+  THE RULE THIS FILE EXISTS TO ENFORCE
+  ====================================
+  Uninstalling the product must not delete a single byte of operator data.
+
+  The database holds the alarm history and the command audit trail for a
+  property that runs on its own power and water. That history is the record of
+  what the site actually did — which alarm fired before the battery went to
+  cutoff, who acknowledged it, which command was rejected by an interlock. It is
+  evidence, and some of it is the only copy. An uninstall that deletes it,
+  including the "helpful" prompt-and-delete that many installers offer, would be
+  unforgivable, and no amount of "the operator confirmed" makes it acceptable.
+
+  MECHANICS: every component below is Permanent="yes", which means Windows
+  Installer never removes it, on uninstall or on major upgrade. There is not a
+  single RemoveFile or RemoveFolder element anywhere under CHAOSDATAFOLDER, and
+  there must never be one. The two config files are additionally
+  NeverOverwrite="yes", so an upgrade cannot stamp on a hand-edited config
+  either.
+
+  Consequence, stated so it is not a surprise: after uninstall,
+  %ProgramData%\Project CHAOS survives with the database, the logs, the backups
+  and the config in it. That is the intended behaviour. Removing it is a
+  deliberate act by a human with a shovel, not a side effect of msiexec /x.
+
+  ACLs are left at the ProgramData default: SYSTEM and Administrators full,
+  Users read. The service runs as LocalSystem and can write; a logged-in
+  non-administrator can read the logs but cannot write to the database, which is
+  the right way round for a control system.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <?include Chaos.Definitions.wxi ?>
+
+  <Fragment>
+    <ComponentGroup Id="ChaosProgramData">
+
+      <Component Id="ChaosDataRoot" Directory="CHAOSDATAFOLDER" Permanent="yes"
+                 Guid="2BF2F4D6-6ED4-4BA6-9A7E-53DB6A9619D1">
+        <CreateFolder />
+      </Component>
+
+      <Component Id="ChaosDataConfigDir" Directory="CHAOSDATACONFIG" Permanent="yes"
+                 Guid="0485A5DF-FF73-42DA-94FB-A07D73CF1DE5">
+        <CreateFolder />
+      </Component>
+
+      <!-- The SQLite database lives here. HOMESTEAD_DATABASE_URL points at
+           db\homestead.db; see docs/windows-deployment.md. -->
+      <Component Id="ChaosDataDbDir" Directory="CHAOSDATADB" Permanent="yes"
+                 Guid="69BEEB53-5ED0-4717-BC03-E195374DE2AD">
+        <CreateFolder />
+      </Component>
+
+      <Component Id="ChaosDataLogsDir" Directory="CHAOSDATALOGS" Permanent="yes"
+                 Guid="431A9382-C138-491E-8DD2-6C3EAC68E3D2">
+        <CreateFolder />
+      </Component>
+
+      <Component Id="ChaosDataBackupsDir" Directory="CHAOSDATABACKUPS" Permanent="yes"
+                 Guid="F40EBF84-AF4E-4BCB-A08A-F5D382D05284">
+        <CreateFolder />
+      </Component>
+
+      <!-- Host configuration. Written once, never overwritten by an upgrade,
+           never removed by an uninstall. -->
+      <Component Id="ChaosHostConfigFile" Directory="CHAOSDATACONFIG" Permanent="yes"
+                 NeverOverwrite="yes" Guid="B0178E8C-8B24-4E77-B44E-DE091D312C1F">
+        <File Id="FileChaosHostConfig" Name="chaos.host.json"
+              Source="!(bindpath.Installer)\config\chaos.host.json" KeyPath="yes" />
+      </Component>
+
+      <!-- HOMESTEAD_* overrides for the Python backend. Ships fully commented
+           out: the defaults come from the registry and from what the supervisor
+           passes to the child process. This file is for the operator who needs
+           to change one thing on one node. -->
+      <Component Id="ChaosHomesteadEnvFile" Directory="CHAOSDATACONFIG" Permanent="yes"
+                 NeverOverwrite="yes" Guid="623665D6-D6BD-452C-83FA-D09685BE6157">
+        <File Id="FileChaosHomesteadEnv" Name="homestead.env"
+              Source="!(bindpath.Installer)\config\homestead.env" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+  </Fragment>
+</Wix>

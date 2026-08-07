@@ -40,8 +40,32 @@ public readonly record struct ScreenRect(int Left, int Top, int Width, int Heigh
 /// One display, as reported by Windows and flattened into plain data so the
 /// placement rules can be tested without a desktop.
 /// </summary>
-/// <param name="DeviceId">Stable-ish device name, e.g. <c>\\.\DISPLAY2</c>.</param>
+/// <param name="DeviceId">
+/// Identity used to recognise this display after a restart. See
+/// <see cref="MonitorKey"/> for why this is derived from geometry.
+/// </param>
 /// <param name="WorkArea">Usable area, taskbar and docked bars excluded.</param>
 /// <param name="IsPrimary">Whether this is the primary display.</param>
 /// <param name="Index">1-based enumeration order, for <c>--monitor 2</c>.</param>
 public sealed record MonitorInfo(string DeviceId, ScreenRect WorkArea, bool IsPrimary, int Index);
+
+/// <summary>
+/// Builds the persisted identity of a display.
+/// </summary>
+/// <remarks>
+/// WinUI's <c>DisplayArea.DisplayId</c> is a per-session handle value: it is
+/// not stable across a reboot, a driver reload, or unplugging and replugging a
+/// wall display, which is exactly when window restore has to make a decision.
+/// Position and size are stable in practice and, more usefully, they are stable
+/// in the way that matters — "the 3840x2160 panel at +1920,0" is the same wall
+/// display tomorrow, and genuinely is not the same display if that geometry has
+/// gone. Matching on it makes a removed monitor detectable rather than silently
+/// restoring a window nobody can see.
+/// </remarks>
+public static class MonitorKey
+{
+    /// <summary>Identity key for a display, from its outer bounds.</summary>
+    public static string For(ScreenRect outerBounds) => string.Create(
+        System.Globalization.CultureInfo.InvariantCulture,
+        $"{outerBounds.Left},{outerBounds.Top},{outerBounds.Width}x{outerBounds.Height}");
+}

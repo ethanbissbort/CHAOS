@@ -4,20 +4,28 @@
     Chaos.Host.Supervisor supervises the Python platform as a child process of
     the .NET gateway.
 
-    It targets plain net8.0 — never net8.0-windows — so it builds, tests and
-    runs on the Linux CI leg. Everything Windows-specific (Job Objects, console
-    control events, the Event Log) is reached through P/Invoke or the
+    It targets the shared $(ChaosTargetFramework) (net10.0) — never a
+    -windows TFM — so it builds, tests and runs on a Linux developer machine
+    as well as in Visual Studio. Everything Windows-specific (Job Objects,
+    console control events, the Event Log) is reached through P/Invoke or the
     System.Diagnostics.EventLog package behind an OperatingSystem.IsWindows()
     guard, and degrades to an honest, logged no-op elsewhere.
   -->
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>$(ChaosTargetFramework)</TargetFramework>
     <RootNamespace>Chaos.Host.Supervisor</RootNamespace>
     <AssemblyName>Chaos.Host.Supervisor</AssemblyName>
     <IsPackable>false</IsPackable>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!--
+      Required by the [LibraryImport] source generator, which emits the
+      marshalling stubs for the Job Object and console-control P/Invokes.
+      There is no hand-written unsafe code in this project: search for
+      "unsafe" and you will find none outside obj/.
+    -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <!--
@@ -49,13 +57,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
-    <!-- Windows-only at runtime; ships a net8.0 facade that throws off Windows,
-         which is why every call site is behind OperatingSystem.IsWindows(). -->
-    <PackageReference Include="System.Diagnostics.EventLog" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.10" />
+    <!-- Windows-only at runtime; ships a cross-platform facade that throws off
+         Windows, which is why every call site is behind OperatingSystem.IsWindows(). -->
+    <PackageReference Include="System.Diagnostics.EventLog" Version="10.0.10" />
   </ItemGroup>
 
   <ItemGroup>

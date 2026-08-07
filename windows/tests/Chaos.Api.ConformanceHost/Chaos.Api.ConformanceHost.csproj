@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+    A minimal ASP.NET Core host that composes Chaos.Api and nothing else.
+
+    It exists for one reason: the cross-implementation conformance harness
+    (tests/test_dotnet_conformance.py) has to issue REAL HTTP requests to the
+    .NET implementation, and Chaos.Api is a library with no listener.
+
+    It is deliberately NOT Chaos.Host. Running the harness against the gateway
+    would prove nothing while /api/v1/annunciator is still marked Python in the
+    route-ownership manifest: the gateway would proxy the request to the Python
+    backend and the harness would compare Python with Python and pass. That is
+    the failure mode a conformance suite must not have, so this host serves the
+    native endpoints and only the native endpoints.
+
+    Once the manifest entry is flipped to Dotnet, pointing the same harness at
+    Chaos.Host is the integration check — a different test, on purpose.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>$(ChaosTargetFramework)</TargetFramework>
+    <AssemblyName>Chaos.Api.ConformanceHost</AssemblyName>
+    <RootNamespace>Chaos.Api.ConformanceHost</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <!-- Not a test project: `dotnet test` must not try to run it. -->
+    <IsTestProject>false</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Chaos.Api\Chaos.Api.csproj" />
+  </ItemGroup>
+
+</Project>

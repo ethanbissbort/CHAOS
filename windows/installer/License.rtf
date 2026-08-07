@@ -1,0 +1,24 @@
+{\rtf1\ansi\ansicpg1252\deff0{\fonttbl{\f0\fswiss\fcharset0 Segoe UI;}}
+\viewkind4\uc1\pard\f0\fs20
+\b Project CHAOS \endash  Central Homestead Automation and Operation System\b0\par
+\par
+Licensed under the Apache License, Version 2.0 (the "License"). You may not use this software except in compliance with the License. A copy of the License ships with the source distribution as LICENSE and is available at:\par
+\par
+\tab http://www.apache.org/licenses/LICENSE-2.0\par
+\par
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.\par
+\par
+\b Read this before you install it.\b0\par
+\par
+This software supervises energy, water and alarm systems. It is \b not\b0  a protection system. Breakers, relief valves, float switches, high-limit thermostats and emergency stops retain authority over the equipment they protect, and nothing here gets a vote on that. The platform requests; local controllers decide.\par
+\par
+Physical control is disabled by default and should stay disabled until the subsystem you intend to control has passed commissioning. See docs/commissioning.md.\par
+\par
+\b Your data stays where it is.\b0\par
+\par
+Operator data \endash  the database, the alarm and command history, the logs, local backups and your configuration \endash  lives in %ProgramData%\\Project CHAOS and is \b not\b0  removed when you uninstall this product. Upgrading does not overwrite your configuration files either. If you want that data gone, delete it deliberately; the installer will not do it for you.\par
+\par
+\b The web interface is reachable on your LAN.\b0\par
+\par
+Installing adds one inbound Windows Firewall rule: TCP 8080, private networks only, so phones, tablets and wall displays on the homestead network can reach the interface. It is never opened on a public network profile. The rule is removed when you uninstall.\par
+}
