@@ -43,6 +43,13 @@ public static class ShellEntryPoint
 
         global::WinRT.ComWrappersSupport.InitializeComWrappers();
 
+        // Published before Application.Start so that App's parameterless
+        // constructor — the one the XAML-generated Main would use — starts
+        // against the same gateway and activation this entry point resolved,
+        // rather than against defaults.
+        App.PendingOptions = options;
+        App.PendingInstance = instance;
+
         // The callback parameter is deliberately NOT named "_": that would make
         // any discard assignment inside the body assign to the parameter.
         Microsoft.UI.Xaml.Application.Start(callbackParams =>
