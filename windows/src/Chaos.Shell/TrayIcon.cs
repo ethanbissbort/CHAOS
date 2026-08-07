@@ -144,18 +144,42 @@ internal sealed class TrayIcon : IDisposable
     private const int IdAnnunciator = 2;
     private const int IdBrowser = 3;
     private const int IdStatus = 4;
+    private const int IdSettings = 5;
     private const int IdExit = 9;
+
+    /// <summary>
+    /// Rebuilds the menu.
+    /// </summary>
+    /// <remarks>
+    /// The Exit item's wording depends on how the platform is running, so the
+    /// menu is rebuilt whenever that changes. The warning has to be on the item
+    /// itself: an operator who reads "Exit shell (platform keeps running)" and
+    /// clicks it, on a day when this shell IS the platform, has been misled by
+    /// the menu before any dialog gets a chance to say otherwise.
+    /// </remarks>
+    public void RefreshMenu()
+    {
+        if (_menu != IntPtr.Zero)
+        {
+            DestroyMenu(_menu);
+            _menu = IntPtr.Zero;
+        }
+
+        BuildMenu();
+    }
 
     private void BuildMenu()
     {
         _menu = CreatePopupMenu();
+        AppendMenu(_menu, 0, IdStatus, "Start screen…");
+        AppendMenu(_menu, 0x800, 0, null);            // MF_SEPARATOR
         AppendMenu(_menu, 0, IdConsole, "Open console");
         AppendMenu(_menu, 0, IdAnnunciator, "Open annunciator");
         AppendMenu(_menu, 0, IdBrowser, "Open in browser");
-        AppendMenu(_menu, 0x800, 0, null);            // MF_SEPARATOR
-        AppendMenu(_menu, 0, IdStatus, "Platform status…");
         AppendMenu(_menu, 0x800, 0, null);
-        AppendMenu(_menu, 0, IdExit, "Exit shell (platform keeps running)");
+        AppendMenu(_menu, 0, IdSettings, "Settings…");
+        AppendMenu(_menu, 0x800, 0, null);
+        AppendMenu(_menu, 0, IdExit, ShellMessages.ExitMenuItemFor(_app.RunMode));
     }
 
     private void ShowMenu()
@@ -178,11 +202,15 @@ internal sealed class TrayIcon : IDisposable
                 _app.ShowAnnunciator();
                 break;
             case IdBrowser:
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(
-                    _app.Endpoints.Console.ToString()) { UseShellExecute = true });
+                PlatformController.OpenInBrowser(_app.Endpoints.Console);
                 break;
             case IdStatus:
-                _app.ShowConsole();
+                // The start screen is where platform state lives now: what was
+                // found, who owns it, and what can be done about it.
+                _app.ShowLauncher();
+                break;
+            case IdSettings:
+                _app.ShowSettings();
                 break;
             case IdExit:
                 _app.ExitShell();

@@ -48,28 +48,39 @@ public sealed partial class AnnunciatorWindow : Window
     private void RestorePlacement()
     {
         var saved = _app.Layout.Annunciator;
+        var settings = _app.Settings;
         var monitors = MonitorEnumerator.Current();
+
         if (monitors.Count == 0)
         {
             AppWindow.Resize(new SizeInt32(1440, 920));
             return;
         }
 
-        var resolved = WindowPlacementResolver.Resolve(
-            saved, monitors, new ScreenRect(0, 0, 1440, 920));
-        var b = resolved.Bounds;
-        AppWindow.MoveAndResize(new RectInt32(b.Left, b.Top, b.Width, b.Height));
-
-        if (saved is null)
+        if (!string.IsNullOrWhiteSpace(settings.AnnunciatorMonitor))
         {
-            return;
+            // An explicit display in Settings beats wherever the panel happened
+            // to be dragged last time. Select falls back to the primary when
+            // the chosen display is not attached, so a wall panel that has been
+            // unplugged still opens somewhere an operator can see it.
+            var target = WindowPlacementResolver.Select(monitors, settings.AnnunciatorMonitor);
+            var area = target.WorkArea;
+            AppWindow.MoveAndResize(new RectInt32(area.Left, area.Top, area.Width, area.Height));
+        }
+        else
+        {
+            var resolved = WindowPlacementResolver.Resolve(
+                saved, monitors, new ScreenRect(0, 0, 1440, 920));
+            var b = resolved.Bounds;
+            AppWindow.MoveAndResize(new RectInt32(b.Left, b.Top, b.Width, b.Height));
         }
 
-        if (saved.FullScreen)
+        if (settings.AnnunciatorFullScreen || saved?.FullScreen == true)
         {
             SetFullScreen(true);
         }
-        if (saved.AlwaysOnTop)
+
+        if (saved?.AlwaysOnTop == true)
         {
             SetAlwaysOnTop(true);
         }

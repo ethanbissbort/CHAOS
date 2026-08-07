@@ -482,7 +482,11 @@ Invoke-ChaosNative -FilePath $pythonExe -What 'relocate-launchers.py' -Arguments
 # .pyc in a read-only tree is a .pyc that never gets used.
 
 Write-ChaosStep 'Precompiling to bytecode'
-$compileLog = & $pythonExe -m compileall -q -j 0 --invalidation-mode unchecked-hash $sitePackages 2>&1
+# compileall reports failures on STDOUT, so no 2>&1 is needed -- and it must not
+# be used: with $ErrorActionPreference = 'Stop', PowerShell 7.2 and 7.3 turn a
+# redirected native stderr line into a terminating error, which would abort the
+# build over a warning.  @() so the result is always enumerable.
+$compileLog = @(& $pythonExe -m compileall -q -j 0 --invalidation-mode unchecked-hash $sitePackages)
 if ($LASTEXITCODE -ne 0) {
     # compileall returns non-zero if ANY file fails to compile, including files
     # in third-party packages that are intentionally Python-2 or template files.

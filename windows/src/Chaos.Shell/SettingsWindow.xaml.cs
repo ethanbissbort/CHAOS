@@ -50,7 +50,7 @@ public sealed partial class SettingsWindow : Window
         {
             var size = monitor.WorkArea;
             MonitorBox.Items.Add(
-                $"Display {monitor.Index + 1}{(monitor.IsPrimary ? " (primary)" : string.Empty)} — "
+                $"Display {monitor.Index}{(monitor.IsPrimary ? " (primary)" : string.Empty)} — "
                 + $"{size.Width}×{size.Height} — {monitor.DeviceId}");
         }
     }

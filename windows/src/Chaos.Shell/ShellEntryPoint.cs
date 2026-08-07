@@ -50,6 +50,12 @@ public static class ShellEntryPoint
         App.PendingOptions = options;
         App.PendingInstance = instance;
 
+        // Kept verbatim so an elevated restart carries the same --host,
+        // --annunciator and --monitor the operator launched with. Rebuilding
+        // them from the parsed options would quietly drop anything the parser
+        // did not understand.
+        App.PendingArguments = rawArgs;
+
         // The callback parameter is deliberately NOT named "_": that would make
         // any discard assignment inside the body assign to the parameter.
         Microsoft.UI.Xaml.Application.Start(callbackParams =>

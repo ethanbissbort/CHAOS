@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Net.Http;
 using Chaos.Shell.Core;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
@@ -16,16 +14,19 @@ namespace Chaos.Shell;
 /// naming what was tried and what to do about it. A blank white window is the
 /// worst possible outcome for a control system: it says nothing about whether
 /// the platform is running.
+///
+/// Probing goes through Chaos.Shell.Core's PlatformProbeClient, so this window
+/// and the launcher agree on what "reachable" means — in particular that a 503
+/// from a gateway whose backend is down is still a reachable gateway.
 /// </summary>
 public sealed partial class MainWindow : Window
 {
-    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(4) };
-
     private readonly App _app;
     private readonly DispatcherQueue _dispatcher;
     private readonly StartupSequence _startup;
     private readonly CancellationTokenSource _closing = new();
 
+    private GatewayProbe _probe = GatewayProbe.NotProbed;
     private LinkStatus _link = LinkStatus.Connecting();
     private AlarmCounts _counts = AlarmCounts.None;
     private bool _consoleShown;
@@ -41,12 +42,33 @@ public sealed partial class MainWindow : Window
         Title = "Project CHAOS — Operator Console";
         HostText.Text = app.Endpoints.BaseUri.ToString();
 
+        ShowRunMode();
         RestorePlacement();
 
         Closed += OnClosed;
 
         _ = RunStartupAsync();
         _ = PollAsync();
+    }
+
+    /// <summary>
+    /// Paints the run-mode strip. Called on every poll, because the answer can
+    /// change under the window: a service can be stopped from Services.msc, and
+    /// a platform this shell started can exit on its own.
+    /// </summary>
+    private void ShowRunMode()
+    {
+        var banner = RunModeBanner.For(
+            _app.RunMode, _app.Settings.ServiceName, _app.Endpoints.BaseUri.ToString());
+
+        RunModeText.Text = $"{banner.Headline} — {banner.Detail}";
+
+        var cautionary = banner.Severity == RunModeSeverity.Caution;
+        RunModeText.Foreground = App.Brush(cautionary ? "ChaosShellWarn" : "ChaosShellMuted");
+        RunModeStrip.BorderBrush = App.Brush(
+            banner.ClosingTheShellStopsThePlatform ? "ChaosShellWarn" : "ChaosShellStroke");
+        RunModeStrip.BorderThickness = new Thickness(
+            0, 0, 0, banner.ClosingTheShellStopsThePlatform ? 2 : 1);
     }
 
     private void RestorePlacement()
@@ -109,8 +131,8 @@ public sealed partial class MainWindow : Window
 
                 case StartupAction.GiveUp:
                     ShowDiagnostic(StartupDiagnostic.GatewayUnreachable(
-                        _app.Endpoints, attempt, elapsed, lastError, LogDirectory,
-                        ShellMessages.ServiceName));
+                        _app.Endpoints, attempt, elapsed, lastError, PlatformController.LogDirectory,
+                        _app.Settings.ServiceName));
                     return;
 
                 case StartupAction.Wait:
@@ -134,32 +156,33 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    /// <summary>
+    /// One probe. Reachability and the backend's state come from the shared
+    /// client, so the console cannot disagree with the launcher about what it
+    /// found.
+    /// </summary>
     private async Task<bool> ProbeAsync()
     {
         try
         {
-            using var response = await Http.GetAsync(_app.Endpoints.Health, _closing.Token)
+            _probe = await _app.Probe
+                .ProbeGatewayAsync(_app.Endpoints, _probe, DateTimeOffset.UtcNow, _closing.Token)
                 .ConfigureAwait(true);
-            if (!response.IsSuccessStatusCode)
-            {
-                _link = LinkStatus.Offline(
-                    _link.LastContactUtc,
-                    $"HTTP {(int)response.StatusCode}",
-                    _link.ConsecutiveFailures + 1);
-                return false;
-            }
-
-            var body = await response.Content.ReadAsStringAsync(_closing.Token).ConfigureAwait(true);
-            PlatformHealth.TryRead(body, out var health, out _);
-            _link = LinkStatus.Online(DateTimeOffset.UtcNow, health?.Version);
-            return true;
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (OperationCanceledException)
         {
-            _link = LinkStatus.Offline(
-                _link.LastContactUtc, ex.Message, _link.ConsecutiveFailures + 1);
             return false;
         }
+
+        if (_probe.Reachable)
+        {
+            _link = LinkStatus.Online(DateTimeOffset.UtcNow, _probe.HostVersion);
+            _app.NoteLinkRestored();
+            return true;
+        }
+
+        _link = LinkStatus.Offline(_link.LastContactUtc, _probe.Error, _probe.ConsecutiveFailures);
+        return false;
     }
 
     private void ShowConsole()
@@ -194,6 +217,7 @@ public sealed partial class MainWindow : Window
         GateSteps.ItemsSource = diagnostic.NextSteps.ToList();
         GateProgress.Visibility = Visibility.Collapsed;
         RetryButton.Visibility = Visibility.Visible;
+        StartScreenFromGateButton.Visibility = Visibility.Visible;
         LogsButton.Visibility = Visibility.Visible;
         GatePanel.Visibility = Visibility.Visible;
         ConsoleView.Visibility = Visibility.Collapsed;
@@ -214,6 +238,12 @@ public sealed partial class MainWindow : Window
             {
                 await ReadAlarmsAsync().ConfigureAwait(true);
             }
+            else
+            {
+                // The launcher decides whether this warrants interrupting the
+                // operator; the console only reports what it saw.
+                _app.NoteLinkLost(_probe.ConsecutiveFailures);
+            }
 
             LinkText.Text = _link.Phase switch
             {
@@ -222,6 +252,7 @@ public sealed partial class MainWindow : Window
                 _ => $"NO CONTACT · {_link.LastError}",
             };
 
+            ShowRunMode();
             _app.UpdateTray(_link, _counts);
 
             try
@@ -239,7 +270,8 @@ public sealed partial class MainWindow : Window
     {
         try
         {
-            var body = await Http.GetStringAsync(_app.Endpoints.ActiveAlarms, _closing.Token)
+            using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(4) };
+            var body = await client.GetStringAsync(_app.Endpoints.ActiveAlarms, _closing.Token)
                 .ConfigureAwait(true);
             if (AlarmSummaryReader.TryRead(body, out var counts, out _))
             {
@@ -267,11 +299,16 @@ public sealed partial class MainWindow : Window
     private void OnOpenAnnunciator(object sender, RoutedEventArgs e) => _app.ShowAnnunciator();
 
     private void OnOpenInBrowser(object sender, RoutedEventArgs e) =>
-        Process.Start(new ProcessStartInfo(_app.Endpoints.Console.ToString()) { UseShellExecute = true });
+        PlatformController.OpenInBrowser(_app.Endpoints.Console);
+
+    private void OnOpenLauncher(object sender, RoutedEventArgs e) => _app.ShowLauncher();
+
+    private void OnOpenSettings(object sender, RoutedEventArgs e) => _app.ShowSettings();
 
     private void OnRetry(object sender, RoutedEventArgs e)
     {
         RetryButton.Visibility = Visibility.Collapsed;
+        StartScreenFromGateButton.Visibility = Visibility.Collapsed;
         LogsButton.Visibility = Visibility.Collapsed;
         GateProgress.Visibility = Visibility.Visible;
         GateTitle.Text = "Starting Project CHAOS";
@@ -281,11 +318,7 @@ public sealed partial class MainWindow : Window
         _ = RunStartupAsync();
     }
 
-    private static string LogDirectory =>
-        Environment.ExpandEnvironmentVariables(@"%ProgramData%\Project CHAOS\logs");
-
-    private void OnOpenLogs(object sender, RoutedEventArgs e) =>
-        Process.Start(new ProcessStartInfo(LogDirectory) { UseShellExecute = true });
+    private void OnOpenLogs(object sender, RoutedEventArgs e) => PlatformController.OpenLogFolder();
 
     private void OnClosed(object sender, WindowEventArgs args)
     {
