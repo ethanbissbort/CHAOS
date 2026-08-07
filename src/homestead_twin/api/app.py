@@ -14,7 +14,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from homestead_twin import __version__
@@ -28,11 +28,18 @@ logger = logging.getLogger(__name__)
 WEB_DIR = Path(__file__).resolve().parents[1] / "web"
 
 
+#: Routers are matched in registration order, and a ``{x:path}`` parameter is
+#: greedy -- ``/points/{point_id:path}`` would otherwise swallow
+#: ``/points/{point_id:path}/current``. Modules may declare ``ROUTER_PRIORITY``
+#: (lower = registered earlier) so the more specific route wins.
+DEFAULT_ROUTER_PRIORITY = 100
+
+
 def discover_routers() -> list[APIRouter]:
     """Import every module under ``api.routers`` and collect its ``router``."""
     import homestead_twin.api.routers as routers_pkg
 
-    found: list[APIRouter] = []
+    found: list[tuple[int, str, APIRouter]] = []
     for module_info in pkgutil.iter_modules(routers_pkg.__path__):
         if module_info.name.startswith("_"):
             continue
@@ -44,10 +51,13 @@ def discover_routers() -> list[APIRouter]:
             continue
         router = getattr(module, "router", None)
         if isinstance(router, APIRouter):
-            found.append(router)
+            priority = getattr(module, "ROUTER_PRIORITY", DEFAULT_ROUTER_PRIORITY)
+            found.append((priority, module_info.name, router))
         else:
             logger.warning("Router module %s exposes no APIRouter named 'router'", module_name)
-    return found
+
+    found.sort(key=lambda item: (item[0], item[1]))
+    return [router for _, _, router in found]
 
 
 def create_app(
@@ -123,7 +133,20 @@ def create_app(
         app.mount("/ui", StaticFiles(directory=WEB_DIR, html=True), name="ui")
 
         @app.get("/", include_in_schema=False)
-        def index() -> FileResponse:
-            return FileResponse(WEB_DIR / "index.html")
+        def index():
+            index_file = WEB_DIR / "index.html"
+            if index_file.is_file():
+                return FileResponse(index_file)
+            # A missing operator UI must not present as a server fault -- the
+            # API is the control path and stays usable on its own.
+            return JSONResponse(
+                {
+                    "status": "ok",
+                    "detail": "Operator UI is not installed; the API is available at /api/v1.",
+                    "docs": "/docs",
+                    "health": "/health",
+                },
+                status_code=200,
+            )
 
     return app
