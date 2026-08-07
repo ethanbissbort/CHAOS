@@ -1,5 +1,4 @@
 using Chaos.Shell.Core;
-using Microsoft.UI.Dispatching;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -23,7 +22,6 @@ public sealed partial class LauncherWindow : Window
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(2);
 
     private readonly App _app;
-    private readonly DispatcherQueue _dispatcher;
     private readonly CancellationTokenSource _closing = new();
 
     private GatewayProbe _gateway = GatewayProbe.NotProbed;
@@ -31,7 +29,6 @@ public sealed partial class LauncherWindow : Window
     private HostExecutableProbe _executable = HostExecutableProbe.NotSearched;
     private SetupSnapshot _setup = SetupSnapshot.NotChecked;
 
-    private LauncherView? _view;
     private bool _busy;
     private string? _busyMessage;
     private string? _lastActionMessage;
@@ -43,7 +40,6 @@ public sealed partial class LauncherWindow : Window
     public LauncherWindow(App app)
     {
         _app = app;
-        _dispatcher = DispatcherQueue.GetForCurrentThread();
         _service = ServiceProbe.NotChecked(app.Settings.ServiceName);
 
         InitializeComponent();
@@ -100,7 +96,41 @@ public sealed partial class LauncherWindow : Window
         }
     }
 
+    /// <summary>
+    /// One pass over every check.
+    /// </summary>
+    /// <remarks>
+    /// Cancellation is expected here — the window can close mid-probe — and is
+    /// swallowed deliberately. Everything else is caught too: this runs from a
+    /// fire-and-forget loop and from an <c>async void</c> click handler, where
+    /// an escaping exception takes the process down. Taking down the shell also
+    /// takes down a platform the shell started, so nothing on this screen is
+    /// allowed to throw.
+    /// </remarks>
     private async Task RefreshAsync()
+    {
+        try
+        {
+            await ProbeEverythingAsync().ConfigureAwait(true);
+        }
+        catch (OperationCanceledException)
+        {
+            // The window is closing.
+        }
+        catch (Exception ex)
+        {
+            _lastActionMessage =
+                $"The shell hit an unexpected problem while checking the platform: {ex.Message}. "
+                + "The checks above may be out of date; press Check again.";
+
+            if (!_closing.IsCancellationRequested)
+            {
+                Render(LauncherStateMachine.Evaluate(CurrentFacts()));
+            }
+        }
+    }
+
+    private async Task ProbeEverythingAsync()
     {
         var settings = _app.Settings;
 
@@ -189,8 +219,8 @@ public sealed partial class LauncherWindow : Window
         RunModeDetail.Text = view.RunMode.Detail;
 
         var cautionary = view.RunMode.Severity == RunModeSeverity.Caution;
-        RunModeBorder.BorderBrush = Brush(cautionary ? "ChaosShellWarn" : "ChaosShellStroke");
-        RunModeHeadline.Foreground = Brush(cautionary ? "ChaosShellWarn" : "ChaosShellText");
+        RunModeBorder.BorderBrush = ShellBrush(cautionary ? "ChaosShellWarn" : "ChaosShellStroke");
+        RunModeHeadline.Foreground = ShellBrush(cautionary ? "ChaosShellWarn" : "ChaosShellText");
 
         // The one distinction that must never be missed reads as an alarm when
         // this shell is the platform's parent process.
@@ -217,13 +247,13 @@ public sealed partial class LauncherWindow : Window
                 Padding = new Thickness(12, 10, 12, 10),
                 CornerRadius = new CornerRadius(4),
                 BorderThickness = new Thickness(1),
-                BorderBrush = Brush("ChaosShellWarn"),
+                BorderBrush = ShellBrush("ChaosShellWarn"),
                 Child = new TextBlock
                 {
                     Text = notice,
                     TextWrapping = TextWrapping.Wrap,
                     FontSize = 13,
-                    Foreground = Brush("ChaosShellText"),
+                    Foreground = ShellBrush("ChaosShellText"),
                 },
             };
 
@@ -278,7 +308,7 @@ public sealed partial class LauncherWindow : Window
             FontFamily = new FontFamily("Consolas"),
             FontSize = 12,
             FontWeight = FontWeights.SemiBold,
-            Foreground = Brush(ColourKey(drawing)),
+            Foreground = ShellBrush(ColourKey(drawing)),
             VerticalAlignment = VerticalAlignment.Top,
             Margin = new Thickness(0, 2, 0, 0),
         };
@@ -291,7 +321,7 @@ public sealed partial class LauncherWindow : Window
             FontSize = 14,
             FontWeight = FontWeights.SemiBold,
             TextWrapping = TextWrapping.Wrap,
-            Foreground = Brush("ChaosShellText"),
+            Foreground = ShellBrush("ChaosShellText"),
         });
         body.Children.Add(new TextBlock
         {
@@ -299,7 +329,7 @@ public sealed partial class LauncherWindow : Window
             FontSize = 13,
             LineHeight = 19,
             TextWrapping = TextWrapping.Wrap,
-            Foreground = Brush("ChaosShellMuted"),
+            Foreground = ShellBrush("ChaosShellMuted"),
         });
         Grid.SetColumn(body, 1);
 
@@ -347,7 +377,7 @@ public sealed partial class LauncherWindow : Window
                 TextWrapping = TextWrapping.Wrap,
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(12, 0, 0, 0),
-                Foreground = Brush(offer.CanInvoke ? "ChaosShellMuted" : "ChaosShellWarn"),
+                Foreground = ShellBrush(offer.CanInvoke ? "ChaosShellMuted" : "ChaosShellWarn"),
             };
             Grid.SetColumn(reason, 1);
 
@@ -398,7 +428,7 @@ public sealed partial class LauncherWindow : Window
         _ => "ChaosShellMuted",
     };
 
-    private static SolidColorBrush Brush(string key) =>
+    private static SolidColorBrush ShellBrush(string key) =>
         Application.Current.Resources.TryGetValue(key, out var value) && value is SolidColorBrush brush
             ? brush
             : new SolidColorBrush(Microsoft.UI.Colors.Gray);
@@ -414,43 +444,58 @@ public sealed partial class LauncherWindow : Window
 
         _operatorInteracted = true;
 
-        switch (action)
+        // Nothing may escape an async void handler: an unhandled exception here
+        // ends the process, and ending the process stops a platform this shell
+        // started. Every failure becomes a sentence on the screen instead.
+        try
         {
-            case LauncherAction.StartPlatform:
-                await StartPlatformAsync().ConfigureAwait(true);
-                break;
+            switch (action)
+            {
+                case LauncherAction.StartPlatform:
+                    await StartPlatformAsync().ConfigureAwait(true);
+                    break;
 
-            case LauncherAction.StopPlatform:
-                await StopPlatformAsync().ConfigureAwait(true);
-                break;
+                case LauncherAction.StopPlatform:
+                    await StopPlatformAsync().ConfigureAwait(true);
+                    break;
 
-            case LauncherAction.RunSetup:
-                await RunSetupAsync().ConfigureAwait(true);
-                break;
+                case LauncherAction.RunSetup:
+                    await RunSetupAsync().ConfigureAwait(true);
+                    break;
 
-            case LauncherAction.OpenConsole:
-                _app.ShowConsole();
-                Close();
-                break;
+                case LauncherAction.OpenConsole:
+                    _app.ShowConsole();
+                    Close();
+                    return;
 
-            case LauncherAction.OpenSettings:
-                _app.ShowSettings();
-                break;
+                case LauncherAction.OpenSettings:
+                    _app.ShowSettings();
+                    break;
 
-            case LauncherAction.OpenLogs:
-                _lastActionMessage = PlatformController.OpenLogFolder();
-                break;
+                case LauncherAction.OpenLogs:
+                    _lastActionMessage = PlatformController.OpenLogFolder();
+                    break;
 
-            case LauncherAction.RelaunchElevated:
-                await RelaunchElevatedAsync().ConfigureAwait(true);
-                break;
+                case LauncherAction.RelaunchElevated:
+                    await RelaunchElevatedAsync().ConfigureAwait(true);
+                    break;
 
-            case LauncherAction.RecheckNow:
-                await RefreshAsync().ConfigureAwait(true);
-                break;
+                case LauncherAction.RecheckNow:
+                    await RefreshAsync().ConfigureAwait(true);
+                    break;
 
-            default:
-                break;
+                default:
+                    break;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // The window closed while the action was running.
+        }
+        catch (Exception ex)
+        {
+            Idle();
+            _lastActionMessage = $"That did not complete: {ex.Message}";
         }
 
         if (!_closing.IsCancellationRequested)

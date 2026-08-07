@@ -1,12 +1,14 @@
 using System.Net.Http;
 using Chaos.Shell.Core;
-using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.Windows.AppLifecycle;
-using Windows.UI;
 
+// Colour types are fully qualified below rather than imported. Both
+// Microsoft.UI and Windows.UI expose a "Colors" class, and importing either
+// namespace here makes an unqualified "Colors" ambiguous — a compile error the
+// owner would meet rather than a CI runner.
 namespace Chaos.Shell;
 
 /// <summary>
@@ -196,13 +198,21 @@ public partial class App : Application
     {
         if (_launcher is null)
         {
-            _launcher = new LauncherWindow(this);
-            _launcher.Closed += (_, _) =>
+            // The local is captured, not the field: by the time the handler
+            // runs the field may already hold a newer launcher, and reading it
+            // would record the wrong window's dismissal.
+            var launcher = new LauncherWindow(this);
+            launcher.Closed += (_, _) =>
             {
-                _launcherDismissed = _launcher?.Dismissed ?? true;
-                _launcher = null;
+                _launcherDismissed = launcher.Dismissed;
+                if (ReferenceEquals(_launcher, launcher))
+                {
+                    _launcher = null;
+                }
             };
-            _launcher.Activate();
+
+            _launcher = launcher;
+            launcher.Activate();
         }
         else
         {
@@ -379,10 +389,10 @@ public partial class App : Application
         }
     }
 
-    private static Color Parse(string hex)
+    private static Windows.UI.Color Parse(string hex)
     {
         var span = hex.AsSpan(1);
-        return Color.FromArgb(
+        return Windows.UI.Color.FromArgb(
             255,
             byte.Parse(span[..2], System.Globalization.NumberStyles.HexNumber, null),
             byte.Parse(span[2..4], System.Globalization.NumberStyles.HexNumber, null),
@@ -390,10 +400,10 @@ public partial class App : Application
     }
 
     /// <summary>One of the shell's brushes, or grey if the key has gone.</summary>
-    internal static SolidColorBrush Brush(string key) =>
+    internal static SolidColorBrush ShellBrush(string key) =>
         Current.Resources.TryGetValue(key, out var value) && value is SolidColorBrush brush
             ? brush
-            : new SolidColorBrush(Colors.Gray);
+            : new SolidColorBrush(Microsoft.UI.Colors.Gray);
 
     // ---------------------------------------------------------- lifecycle --
 
@@ -469,13 +479,25 @@ public partial class App : Application
 
     internal void SaveLayout(bool? annunciatorOpen = null)
     {
-        _layout = _layout with
+        // Saving runs from window Closed handlers, where the AppWindow behind a
+        // window may already be gone. Losing a remembered position is a
+        // nuisance; taking the shell down on the way out — and with it a
+        // platform this shell started — is not.
+        try
         {
-            Main = _main?.CurrentPlacement() ?? _layout.Main,
-            Annunciator = _annunciator?.CurrentPlacement() ?? _layout.Annunciator,
-            AnnunciatorWasOpen = annunciatorOpen ?? _layout.AnnunciatorWasOpen,
-            LastHost = Endpoints.BaseUri.ToString(),
-        };
+            _layout = _layout with
+            {
+                Main = _main?.CurrentPlacement() ?? _layout.Main,
+                Annunciator = _annunciator?.CurrentPlacement() ?? _layout.Annunciator,
+                AnnunciatorWasOpen = annunciatorOpen ?? _layout.AnnunciatorWasOpen,
+                LastHost = Endpoints.BaseUri.ToString(),
+            };
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException)
+        {
+            // Keep whatever was last known good.
+        }
+
         _layoutStore.Save(_layout);
     }
 

@@ -28,7 +28,7 @@ namespace Chaos.Shell;
 /// </para>
 /// </remarks>
 [SupportedOSPlatform("windows")]
-internal sealed partial class WindowsJobObject : IDisposable
+internal sealed class WindowsJobObject : IDisposable
 {
     private const int JobObjectExtendedLimitInformation = 9;
     private const uint JobObjectLimitKillOnJobClose = 0x2000;
@@ -219,22 +219,28 @@ internal sealed partial class WindowsJobObject : IDisposable
 
 #pragma warning restore CS0649
 
-    [LibraryImport("kernel32.dll", EntryPoint = "CreateJobObjectW", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
-    private static partial IntPtr CreateJobObject(IntPtr securityAttributes, string? name);
+    // Classic DllImport rather than the [LibraryImport] source generator, which
+    // is what the supervisor uses. The generator emits unsafe marshalling stubs
+    // and so needs AllowUnsafeBlocks; this project has none, every other
+    // P/Invoke in it (TrayIcon, MonitorEnumerator) is a DllImport, and adding a
+    // compiler switch to the owner's project for one file is not worth it.
 
-    [LibraryImport("kernel32.dll", SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool AssignProcessToJobObject(IntPtr job, IntPtr process);
+    [DllImport("kernel32.dll", EntryPoint = "CreateJobObjectW", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern IntPtr CreateJobObject(IntPtr securityAttributes, string? name);
 
-    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool SetInformationJobObject(IntPtr job, int informationClass, IntPtr information, uint length);
+    private static extern bool AssignProcessToJobObject(IntPtr job, IntPtr process);
 
-    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool TerminateJobObject(IntPtr job, uint exitCode);
+    private static extern bool SetInformationJobObject(IntPtr job, int informationClass, IntPtr information, uint length);
 
-    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool CloseHandle(IntPtr handle);
+    private static extern bool TerminateJobObject(IntPtr job, uint exitCode);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CloseHandle(IntPtr handle);
 }

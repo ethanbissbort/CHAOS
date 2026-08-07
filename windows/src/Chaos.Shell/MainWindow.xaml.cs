@@ -21,6 +21,13 @@ namespace Chaos.Shell;
 /// </summary>
 public sealed partial class MainWindow : Window
 {
+    /// <summary>
+    /// One client for the process. A new HttpClient every five-second poll
+    /// exhausts sockets on a node that stays up for months.
+    /// </summary>
+    private static readonly System.Net.Http.HttpClient Http =
+        new() { Timeout = TimeSpan.FromSeconds(4) };
+
     private readonly App _app;
     private readonly DispatcherQueue _dispatcher;
     private readonly StartupSequence _startup;
@@ -64,8 +71,8 @@ public sealed partial class MainWindow : Window
         RunModeText.Text = $"{banner.Headline} — {banner.Detail}";
 
         var cautionary = banner.Severity == RunModeSeverity.Caution;
-        RunModeText.Foreground = App.Brush(cautionary ? "ChaosShellWarn" : "ChaosShellMuted");
-        RunModeStrip.BorderBrush = App.Brush(
+        RunModeText.Foreground = App.ShellBrush(cautionary ? "ChaosShellWarn" : "ChaosShellMuted");
+        RunModeStrip.BorderBrush = App.ShellBrush(
             banner.ClosingTheShellStopsThePlatform ? "ChaosShellWarn" : "ChaosShellStroke");
         RunModeStrip.BorderThickness = new Thickness(
             0, 0, 0, banner.ClosingTheShellStopsThePlatform ? 2 : 1);
@@ -270,8 +277,7 @@ public sealed partial class MainWindow : Window
     {
         try
         {
-            using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(4) };
-            var body = await client.GetStringAsync(_app.Endpoints.ActiveAlarms, _closing.Token)
+            var body = await Http.GetStringAsync(_app.Endpoints.ActiveAlarms, _closing.Token)
                 .ConfigureAwait(true);
             if (AlarmSummaryReader.TryRead(body, out var counts, out _))
             {

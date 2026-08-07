@@ -164,6 +164,21 @@ public sealed partial class SettingsWindow : Window
 
     private async void OnSave(object sender, RoutedEventArgs e)
     {
+        // Nothing may escape an async void handler: an unhandled exception ends
+        // the process, and ending the process stops a platform this shell
+        // started.
+        try
+        {
+            await SaveAsync().ConfigureAwait(true);
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = $"The settings could not be saved: {ex.Message}";
+        }
+    }
+
+    private async Task SaveAsync()
+    {
         var validation = ShellSettingsValidator.Validate(Read());
         ShowProblems(validation);
 
@@ -244,7 +259,7 @@ public sealed partial class SettingsWindow : Window
             {
                 Text = warning,
                 TextWrapping = TextWrapping.Wrap,
-                Foreground = App.Brush("ChaosShellWarn"),
+                Foreground = App.ShellBrush("ChaosShellWarn"),
             });
         }
 
