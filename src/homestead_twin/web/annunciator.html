@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Annunciator Panel — Project CHAOS</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23120b06'/%3E%3Crect x='4' y='6' width='10' height='7' fill='%23ff3b30'/%3E%3Crect x='18' y='6' width='10' height='7' fill='%23f5a623'/%3E%3Crect x='4' y='17' width='10' height='7' fill='%23243028'/%3E%3Crect x='18' y='17' width='10' height='7' fill='%23243028'/%3E%3C/svg%3E">
+<script>
+/* Same root resolution as the main console: works at "/", at "/ui/", and
+   behind a reverse proxy. No CDN, no external fetches -- this panel has to
+   work on an isolated local network with the internet down, which is the
+   condition it matters most in. */
+(function () {
+  var path = window.location.pathname;
+  var marker = path.indexOf('/ui/');
+  var root = marker >= 0
+    ? path.slice(0, marker + 4)
+    : path.replace(/annunciator\.html$/, '').replace(/\/*$/, '/');
+  window.__UI_ROOT__ = root;
+  window.__API_ROOT__ = root.slice(0, -3) + 'api/v1';
+  var link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = root + 'annunciator.css';
+  document.head.appendChild(link);
+})();
+</script>
+</head>
+<body>
+
+<header class="ann-head">
+  <div class="ann-title">
+    <span class="ann-title-main">ANNUNCIATOR</span>
+    <span class="ann-title-sub">PROJECT CHAOS · MASTER ALARM PANEL</span>
+  </div>
+
+  <div class="ann-counts" id="counts" role="status" aria-live="polite">
+    <div class="count count-alarm"><b id="c-alarm">0</b><span>ALARM</span></div>
+    <div class="count count-ack"><b id="c-ack">0</b><span>ACK'D</span></div>
+    <div class="count count-ring"><b id="c-ring">0</b><span>RINGBACK</span></div>
+    <div class="count count-inh"><b id="c-inh">0</b><span>INHIBIT</span></div>
+    <div class="count count-oos"><b id="c-oos">0</b><span>OUT OF SVC</span></div>
+  </div>
+
+  <div class="ann-clock">
+    <time id="clock">--:--:--</time>
+    <span class="ann-link" id="link-state">connecting…</span>
+  </div>
+</header>
+
+<main id="panel" class="ann-panel" aria-label="Annunciator tiles">
+  <p class="ann-loading">Loading panel…</p>
+</main>
+
+<aside id="detail" class="ann-detail" hidden aria-label="Tile detail">
+  <button type="button" class="detail-close" id="detail-close" aria-label="Close detail">×</button>
+  <div id="detail-body"></div>
+</aside>
+
+<footer class="ann-controls">
+  <button type="button" id="btn-ack" class="ctl ctl-ack">
+    <span class="ctl-key">ACKNOWLEDGE</span><span class="ctl-sub">silence horn · steady lamp</span>
+  </button>
+  <button type="button" id="btn-silence" class="ctl ctl-silence">
+    <span class="ctl-key">SILENCE HORN</span><span class="ctl-sub">audible only · lamps unchanged</span>
+  </button>
+  <button type="button" id="btn-reset" class="ctl ctl-reset">
+    <span class="ctl-key">RESET</span><span class="ctl-sub">clear ringback tiles</span>
+  </button>
+  <button type="button" id="btn-test" class="ctl ctl-test">
+    <span class="ctl-key">LAMP TEST</span><span class="ctl-sub">illuminate every window</span>
+  </button>
+  <div class="ctl-spacer"></div>
+  <label class="ctl-toggle">
+    <input type="checkbox" id="opt-audio" checked>
+    <span>Audible</span>
+  </label>
+  <label class="ctl-toggle">
+    <input type="checkbox" id="opt-pending">
+    <span>Show on-delay</span>
+  </label>
+  <div class="ctl-identity" id="identity">viewer</div>
+</footer>
+
+<script type="module">
+  import { start } from './annunciator.js';
+  start();
+</script>
+</body>
+</html>

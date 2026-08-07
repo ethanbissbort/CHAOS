@@ -1,0 +1,447 @@
+/* Annunciator panel.
+ *
+ * Modelled on a hardwired control-room panel: engraved windows in a fixed
+ * grid, backlit when abnormal, dark when normal. The visual language is
+ * deliberately not the rest of the console -- this screen is meant to be read
+ * from across a room, at a glance, by someone who has learned where each
+ * window sits.
+ *
+ * Colour never carries meaning alone. Every state also differs in flash
+ * rhythm, border treatment and an explicit status word, so the panel stays
+ * readable for a colour-blind operator and in a photograph.
+ */
+
+:root {
+  --panel-bg: #0a0c0b;
+  --bay-bg: #14181a;
+  --bay-edge: #2a3238;
+  --metal: #39434a;
+  --tile-dark: #1b2124;
+  --tile-dark-edge: #2c3439;
+  --legend-dark: #55636b;
+
+  --sev-emergency: #ff2d20;
+  --sev-critical: #ff4b32;
+  --sev-major: #ffa023;
+  --sev-warning: #ffd23f;
+  --ringback: #6fe3a0;
+  --inhibit: #4aa8d8;
+  --oos: #8c96a0;
+
+  --ink: #e8eef2;
+  --ink-dim: #93a1aa;
+  --font-legend: ui-monospace, "SF Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--panel-bg);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  overflow: hidden;
+}
+
+body {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+/* ------------------------------------------------------------------ head -- */
+
+.ann-head {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 10px 18px;
+  background: linear-gradient(#1d2427, #12171a);
+  border-bottom: 2px solid var(--metal);
+}
+
+.ann-title-main {
+  display: block;
+  font-family: var(--font-legend);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+}
+
+.ann-title-sub {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--ink-dim);
+  margin-top: 2px;
+}
+
+.ann-counts {
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.count {
+  min-width: 78px;
+  padding: 6px 10px;
+  text-align: center;
+  background: #10161a;
+  border: 1px solid var(--bay-edge);
+  border-radius: 3px;
+}
+
+.count b {
+  display: block;
+  font-family: var(--font-legend);
+  font-size: 21px;
+  line-height: 1;
+}
+
+.count span {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--ink-dim);
+  margin-top: 3px;
+}
+
+.count-alarm b { color: var(--sev-critical); }
+.count-ack b   { color: var(--sev-major); }
+.count-ring b  { color: var(--ringback); }
+.count-inh b   { color: var(--inhibit); }
+.count-oos b   { color: var(--oos); }
+
+/* A non-zero out-of-service count is not decoration: it means part of the
+   panel is lying about being normal. It gets a permanent marker. */
+.count-oos[data-nonzero="true"] {
+  border-color: var(--oos);
+  box-shadow: 0 0 0 1px var(--oos) inset;
+}
+
+.ann-clock {
+  text-align: right;
+  font-family: var(--font-legend);
+}
+
+.ann-clock time { font-size: 19px; }
+
+.ann-link {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--ink-dim);
+  margin-top: 2px;
+}
+
+.ann-link[data-state="stale"] { color: var(--sev-warning); }
+.ann-link[data-state="down"]  { color: var(--sev-critical); }
+
+/* ----------------------------------------------------------------- bays -- */
+
+.ann-panel {
+  overflow-y: auto;
+  padding: 14px 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ann-loading { color: var(--ink-dim); font-family: var(--font-legend); }
+
+.bay {
+  background: var(--bay-bg);
+  border: 1px solid var(--bay-edge);
+  border-radius: 4px;
+  padding: 8px 10px 12px;
+}
+
+.bay-title {
+  font-family: var(--font-legend);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--ink-dim);
+  margin: 0 0 8px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--bay-edge);
+}
+
+.bay-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 7px;
+}
+
+/* ---------------------------------------------------------------- tiles -- */
+
+.tile {
+  position: relative;
+  min-height: 74px;
+  padding: 8px 6px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  cursor: pointer;
+  text-align: center;
+  font-family: var(--font-legend);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.25;
+  color: var(--legend-dark);
+  background: var(--tile-dark);
+  border: 1px solid var(--tile-dark-edge);
+  border-radius: 2px;
+  /* The bevel that makes a backlit window read as a physical object. */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.tile:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.tile-status {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 2px;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  opacity: 0.75;
+}
+
+/* Normal: dark. The default above already is the unlit window. */
+
+/* Alarm: lit, fast flash. Severity sets the colour. */
+.tile[data-state="alarm"],
+.tile[data-state="acknowledged"] {
+  color: #1a0d05;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.tile[data-sev="emergency"][data-state="alarm"],
+.tile[data-sev="emergency"][data-state="acknowledged"] { background: var(--sev-emergency); border-color: #ff8a7a; }
+.tile[data-sev="critical"][data-state="alarm"],
+.tile[data-sev="critical"][data-state="acknowledged"]  { background: var(--sev-critical);  border-color: #ff9280; }
+.tile[data-sev="major"][data-state="alarm"],
+.tile[data-sev="major"][data-state="acknowledged"]     { background: var(--sev-major);     border-color: #ffc879; }
+.tile[data-sev="warning"][data-state="alarm"],
+.tile[data-sev="warning"][data-state="acknowledged"]   { background: var(--sev-warning);   border-color: #ffe694; }
+
+.tile[data-state="alarm"] {
+  animation: flash-fast 0.72s steps(1, end) infinite;
+  box-shadow: 0 0 14px rgba(255, 90, 50, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* An emergency window is double-bordered so it is distinguishable from
+   critical without relying on the red hue alone. */
+.tile[data-sev="emergency"] { outline: 2px solid rgba(255, 255, 255, 0.5); outline-offset: -5px; }
+
+.tile[data-state="acknowledged"] { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4); }
+
+/* Ringback: condition gone, waiting to be reset. Slow flash, cool colour. */
+.tile[data-state="ringback"] {
+  background: #12352a;
+  border-color: var(--ringback);
+  color: var(--ringback);
+  animation: flash-slow 1.6s steps(1, end) infinite;
+}
+
+/* Inhibited: recorded, deliberately not annunciated. */
+.tile[data-state="inhibited"] {
+  background: repeating-linear-gradient(
+    -45deg, #14262e, #14262e 6px, #17303a 6px, #17303a 12px
+  );
+  border-color: var(--inhibit);
+  color: #a9d8ee;
+}
+
+/* Out of service: this window cannot light. Hatched like a tagged-out panel,
+   because a dark tile here would be a false assurance. */
+.tile[data-state="out_of_service"] {
+  background: repeating-linear-gradient(
+    -45deg, #1b1e21, #1b1e21 6px, #262b30 6px, #262b30 12px
+  );
+  border-color: var(--oos);
+  border-style: dashed;
+  color: var(--oos);
+}
+
+.tile[data-state="out_of_service"] .tile-legend { opacity: 0.6; }
+
+/* Lamp test: everything lit, as on a real panel. */
+body[data-lamptest="on"] .tile {
+  background: var(--sev-major) !important;
+  border-color: #ffd9a0 !important;
+  color: #1a0d05 !important;
+  animation: none !important;
+  background-image: none !important;
+}
+
+@keyframes flash-fast {
+  0%, 49% { filter: brightness(1); }
+  50%, 100% { filter: brightness(0.32); }
+}
+
+@keyframes flash-slow {
+  0%, 59% { filter: brightness(1); }
+  60%, 100% { filter: brightness(0.42); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Flashing is the primary "unacknowledged" cue, so it is replaced rather
+     than simply removed: a pulsing ring keeps the distinction without the
+     full-tile strobe. */
+  .tile[data-state="alarm"],
+  .tile[data-state="ringback"] {
+    animation: none;
+  }
+  .tile[data-state="alarm"] { outline: 3px solid #fff; outline-offset: -6px; }
+  .tile[data-state="ringback"] { outline: 3px dashed var(--ringback); outline-offset: -6px; }
+}
+
+/* --------------------------------------------------------------- detail -- */
+
+.ann-detail {
+  position: fixed;
+  top: 64px;
+  right: 16px;
+  width: min(420px, calc(100vw - 32px));
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+  padding: 16px 18px;
+  background: #10161a;
+  border: 1px solid var(--metal);
+  border-radius: 4px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+  z-index: 20;
+}
+
+.detail-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--ink-dim);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.detail-legend {
+  font-family: var(--font-legend);
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  margin: 0 0 2px;
+}
+
+.detail-name { color: var(--ink-dim); font-size: 13px; margin: 0 0 12px; }
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 0;
+  border-top: 1px solid #1e262b;
+  font-size: 12px;
+}
+
+.detail-row dt { color: var(--ink-dim); margin: 0; }
+.detail-row dd { margin: 0; text-align: right; font-family: var(--font-legend); }
+
+.detail-note {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  border-radius: 3px;
+  background: #1a1410;
+  border-left: 3px solid var(--oos);
+  color: #d8c9b8;
+}
+
+.detail-note[data-kind="inhibited"] { border-left-color: var(--inhibit); background: #101f26; color: #bcdff0; }
+
+.detail-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+
+/* ------------------------------------------------------------- controls -- */
+
+.ann-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: linear-gradient(#161c20, #0e1315);
+  border-top: 2px solid var(--metal);
+}
+
+.ctl {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 132px;
+  padding: 9px 14px;
+  cursor: pointer;
+  border-radius: 3px;
+  border: 1px solid #4a565e;
+  background: linear-gradient(#39444b, #232c31);
+  color: var(--ink);
+  font-family: var(--font-legend);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 2px 0 #11171a;
+}
+
+.ctl:active { transform: translateY(1px); box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5); }
+.ctl:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.ctl[disabled] { opacity: 0.42; cursor: not-allowed; }
+
+.ctl-key { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; }
+.ctl-sub { font-size: 9px; letter-spacing: 0.06em; color: var(--ink-dim); }
+
+.ctl-ack:not([disabled])     { border-color: #b8862e; background: linear-gradient(#6b4f1c, #3d2d10); }
+.ctl-silence:not([disabled]) { border-color: #6a7580; }
+.ctl-reset:not([disabled])   { border-color: #2f7d59; background: linear-gradient(#245c42, #143025); }
+
+.ctl-spacer { flex: 1; }
+
+.ctl-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--ink-dim);
+  cursor: pointer;
+}
+
+.ctl-identity {
+  font-family: var(--font-legend);
+  font-size: 11px;
+  padding: 5px 10px;
+  border: 1px solid var(--bay-edge);
+  border-radius: 3px;
+  color: var(--ink-dim);
+}
+
+.ctl-identity[data-role="operator"],
+.ctl-identity[data-role="maintainer"],
+.ctl-identity[data-role="administrator"] { color: var(--ringback); border-color: #2f7d59; }
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 84px;
+  transform: translateX(-50%);
+  padding: 10px 18px;
+  background: #1d2429;
+  border: 1px solid var(--metal);
+  border-radius: 3px;
+  font-size: 13px;
+  z-index: 40;
+}
+
+.toast[data-kind="error"] { border-color: var(--sev-critical); color: #ffc9c0; }

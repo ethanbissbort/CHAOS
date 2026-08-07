@@ -130,7 +130,48 @@ or amend section 25.2 if deeper hierarchies are genuinely wanted.
 
 ---
 
-## F-007 — `battery_cell_imbalance` is enabled but can never fire
+## F-007 — Ten of the forty alarms can never fire
+
+**Severity: high — alarms that look configured and are not**
+
+*Widened from a single alarm after the annunciator panel (`GET /api/v1/annunciator`)
+computed serviceability for every definition. `battery_cell_imbalance` was the
+first case found; it is one of ten.*
+
+Each of these is **enabled**, appears healthy in the alarm list, and has a
+trigger point that does not exist for its asset. None can ever raise.
+
+| Alarm | Severity | Missing trigger point |
+|---|---|---|
+| `rack_smoke_detected` | critical | `smoke_active` on the NetBotz sensor |
+| `power_container_water_ingress` | critical | `leak_active` on the container sensor |
+| `power_container_ac_bus_lost` | critical | `energized_state` on the AC main |
+| `alarm_beacon_unavailable` | major | `availability_state` on the beacon |
+| `battery_cell_imbalance` | major | `cell_voltage_delta_mv` on the bank |
+| `inverter_overload_risk` | major | `power_ac_kw` on all 4 inverters |
+| `rack_door_forced_open` | major | `forced_open_active` on the controller |
+| `rack_door_open_extended` | warning | `door_state` on the controller |
+| `storage_capacity_high` | warning | `storage_used_pct` on all 3 servers |
+| `time_sync_drift` | warning | `clock_offset_ms` on all 3 servers |
+
+**The whole SAFETY bay is dark and none of it works.** All three safety alarms
+are in this list. Smoke detection and water ingress in the 20-foot container
+that holds the batteries, the power conversion equipment *and* the server rack
+cannot raise an alarm — and that container is the common-mode failure domain
+SDD section 16.1 is explicitly written about. The beacon alarm that would report
+the local siren dead is also inoperable, so the independent alerting path
+section 16.1 relies on has no health check either.
+
+An alarm list showing "40 defined, 0 active" reads as full coverage. A quarter
+of it is incapable of firing.
+
+**Recommendation:** add the ten trigger points to their asset classes or
+bindings. Until then the platform reports them as `out_of_service` on the
+annunciator rather than dark, which is honest but is not coverage.
+
+---
+
+## F-007a — `battery_cell_imbalance` (the original case)
 
 **Severity: high — an alarm that looks configured and is not**
 
