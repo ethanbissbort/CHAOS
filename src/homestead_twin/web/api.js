@@ -224,14 +224,24 @@ export const api = {
   assetDependencies: (assetId) => get(`/assets/${encodeURI(assetId)}/dependencies`),
   registrySummary: () => get('/registry/summary'),
   activeAlarms: () => getFirst(['/alarms/active', '/alarms?state=active']),
+  incidents: (state = 'open') => get(`/incidents?state=${encodeURIComponent(state)}`),
   energyState: () => get('/energy/state'),
   loadBudgets: () => getFirst(['/energy/load-budgets', '/energy/loads']),
 
+  // The alarms router takes {note, force}; `note` is the mandatory audit reason.
   alarmAction: (alarmId, action, reason) =>
     postFirst(
       [`/alarms/${encodeURIComponent(alarmId)}/${action}`, `/alarms/${encodeURIComponent(alarmId)}/transition`],
-      { reason, action, note: reason },
+      { note: reason },
     ),
+
+  /** POST /commands rejects unknown fields, so this mirrors CommandCreate exactly. */
+  issueCommand: ({ assetId, pointName, command, value, reason, dryRun = false }) => {
+    const body = { asset_id: assetId, command, reason, dry_run: Boolean(dryRun), requires_ack: true };
+    if (pointName) body.point_name = pointName;
+    if (value !== undefined) body.value = value;
+    return post('/commands', body);
+  },
 };
 
 /* ------------------------------------------------------------ formatting -- */

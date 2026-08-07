@@ -1,0 +1,656 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://homestead.local/schemas/rack-layout.schema.json",
+  "title": "Homestead Rack Layout Proposal",
+  "description": "Preliminary rack-unit, PDU-outlet, switch-port, VLAN and power-feed assignments for a homestead rack. Every record is a proposal for review; no value in a conforming document is a ratified decision.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "document_type",
+    "document_status",
+    "approval_status",
+    "generated_at",
+    "extends",
+    "rack",
+    "power_feeds",
+    "pdus",
+    "placements",
+    "rack_unit_allocation",
+    "thermal_summary",
+    "layout_notes"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "document_type": {
+      "const": "rack_layout"
+    },
+    "document_status": {
+      "const": "proposal_for_review"
+    },
+    "approval_status": {
+      "enum": [
+        "not_ratified",
+        "under_review",
+        "ratified"
+      ]
+    },
+    "authority": {
+      "type": "string"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "extends": {
+      "type": "string"
+    },
+    "merge_target": {
+      "type": "string"
+    },
+    "source_document": {
+      "type": "string"
+    },
+    "work_queue_item": {
+      "type": "string"
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1
+    },
+    "review_required_before_use": {
+      "const": true
+    },
+    "supersedes": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "placement_principles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "rack": {
+      "type": "object",
+      "required": [
+        "rack_asset_id",
+        "rack_unit_count",
+        "rack_unit_numbering"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "rack_asset_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+){3}$"
+        },
+        "rack_unit_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60
+        },
+        "rack_unit_count_source": {
+          "type": "string"
+        },
+        "rack_unit_numbering": {
+          "const": "bottom_to_top_unit_1_is_lowest"
+        },
+        "open_fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "power_feeds": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "feed_id",
+          "upstream_asset_id",
+          "description",
+          "data_status",
+          "open_fields"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "feed_id": {
+            "enum": [
+              "A",
+              "B"
+            ]
+          },
+          "upstream_asset_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+){3}$"
+          },
+          "description": {
+            "type": "string"
+          },
+          "data_status": {
+            "enum": [
+              "derived_from_register",
+              "proposed",
+              "unresolved"
+            ]
+          },
+          "open_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "pdus": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "pdu_asset_id",
+          "outlet_count",
+          "power_feed",
+          "upstream_asset_id",
+          "outlets"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "pdu_asset_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+){3}$"
+          },
+          "outlet_count": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "outlet_count_source": {
+            "type": "string"
+          },
+          "nominal_voltage_v": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "power_feed": {
+            "enum": [
+              "A",
+              "B",
+              "A_and_B",
+              "not_assigned"
+            ]
+          },
+          "upstream_asset_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+){3}$"
+          },
+          "upstream_basis": {
+            "type": "string"
+          },
+          "outlets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "outlet",
+                "assigned_asset_id",
+                "purpose",
+                "status"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "outlet": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "assigned_asset_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+){3}$"
+                },
+                "purpose": {
+                  "enum": [
+                    "primary_power_cord",
+                    "redundant_power_cord",
+                    "spare"
+                  ]
+                },
+                "status": {
+                  "enum": [
+                    "preliminary_assignment",
+                    "reserved_pending_psu_confirmation",
+                    "spare"
+                  ]
+                }
+              }
+            }
+          },
+          "open_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "switch_port_plan": {
+      "type": "object",
+      "required": [
+        "access_switch_asset_id",
+        "numbering_basis"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "access_switch_asset_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+){3}$"
+        },
+        "backbone_switch_asset_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+){3}$"
+        },
+        "numbering_basis": {
+          "const": "positional_index_only"
+        },
+        "interface_naming_status": {
+          "enum": [
+            "unresolved",
+            "confirmed"
+          ]
+        },
+        "open_fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "placements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "asset_id",
+          "name",
+          "asset_class",
+          "register_status",
+          "mount_style",
+          "rack_unit_start",
+          "rack_unit_height",
+          "rack_unit_height_basis",
+          "depth_class",
+          "power_feed",
+          "power_feed_basis",
+          "power_source_asset_id",
+          "pdu_asset_id",
+          "pdu_outlet",
+          "pdu_outlet_basis",
+          "switch_asset_id",
+          "switch_port",
+          "switch_port_basis",
+          "additional_switch_connections",
+          "vlan_ids",
+          "vlan_asset_ids",
+          "vlan_basis",
+          "estimated_power_w",
+          "power_data_status",
+          "heat_load_status",
+          "placement_status",
+          "data_status",
+          "open_fields",
+          "notes"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "asset_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+){3}$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "asset_class": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "register_status": {
+            "type": "string"
+          },
+          "mount_style": {
+            "enum": [
+              "rack_unit",
+              "zero_u_accessory",
+              "door_mounted"
+            ]
+          },
+          "rack_unit_start": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 60
+          },
+          "rack_unit_height": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 60
+          },
+          "rack_unit_height_basis": {
+            "enum": [
+              "published_form_factor_for_named_model",
+              "estimated_pending_model_confirmation",
+              "not_applicable"
+            ]
+          },
+          "depth_class": {
+            "enum": [
+              "full_depth",
+              "mid_depth",
+              "shallow",
+              "not_applicable"
+            ]
+          },
+          "power_feed": {
+            "enum": [
+              "A",
+              "B",
+              "A_and_B",
+              "not_assigned"
+            ]
+          },
+          "power_feed_basis": {
+            "type": "string"
+          },
+          "power_source_asset_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+){3}$"
+          },
+          "pdu_asset_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+){3}$"
+          },
+          "pdu_outlet": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
+          },
+          "pdu_outlet_basis": {
+            "type": "string"
+          },
+          "switch_asset_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+){3}$"
+          },
+          "switch_port": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
+          },
+          "switch_port_basis": {
+            "type": "string"
+          },
+          "additional_switch_connections": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "switch_asset_id",
+                "switch_port",
+                "purpose",
+                "vlan_ids",
+                "status"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "switch_asset_id": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+){3}$"
+                },
+                "switch_port": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "purpose": {
+                  "type": "string"
+                },
+                "vlan_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  },
+                  "uniqueItems": true
+                },
+                "status": {
+                  "enum": [
+                    "preliminary",
+                    "proposed",
+                    "confirmed"
+                  ]
+                }
+              }
+            }
+          },
+          "vlan_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "uniqueItems": true
+          },
+          "vlan_asset_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+){3}$"
+            },
+            "uniqueItems": true
+          },
+          "vlan_basis": {
+            "type": "string"
+          },
+          "estimated_power_w": {
+            "type": "null",
+            "description": "Always null: the design package contains no power figures for rack equipment."
+          },
+          "power_data_status": {
+            "const": "not_estimated"
+          },
+          "heat_load_status": {
+            "const": "not_calculated_pending_measured_load"
+          },
+          "placement_status": {
+            "enum": [
+              "preliminary",
+              "proposed",
+              "ratified"
+            ]
+          },
+          "data_status": {
+            "enum": [
+              "estimated",
+              "derived_from_register",
+              "confirmed"
+            ]
+          },
+          "open_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "rack_unit_allocation": {
+      "type": "object",
+      "required": [
+        "occupied_rack_units",
+        "free_rack_units",
+        "free_rack_unit_count"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "occupied_rack_units": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "uniqueItems": true
+        },
+        "free_rack_units": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "uniqueItems": true
+        },
+        "free_rack_unit_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "contiguous_free_block": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "thermal_summary": {
+      "type": "object",
+      "required": [
+        "total_estimated_power_w",
+        "power_data_status",
+        "heat_load_status",
+        "open_fields"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "total_estimated_power_w": {
+          "type": "null"
+        },
+        "power_data_status": {
+          "const": "not_estimated"
+        },
+        "heat_load_status": {
+          "const": "not_calculated_pending_measured_load"
+        },
+        "basis": {
+          "type": "string"
+        },
+        "open_fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "required_before_use": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "excluded_assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "asset_id",
+          "reason"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "asset_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+){3}$"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "open_document_fields": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "layout_notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    }
+  }
+}

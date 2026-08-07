@@ -135,7 +135,23 @@ async function loadAlarms() {
   const direct = await api.activeAlarms();
   if (direct.ok) {
     const items = Array.isArray(direct.data) ? direct.data : (direct.data.items || direct.data.alarms || []);
-    return { source: 'alarms API', alarms: items.map(normalise), result: direct, truncated: false };
+    const alarms = items.map(normalise);
+
+    // The alarms endpoint returns incident ids; titles live on /incidents.
+    const wanted = new Set(alarms.map((a) => a.incident_id).filter(Boolean));
+    if (wanted.size) {
+      const incidents = await api.incidents('open');
+      if (incidents.ok) {
+        const rows = Array.isArray(incidents.data) ? incidents.data : (incidents.data.items || incidents.data.incidents || []);
+        const titles = new Map(rows.map((row) => [row.id || row.incident_id, row.title]));
+        alarms.forEach((alarm) => {
+          if (alarm.incident_id && titles.has(alarm.incident_id)) {
+            alarm.incident_title = titles.get(alarm.incident_id);
+          }
+        });
+      }
+    }
+    return { source: 'alarms API', alarms, result: direct, truncated: false };
   }
   const overview = await api.overview(100);
   if (!overview.ok) return { source: null, alarms: [], result: overview, truncated: false };
@@ -196,8 +212,12 @@ export default {
         return;
       }
 
-      if (loaded.summary) {
-        const s = loaded.summary;
+      // Counts always come from the overview aggregate so the header is the
+      // same number the home screen and the nav badge show.
+      const overview = ctx.latestOverview();
+      const summary = loaded.summary || (overview.data ? overview.data.alarms : null);
+      if (summary) {
+        const s = summary;
         root.appendChild(h('div', { class: 'stat-row', style: 'margin-bottom:var(--gap)' },
           h('span', null, h('b', { text: String(s.active_total || 0) }), ' active'),
           h('span', null, h('b', { text: String((s.emergency_active || 0) + (s.critical_active || 0)) }), ' critical or emergency'),

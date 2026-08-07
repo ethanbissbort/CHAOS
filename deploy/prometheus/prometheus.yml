@@ -1,0 +1,133 @@
+# Prometheus -- infrastructure monitoring (SDD section 8.7).
+#
+# HONEST SCOPE, read this before adding panels that depend on it.
+#
+# Exactly one job below is live: Prometheus scraping itself. Everything else is
+# commented out because the exporter it needs is not deployed, or because the
+# target's address is an open item in the design package.
+#
+# The digital twin API does NOT currently expose /metrics. Process telemetry
+# (ingest rate, dead letters, command outcomes, alarm counts, EMS state) is
+# written to PostgreSQL by the platform itself and is read by Grafana through
+# the PostgreSQL datasource, not through Prometheus. Prometheus's job here is
+# the layer underneath: hosts, switches, UPS, PDUs, NetBotz, ZFS, backups.
+#
+# Addressing: data/homestead_asset_register.yaml deliberately records every
+# management_ip as TBD. No target below invents one. Fill them in from the
+# addressing plan when it exists (SDD 49 item 4 / docs/network-and-trust-boundaries.md).
+
+global:
+  scrape_interval: 30s
+  scrape_timeout: 10s
+  evaluation_interval: 30s
+  external_labels:
+    site: homestead
+    node_role: primary
+
+# Alerting is intentionally not wired to Alertmanager. Operational alarms are
+# the platform's job (SDD 14): they carry asset identity, severity, lifecycle,
+# an operating procedure and an audit trail, none of which an Alertmanager
+# notification has. Prometheus alerting is appropriate for infrastructure
+# liveness only -- add it when there are exporters to alert on.
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ["alertmanager:9093"]
+# rule_files:
+#   - /etc/prometheus/rules/*.yml
+
+scrape_configs:
+  # --- Live -----------------------------------------------------------------
+  - job_name: prometheus
+    static_configs:
+      - targets: ["127.0.0.1:9090"]
+        labels:
+          asset_id: it.application_service.rack_01.prometheus_01
+          service: prometheus
+
+  # --- Awaiting an exporter -------------------------------------------------
+
+  # Digital twin API. Enable once the application exposes /metrics.
+  # Until then, use the PostgreSQL datasource in Grafana and /health for liveness.
+  # - job_name: homestead-twin
+  #   metrics_path: /metrics
+  #   static_configs:
+  #     - targets: ["twin:8000"]
+  #       labels:
+  #         asset_id: it.application_service.rack_01.digital_twin_api_01
+  #         service: digital-twin-api
+
+  # PostgreSQL. Needs prometheus-community/postgres_exporter as a sidecar.
+  # - job_name: postgres
+  #   static_configs:
+  #     - targets: ["postgres-exporter:9187"]
+  #       labels:
+  #         asset_id: it.application_service.rack_01.postgres_01
+  #         service: postgresql
+
+  # Mosquitto. Needs sapcc/mosquitto-exporter, with a read-only $SYS identity.
+  # - job_name: mosquitto
+  #   static_configs:
+  #     - targets: ["mosquitto-exporter:9234"]
+  #       labels:
+  #         asset_id: it.application_service.rack_01.mqtt_01
+  #         service: mosquitto
+
+  # Container and VM hosts. Needs node_exporter on each host.
+  # Assets: it.server.rack_01.r740xd_01, it.server.rack_01.t7820_01,
+  #         it.server.secondary_control_node.01
+  # - job_name: node
+  #   static_configs:
+  #     - targets: []   # host:9100 -- addressing TBD (SDD 49 item 4)
+
+  # ZFS pools and storage arrays (SDD 8.7).
+  # Assets: it.storage_array.rack_01.sc200_01, it.storage_array.rack_01.sc200_02
+  # - job_name: zfs
+  #   static_configs:
+  #     - targets: []   # node_exporter with the zfs collector enabled
+
+  # --- SNMP: UPS, PDUs, NetBotz, switches, router, WLC (SDD 8.7, 15.1) ------
+  #
+  # These devices live on VLAN 10 (management). The scrape is the one flow that
+  # crosses from VLAN 20 into VLAN 10, and it is read-only SNMP. Use SNMPv3 with
+  # authPriv and a per-device credential -- SNMPv2c community strings are
+  # plaintext passwords shared across a fleet, which is exactly what SDD 15.2
+  # rules out.
+  #
+  # Needs prometheus/snmp_exporter with a generated snmp.yml.
+  #
+  # Assets in the register that belong here:
+  #   energy.ups.rack_01.01                     APC Smart-UPS 1500
+  #   energy.pdu.rack_01.switched_01            switched rack PDU
+  #   energy.pdu.rack_01.basic_01               basic rack PDU (no network mgmt)
+  #   energy.ats.rack_01.ap5442_01              rack ATS
+  #   it.environmental_monitor.power_container.netbotz_500_01
+  #   it.environmental_monitor.rack_01.nbrk0550_01
+  #   it.environmental_monitor.rack_01.ap9320_01
+  #   it.switch.rack_01.catalyst_2960x_01
+  #   it.switch.rack_01.arista_7050qx_01
+  #   it.router.rack_01.isr4321_01
+  #   it.wireless_controller.rack_01.wlc5508_01
+  #   security.access_controller.rack_01.ap9361_01
+  #
+  # - job_name: snmp
+  #   metrics_path: /snmp
+  #   params:
+  #     auth: [homestead_v3]
+  #     module: [apc_ups]           # or: pdu, netbotz, if_mib
+  #   static_configs:
+  #     - targets: []               # management addressing TBD -- do not guess
+  #   relabel_configs:
+  #     - source_labels: [__address__]
+  #       target_label: __param_target
+  #     - source_labels: [__param_target]
+  #       target_label: instance
+  #     - target_label: __address__
+  #       replacement: snmp-exporter:9116
+
+  # --- Backup job success (MVP acceptance criterion 5) ---------------------
+  # deploy/backup/backup.sh can write a textfile-collector metric; point
+  # node_exporter's --collector.textfile.directory at the same path.
+  # - job_name: backup
+  #   static_configs:
+  #     - targets: []   # node_exporter on the backup host

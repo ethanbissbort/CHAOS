@@ -1,7 +1,8 @@
 {
-  "validation_timestamp": "2026-08-06T18:51:57Z",
+  "validation_timestamp": "2026-08-07T13:34:25Z",
   "schema_version": "0.3.0",
   "result": "PASS",
+  "strict": false,
   "counts": {
     "domains": 12,
     "asset_classes": 72,
@@ -9,16 +10,160 @@
     "assets": 90,
     "relationships": 99,
     "point_bindings": 245,
-    "json_schemas": 4
+    "water_assets": 47,
+    "water_relationships": 92,
+    "water_points": 39,
+    "rack_placements": 22,
+    "rack_units_occupied": 24,
+    "rack_units_free": 18,
+    "lifecycle_records": 90,
+    "lifecycle_owned": 2,
+    "lifecycle_planned": 88,
+    "documents_validated": 10,
+    "json_schemas": 10
   },
+  "documents": [
+    {
+      "document": "alarm_definitions",
+      "data": "data/alarm_definitions.yaml",
+      "schema": "schemas/alarm_definitions.schema.json",
+      "json_mirror": "data/alarm_definitions.json",
+      "status": "OK",
+      "counts": {
+        "alarms": 40
+      },
+      "messages": []
+    },
+    {
+      "document": "asset_class_dictionary",
+      "data": "data/asset_class_dictionary.yaml",
+      "schema": "schemas/asset_class_dictionary.schema.json",
+      "json_mirror": "data/asset_class_dictionary.json",
+      "status": "OK",
+      "counts": {
+        "asset_classes": 72,
+        "point_profiles": 5,
+        "domains": 12
+      },
+      "messages": []
+    },
+    {
+      "document": "asset_lifecycle",
+      "data": "data/asset_lifecycle.yaml",
+      "schema": "schemas/asset_lifecycle.schema.json",
+      "json_mirror": "data/asset_lifecycle.json",
+      "status": "OK",
+      "counts": {
+        "records": 90
+      },
+      "messages": []
+    },
+    {
+      "document": "homestead_asset_register",
+      "data": "data/homestead_asset_register.yaml",
+      "schema": "schemas/asset_register.schema.json",
+      "json_mirror": "data/homestead_asset_register.json",
+      "status": "OK",
+      "counts": {
+        "assets": 90,
+        "relationships": 99
+      },
+      "messages": []
+    },
+    {
+      "document": "load_schedule",
+      "data": "data/load_schedule.yaml",
+      "schema": "schemas/load_schedule.schema.json",
+      "json_mirror": "data/load_schedule.json",
+      "status": "OK",
+      "counts": {
+        "loads": 12
+      },
+      "messages": []
+    },
+    {
+      "document": "point_bindings",
+      "data": "data/point_bindings.yaml",
+      "schema": "schemas/point_bindings.schema.json",
+      "json_mirror": "data/point_bindings.json",
+      "status": "OK",
+      "counts": {
+        "bindings": 245
+      },
+      "messages": []
+    },
+    {
+      "document": "point_dictionary",
+      "data": "data/point_dictionary.yaml",
+      "schema": "schemas/point_dictionary.schema.json",
+      "json_mirror": "data/point_dictionary.json",
+      "status": "OK",
+      "counts": {
+        "points": 214
+      },
+      "messages": []
+    },
+    {
+      "document": "rack_layout",
+      "data": "data/rack_layout.yaml",
+      "schema": "schemas/rack_layout.schema.json",
+      "json_mirror": "data/rack_layout.json",
+      "status": "OK",
+      "counts": {
+        "placements": 22
+      },
+      "messages": []
+    },
+    {
+      "document": "water_assets",
+      "data": "data/water_assets.yaml",
+      "schema": "schemas/water_assets.schema.json",
+      "json_mirror": "data/water_assets.json",
+      "status": "OK",
+      "counts": {
+        "assets": 47,
+        "relationships": 92
+      },
+      "messages": []
+    },
+    {
+      "document": "water_points",
+      "data": "data/water_points.yaml",
+      "schema": "schemas/water_points.schema.json",
+      "json_mirror": "data/water_points.json",
+      "status": "OK",
+      "counts": {
+        "points": 39
+      },
+      "messages": []
+    }
+  ],
   "checks": [
+    "Every data/*.yaml was discovered and paired with its schema by name.",
     "All JSON Schemas are valid Draft 2020-12 schemas.",
     "All YAML documents validate against their schemas.",
-    "All asset IDs are unique.",
+    "Every data/*.json is content-equal to its data/*.yaml source.",
+    "All asset IDs are unique and match the section 25.2 identification format.",
     "All parent and relationship references resolve.",
-    "All asset classes and domain assignments resolve.",
+    "All asset classes, domains and relationship types resolve.",
     "All point profiles and class default points resolve.",
     "All point bindings reference existing assets and point definitions.",
-    "All point IDs match <asset_id>/<point_name>."
-  ]
+    "All point IDs match <asset_id>/<point_name>.",
+    "All point names match the dictionary point_name_pattern.",
+    "Water extension asset IDs are unique, well formed and do not collide with the base register.",
+    "Water extension classes, domains, parents, profiles and relationships resolve.",
+    "Water point names are unique against the base dictionary and match point_name_pattern.",
+    "Water point classes, units and applicable asset classes resolve.",
+    "Rack layout references resolve and no two devices claim the same rack unit.",
+    "Rack layout PDU outlets and switch ports are each claimed at most once.",
+    "Rack layout VLAN assignments agree with the register network segments.",
+    "Lifecycle records resolve to register assets and follow the declared ownership derivation.",
+    "No lifecycle record carries a price, date or warranty term while marked not_yet_imported."
+  ],
+  "notes": [
+    "data/alarm_definitions.yaml has no dedicated cross-document check in this validator; schema and JSON-mirror checks still applied.",
+    "data/load_schedule.yaml has no dedicated cross-document check in this validator; schema and JSON-mirror checks still applied."
+  ],
+  "warnings": [],
+  "errors": []
 }

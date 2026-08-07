@@ -868,6 +868,56 @@ def _subsystem_rollup(reader: Reader, settings: Settings, detailed: bool = False
 # ---------------------------------------------------------------------------
 
 
+def _normalise_interlock(
+    entry: Any, *, source: str, evaluated_at: str | None, command_id: str | None
+) -> dict:
+    """Accept either interlock record shape without losing information.
+
+    The command service records ``{code, allowed, reason, detail, blocks_dispatch}``;
+    older/simpler producers record ``{name, passed, detail}``. An operator needs
+    both facts kept apart: whether the check *passed*, and whether it would stop
+    a real dispatch even so (a dry run passes checks it would fail for real).
+    """
+    if not isinstance(entry, dict):
+        return {
+            "name": str(entry),
+            "passed": None,
+            "blocking": None,
+            "blocks_dispatch": None,
+            "detail": None,
+            "context": None,
+            "source": source,
+            "evaluated_at": evaluated_at,
+            "command_id": command_id,
+        }
+
+    passed = entry.get("passed")
+    if passed is None:
+        passed = entry.get("allowed")
+    if passed is None and entry.get("result") is not None:
+        passed = entry["result"] in ("pass", "passed", "ok", True)
+    if passed is not None:
+        passed = bool(passed)
+
+    detail = entry.get("reason") if isinstance(entry.get("reason"), str) else None
+    context = entry.get("detail")
+    if detail is None and isinstance(context, str):
+        detail, context = context, None
+
+    return {
+        "name": entry.get("name") or entry.get("code") or entry.get("interlock") or "unnamed",
+        "passed": passed,
+        "blocking": None if passed is None else (not passed),
+        "blocks_dispatch": entry.get("blocks_dispatch"),
+        "detail": detail,
+        "context": context,
+        "override_by": entry.get("override_by"),
+        "source": source,
+        "evaluated_at": evaluated_at,
+        "command_id": command_id,
+    }
+
+
 def _mode_for(reader: Reader, scope_type: str, scope_id: str) -> OperatingMode | None:
     stmt = select(OperatingMode).where(
         OperatingMode.scope_type == scope_type, OperatingMode.scope_id == scope_id
@@ -1713,33 +1763,14 @@ def get_control(asset_id: str, session: DbSession, settings: AppSettings) -> dic
             break
     if interlock_source is not None:
         for entry in interlock_source.interlocks_evaluated or []:
-            if isinstance(entry, dict):
-                passed = entry.get("passed")
-                if passed is None:
-                    passed = entry.get("result") in ("pass", "passed", "ok", True)
-                interlocks.append(
-                    {
-                        "name": entry.get("name") or entry.get("interlock") or "unnamed",
-                        "passed": bool(passed),
-                        "blocking": not bool(passed),
-                        "detail": entry.get("detail") or entry.get("reason"),
-                        "source": "command",
-                        "evaluated_at": _iso(interlock_source.issued_at),
-                        "command_id": interlock_source.command_id,
-                    }
+            interlocks.append(
+                _normalise_interlock(
+                    entry,
+                    source="command",
+                    evaluated_at=_iso(interlock_source.issued_at),
+                    command_id=interlock_source.command_id,
                 )
-            else:
-                interlocks.append(
-                    {
-                        "name": str(entry),
-                        "passed": None,
-                        "blocking": None,
-                        "detail": None,
-                        "source": "command",
-                        "evaluated_at": _iso(interlock_source.issued_at),
-                        "command_id": interlock_source.command_id,
-                    }
-                )
+            )
 
     permissive = _point_view("interlock_permissive")
     block_reason = _point_view("interlock_block_reason")
@@ -1749,7 +1780,10 @@ def get_control(asset_id: str, session: DbSession, settings: AppSettings) -> dic
                 "name": "interlock_permissive",
                 "passed": bool(permissive["value"]),
                 "blocking": not bool(permissive["value"]),
+                "blocks_dispatch": not bool(permissive["value"]),
                 "detail": (block_reason or {}).get("value"),
+                "context": None,
+                "override_by": None,
                 "source": "live_point",
                 "evaluated_at": permissive.get("ts"),
                 "command_id": None,
@@ -1757,6 +1791,7 @@ def get_control(asset_id: str, session: DbSession, settings: AppSettings) -> dic
         )
 
     blocking = [i for i in interlocks if i.get("blocking")]
+    dispatch_blockers = [i for i in interlocks if i.get("blocks_dispatch")]
 
     # --- authority and mode -------------------------------------------
     override_point = _point_view("manual_override_active")
@@ -1951,6 +1986,8 @@ def get_control(asset_id: str, session: DbSession, settings: AppSettings) -> dic
             "evaluated": interlocks,
             "blocking": blocking,
             "blocking_count": len(blocking),
+            "dispatch_blockers": dispatch_blockers,
+            "dispatch_blocker_count": len(dispatch_blockers),
             "note": (
                 None
                 if interlocks

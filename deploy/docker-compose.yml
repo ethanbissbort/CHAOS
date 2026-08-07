@@ -1,0 +1,207 @@
+# Primary control node -- the stack that runs in the power/utilities/battery/
+# server container (SDD sections 3.2, 7, 8).
+#
+# This whole stack lives inside one physical failure domain. SDD section 16.1
+# requires the design to assume it is gone: see deploy/docker-compose.secondary.yml
+# and docs/secondary-control-node.md for what continues when it is.
+#
+#   cp deploy/.env.example deploy/.env      # then set unique per-device secrets
+#   docker compose -f deploy/docker-compose.yml up -d
+#
+# Every service binds to ${BIND_ADDRESS:-127.0.0.1} by default. Publishing on
+# 0.0.0.0 without a firewall in front would put an unauthenticated Grafana and a
+# control API on every VLAN; SDD section 15.1 is deny-by-default.
+
+name: homestead-twin
+
+x-restart: &restart
+  restart: unless-stopped
+
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "5"
+
+services:
+  # --- PostgreSQL + PostGIS (SDD 8.1, 40) ---------------------------------
+  postgres:
+    image: postgis/postgis:16-3.4
+    <<: [*restart, *logging]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in deploy/.env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/.env}
+      POSTGRES_DB: ${POSTGRES_DB:-homestead}
+      # Deterministic collation keeps asset-ID ordering stable across restores.
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+      TZ: ${TZ:-America/Toronto}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/10-homestead.sql:ro
+    ports:
+      # Exposed for pg_dump and the secondary node's replication/backup pull.
+      - "${BIND_ADDRESS:-127.0.0.1}:${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-homestead}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    shm_size: 256mb
+
+  # --- Mosquitto (SDD 8.2) -------------------------------------------------
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    <<: [*restart, *logging]
+    environment:
+      TZ: ${TZ:-America/Toronto}
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      # Credentials and ACL are generated per device -- see deploy/mosquitto/README.md.
+      # They are intentionally NOT in the repository (SDD 15.2).
+      - mosquitto-config:/mosquitto/config/local
+      - mosquitto-data:/mosquitto/data
+      - mosquitto-log:/mosquitto/log
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${MQTT_PORT:-1883}:1883"
+      # TLS listener. Provision certificates into mosquitto-config, then
+      # uncomment the listener block in mosquitto.conf.
+      - "${BIND_ADDRESS:-127.0.0.1}:${MQTT_TLS_PORT:-8883}:8883"
+    healthcheck:
+      # mosquitto_sub is bundled in the image. $$ escapes compose interpolation.
+      test:
+        - CMD-SHELL
+        - >-
+          mosquitto_sub -h 127.0.0.1 -p 1883 -t '$$SYS/broker/uptime' -C 1 -W 3
+          -u "$${MQTT_HEALTH_USER:-}" -P "$${MQTT_HEALTH_PASSWORD:-}" >/dev/null 2>&1
+          || mosquitto_sub -h 127.0.0.1 -p 1883 -t '$$SYS/broker/uptime' -C 1 -W 3 >/dev/null
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  # --- Digital Twin core service (SDD 8.1) --------------------------------
+  twin:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: ${TWIN_IMAGE:-homestead-twin:local}
+    <<: [*restart, *logging]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
+    environment:
+      TZ: ${TZ:-America/Toronto}
+      HOMESTEAD_NODE_ROLE: primary
+      HOMESTEAD_SITE_ID: ${HOMESTEAD_SITE_ID:-site.site.primary.01}
+      HOMESTEAD_TIMEZONE: ${TZ:-America/Toronto}
+      HOMESTEAD_DATABASE_URL: >-
+        postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-homestead}
+      HOMESTEAD_MQTT_HOST: mosquitto
+      HOMESTEAD_MQTT_PORT: 1883
+      HOMESTEAD_MQTT_USERNAME: ${HOMESTEAD_MQTT_USERNAME:?set a per-service MQTT identity}
+      HOMESTEAD_MQTT_PASSWORD: ${HOMESTEAD_MQTT_PASSWORD:?set a per-service MQTT secret}
+      HOMESTEAD_MQTT_TLS: ${HOMESTEAD_MQTT_TLS:-false}
+      HOMESTEAD_MQTT_CLIENT_ID: homestead-twin-primary
+      HOMESTEAD_MQTT_BASE_TOPIC: ${HOMESTEAD_MQTT_BASE_TOPIC:-homestead}
+      HOMESTEAD_MQTT_ENABLED: ${HOMESTEAD_MQTT_ENABLED:-true}
+      HOMESTEAD_HISTORIAN_BACKEND: ${HOMESTEAD_HISTORIAN_BACKEND:-sql}
+      HOMESTEAD_HISTORIAN_RAW_RETENTION_DAYS: ${HOMESTEAD_HISTORIAN_RAW_RETENTION_DAYS:-90}
+      # Physical control stays off until the subsystem has passed the SDD
+      # section 19 commissioning sequence. Changing this is a deliberate act.
+      HOMESTEAD_ALLOW_PHYSICAL_CONTROL: ${HOMESTEAD_ALLOW_PHYSICAL_CONTROL:-false}
+      HOMESTEAD_EMS_ENABLED: ${HOMESTEAD_EMS_ENABLED:-true}
+      HOMESTEAD_ALARM_ENGINE_ENABLED: ${HOMESTEAD_ALARM_ENGINE_ENABLED:-true}
+      HOMESTEAD_NOTIFICATION_BACKENDS: ${HOMESTEAD_NOTIFICATION_BACKENDS:-log}
+      HOMESTEAD_API_HOST: 0.0.0.0
+      HOMESTEAD_API_PORT: 8000
+    volumes:
+      - twin-var:/app/var
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${TWIN_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    security_opt:
+      - no-new-privileges:true
+
+  # --- Prometheus (SDD 8.7) -----------------------------------------------
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    <<: [*restart, *logging]
+    depends_on:
+      twin:
+        condition: service_started
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=${PROMETHEUS_RETENTION:-90d}
+      - --web.enable-lifecycle
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PROMETHEUS_PORT:-9090}:9090"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:9090/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  # --- Grafana (SDD 8.6) ---------------------------------------------------
+  grafana:
+    image: grafana/grafana:11.1.0
+    <<: [*restart, *logging]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    environment:
+      TZ: ${TZ:-America/Toronto}
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD in deploy/.env}
+      # No sign-up, no anonymous access, no phone-home (SDD 15.2, 5.1).
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_NEWS_NEWS_FEED_ENABLED: "false"
+      # Consumed by the provisioned PostgreSQL datasource.
+      HOMESTEAD_PG_HOST: postgres:5432
+      HOMESTEAD_PG_DB: ${POSTGRES_DB:-homestead}
+      HOMESTEAD_PG_USER: ${GRAFANA_PG_USER:-${POSTGRES_USER}}
+      HOMESTEAD_PG_PASSWORD: ${GRAFANA_PG_PASSWORD:-${POSTGRES_PASSWORD}}
+      HOMESTEAD_PROMETHEUS_URL: http://prometheus:9090
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${GRAFANA_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  postgres-data:
+  mosquitto-config:
+  mosquitto-data:
+  mosquitto-log:
+  twin-var:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  default:
+    name: homestead-twin

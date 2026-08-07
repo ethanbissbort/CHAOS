@@ -1,0 +1,2661 @@
+schema_version: 0.3.0
+document_type: alarm_definitions
+generated_at: '2026-08-07T00:00:00Z'
+source_document: Homestead_Digital_Twin_Software_Design_Document_v0.3.md
+registry_basis: homestead.primary.v0_3
+
+# ---------------------------------------------------------------------------
+# Vocabularies (SDD sections 14.1, 14.2, 14.3)
+# ---------------------------------------------------------------------------
+
+severities:
+  info: Expected state change or advisory.
+  warning: Attention required but no immediate loss of function.
+  major: Subsystem degraded or resource at risk.
+  critical: Immediate action required to prevent major damage or loss of essential service.
+  emergency: >-
+    Life-safety or rapidly escalating physical hazard. Local alarms and protective
+    actions execute independently of this platform (SDD 14.1). The platform reports;
+    it is not the safety system.
+
+lifecycle_states:
+  - detected
+  - active
+  - acknowledged
+  - mitigated
+  - cleared
+  - reviewed
+
+maintenance_mode_behaviours:
+  suppress: Alarm is still evaluated and recorded, but notification is withheld while the scope is in maintenance.
+  downgrade: Alarm is recorded and notified one severity step lower while the scope is in maintenance.
+  notify_only: Alarm notifies normally in maintenance; used where withholding an alert would be unsafe.
+  normal: Maintenance mode has no effect on this alarm.
+
+threshold_statuses:
+  derived_from_design_document: >-
+    The value is computed from a figure that the v0.3 design package actually states
+    (for example the 10 kW hybrid-inverter rating).
+  commissioning_default: >-
+    A defensible starting value chosen so the alarm can be exercised on the bench.
+    It is NOT a decided setpoint. It must be reviewed and replaced during the SDD
+    section 19 commissioning sequence before it governs a real asset.
+  not_applicable: The alarm has no numeric threshold (boolean, enumerated or quality driven).
+
+trigger_operators:
+  lt: Numeric less-than.
+  le: Numeric less-than-or-equal.
+  gt: Numeric greater-than.
+  ge: Numeric greater-than-or-equal.
+  eq: Equality, including booleans and enumerations.
+  ne: Inequality.
+  in: Current value is a member of the listed set.
+  not_in: Current value is not a member of the listed set.
+  quality_in: >-
+    Quality-driven trigger. Used only by data-quality alarms, which are raised by the
+    evaluator when a process alarm's input is bad or stale (SDD 26.6). A process alarm
+    must never trigger on bad or stale data.
+
+notification_channels:
+  log: Always available. Writes a notification-log record and a platform log line.
+  email: SDD FR-007. Not configured in v0.3 -- records a "not_configured" delivery row.
+  push: SDD FR-007. Not configured in v0.3 -- records a "not_configured" delivery row.
+  voice: >-
+    SDD FR-007 CUCM/voice escalation for critical events. Not configured in v0.3 --
+    records a "not_configured" delivery row. Never claim a voice call was placed.
+
+parent_scopes:
+  same_asset: The parent alarm must be open on the same asset.
+  related: The parent alarm must be open on an asset connected to this one in the registry relationship graph.
+  any: Any open instance of the parent alarm qualifies.
+
+# ---------------------------------------------------------------------------
+# Flood control and root-cause correlation (SDD 14.2)
+# ---------------------------------------------------------------------------
+
+correlation_defaults:
+  window_s: 900
+  flood_threshold: 5
+  max_graph_depth: 8
+  downstream_edge_types:
+    feeds: forward
+    contains: forward
+    hosts: forward
+    controls: forward
+    serves: forward
+    protects: forward
+    located_in: reverse
+    part_of: reverse
+    depends_on: reverse
+    managed_by: reverse
+    powered_by: reverse
+  notes:
+    - >-
+      A power-container outage must produce one incident with many member alarms, not
+      hundreds of independent notifications (SDD 14.2). Correlation walks the registry
+      relationship graph; it is not a hard-coded list of alarm keys.
+    - >-
+      The register currently declares no depends_on edges. The graph walk supports the
+      type so that dependencies added later correlate without a code change.
+
+# ---------------------------------------------------------------------------
+# Package-level unresolved items that these thresholds depend on
+# ---------------------------------------------------------------------------
+
+open_items:
+  - id: energy.capacity_revision
+    description: >-
+      Battery capacity is unresolved between the revised 800 kWh nominal / 640 kWh usable
+      target and the 240 kWh predecessor design (register design_basis.open_design_conflicts).
+      Every kWh-denominated threshold below is expressed against the 640 kWh usable figure
+      and must be recomputed once the conflict is closed.
+    affects:
+      - battery_reserve_critical
+  - id: battery.chemistry_unresolved
+    description: >-
+      Battery chemistry, module count and nominal DC voltage are open_fields on
+      energy.battery_bank.power_container.01. Cell temperature and cell-imbalance limits
+      are therefore generic placeholders and must be replaced by the limits the selected
+      BMS publishes.
+    affects:
+      - battery_temperature_high
+      - battery_cell_imbalance
+  - id: generator.design_unresolved
+    description: >-
+      Generator fuel type, tank size, rated power and transfer architecture are open_fields
+      on energy.generator.site.01. The fuel-level thresholds are placeholders and cannot be
+      converted into a run-time reserve until the fuel system is specified.
+    affects:
+      - generator_fuel_low
+  - id: loads.unmeasured
+    description: >-
+      Rack, cooling, greenhouse, spa, workshop and pump loads have never been measured
+      (README "Deliberately unresolved"). Load-derived thresholds are planning placeholders
+      only.
+    affects:
+      - critical_load_growth
+      - ups_runtime_low
+      - inverter_overload_risk
+  - id: container.cooling_unresolved
+    description: >-
+      SDD section 22 item 12 leaves the container's physical separation and independent
+      cooling strategy undecided, so the power/battery/server zone temperature limits are
+      conservative placeholders rather than design values.
+    affects:
+      - power_container_cooling_failed
+      - server_zone_temperature_high
+  - id: pv.performance_model_missing
+    description: >-
+      SDD 37.1 requires irradiance-normalised PV underperformance detection. No performance
+      model exists yet, and final stringing and MPPT allocation are unresolved, so the
+      shipped rule is a crude irradiance-gated floor.
+    affects:
+      - pv_generation_underperformance
+  - id: procedures.not_written
+    description: >-
+      SDD FR-008 requires every alarm to link to an operating procedure. No procedure library
+      exists in this repository yet. Every procedure_ref below is a stable identifier reserved
+      for that procedure, and every definition carries procedure_status "not_yet_written".
+    affects: []
+
+# ---------------------------------------------------------------------------
+# Alarm definitions
+# ---------------------------------------------------------------------------
+
+alarms:
+
+  # -- Energy core alarms, SDD 37.1 ---------------------------------------
+
+  - alarm_key: battery_soc_low
+    name: Battery state of charge low
+    severity: warning
+    domain: energy
+    asset_id: energy.battery_bank.power_container.01
+    point_name: soc_pct
+    trigger:
+      operator: lt
+      value: 40
+    reset:
+      operator: ge
+      value: 45
+    hysteresis: 5
+    on_delay_s: 300
+    off_delay_s: 600
+    trigger_expression: soc_pct < 40 % held 300 s; clears at soc_pct >= 45 % held 600 s
+    threshold_status: commissioning_default
+    threshold_basis: >-
+      SDD 30.8 qualifies CONSERVE on "SOC below the normal reserve target". The normal
+      reserve target is not decided (SDD 22 item 1), so 40 % entry / 45 % recovery is a
+      bench default with a deliberate 5-point deadband.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: suppress
+    parent_alarm_key: null
+    parent_scope: related
+    data_quality_alarm_key: energy_meter_data_invalid
+    affected_assets:
+      - energy.battery_bank.power_container.01
+      - energy.bms.power_container.01
+      - energy.panel.power_container.critical_01
+    probable_causes:
+      - Extended low-irradiance period with no generator support.
+      - Discretionary load left running through the overnight discharge window.
+      - PV array or inverter underproduction.
+      - State-of-charge estimate drift after a period without a full charge cycle.
+    automatic_action: >-
+      None from this platform at warning severity. The EMS may independently enter CONSERVE
+      and shed tier 4 loads under SDD 32; that decision belongs to the EMS, not the alarm engine.
+    operator_action: >-
+      Confirm forecast energy margin, review discretionary loads, and decide whether to
+      request generator support before reserve reaches the critical margin.
+    procedure_ref: OP-ENERGY-LOW-SOC
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log]
+        role: operator
+      - stage: 2
+        after_s: 3600
+        channels: [email]
+        role: operator
+    renotify_after_s: 0
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: [maintenance, 'off']
+        description: Battery bank under maintenance or intentionally unavailable.
+      - type: manual
+        description: Suppressed during a commissioning discharge test (SDD 39).
+    correlation:
+      window_s: 900
+      flood_threshold: 3
+    source_sections: ['37.1', '30.8', '30.9']
+    enabled: true
+    notes:
+      - Deadband and delays exist so passing cloud cover and inverter sampling jitter cannot chatter this alarm.
+
+  - alarm_key: battery_reserve_critical
+    name: Battery energy above emergency reserve critical
+    severity: critical
+    domain: energy
+    asset_id: energy.battery_bank.power_container.01
+    point_name: energy_available_kwh
+    trigger:
+      operator: lt
+      value: 64
+    reset:
+      operator: ge
+      value: 96
+    hysteresis: 32
+    on_delay_s: 120
+    off_delay_s: 900
+    trigger_expression: energy_available_kwh < 64 kWh held 120 s; clears at >= 96 kWh held 900 s
+    threshold_status: commissioning_default
+    threshold_basis: >-
+      10 % entry / 15 % recovery of the 640 kWh usable figure the register carries for
+      energy.battery_bank.power_container.01. That capacity is itself an unresolved design
+      conflict against the 240 kWh predecessor design; if the predecessor is confirmed these
+      values become 24 kWh and 36 kWh.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: downgrade
+    parent_alarm_key: null
+    parent_scope: related
+    data_quality_alarm_key: energy_meter_data_invalid
+    affected_assets:
+      - energy.battery_bank.power_container.01
+      - energy.load.site.control_core_01
+      - energy.load.site.server_rack_01
+      - energy.load.site.water_pumping_01
+      - energy.generator.site.01
+    probable_causes:
+      - Sustained deficit between generation and load.
+      - Generator unavailable or start failed.
+      - Load shedding did not achieve the expected reduction.
+      - Battery capacity degraded below the assumed usable figure.
+    automatic_action: >-
+      None from this platform. Entering CRITICAL_RESERVE and executing the shedding sequence
+      is the EMS's responsibility (SDD 30.7, 32); the alarm engine reports and escalates.
+    operator_action: >-
+      Verify the shed sequence completed, confirm generator availability and fuel, and
+      protect tier 1 loads. Prepare for controlled shutdown of the rack per FR-801.
+    procedure_ref: OP-ENERGY-CRITICAL-RESERVE
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email, push]
+        role: operator
+      - stage: 2
+        after_s: 600
+        channels: [voice]
+        role: operator
+      - stage: 3
+        after_s: 1800
+        channels: [voice]
+        role: on_call
+    renotify_after_s: 900
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: ['off']
+        description: Battery bank intentionally out of service.
+    correlation:
+      window_s: 900
+      flood_threshold: 3
+    source_sections: ['37.1', '30.8', '32']
+    enabled: true
+    notes:
+      - Downgraded rather than suppressed in maintenance; a battery under test can still strand the site.
+
+  - alarm_key: battery_temperature_high
+    name: Battery cell temperature high
+    severity: major
+    domain: energy
+    asset_id: energy.battery_bank.power_container.01
+    point_name: temperature_cell_max_c
+    trigger:
+      operator: gt
+      value: 45
+    reset:
+      operator: le
+      value: 40
+    hysteresis: 5
+    on_delay_s: 120
+    off_delay_s: 600
+    trigger_expression: temperature_cell_max_c > 45 degC held 120 s; clears at <= 40 degC held 600 s
+    threshold_status: commissioning_default
+    threshold_basis: >-
+      Generic upper cell operating limit used only so the alarm can be exercised. Battery
+      chemistry is an open_field on the bank, so the real limit is whatever the selected
+      BMS publishes and must replace this value at commissioning.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: notify_only
+    parent_alarm_key: null
+    parent_scope: related
+    data_quality_alarm_key: energy_meter_data_invalid
+    affected_assets:
+      - energy.battery_bank.power_container.01
+      - energy.bms.power_container.01
+      - structure.room.power_container.battery_zone
+      - energy.load.site.battery_hvac_01
+    probable_causes:
+      - Battery-zone HVAC failure or airflow obstruction.
+      - Sustained high charge or discharge current.
+      - Cell or module fault.
+      - Ambient container temperature excursion.
+    automatic_action: >-
+      None from this platform. The BMS derates or opens contactors on its own thresholds
+      independently of the digital twin.
+    operator_action: >-
+      Check battery-zone HVAC and airflow, reduce charge/discharge demand, and inspect for a
+      hot module. Do not clear until cell temperatures are stable.
+    procedure_ref: OP-ENERGY-BATTERY-THERMAL
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email]
+        role: operator
+      - stage: 2
+        after_s: 900
+        channels: [push]
+        role: operator
+      - stage: 3
+        after_s: 3600
+        channels: [voice]
+        role: on_call
+    renotify_after_s: 1800
+    suppression_conditions: []
+    correlation:
+      window_s: 900
+      flood_threshold: 3
+    source_sections: ['37.1', '16.1', '12']
+    enabled: true
+    notes:
+      - notify_only in maintenance. A thermal event in the shared battery/server container is the
+        common-mode risk SDD 16.1 is written about; silencing it during maintenance is not acceptable.
+
+  - alarm_key: battery_cell_imbalance
+    name: Battery cell voltage imbalance
+    severity: warning
+    domain: energy
+    asset_id: energy.battery_bank.power_container.01
+    point_name: cell_voltage_delta_mv
+    trigger:
+      operator: gt
+      value: 150
+    reset:
+      operator: le
+      value: 100
+    hysteresis: 50
+    on_delay_s: 600
+    off_delay_s: 1800
+    trigger_expression: cell_voltage_delta_mv > 150 mV held 600 s; clears at <= 100 mV held 1800 s
+    threshold_status: commissioning_default
+    threshold_basis: >-
+      Generic placeholder spread. The real balance threshold is a property of the chosen
+      chemistry and BMS balancing strategy, both unresolved.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: suppress
+    parent_alarm_key: null
+    parent_scope: related
+    data_quality_alarm_key: energy_meter_data_invalid
+    affected_assets:
+      - energy.battery_bank.power_container.01
+      - energy.bms.power_container.01
+    probable_causes:
+      - Weak or ageing cell or module.
+      - Balancing circuit not keeping up after deep cycling.
+      - Cell temperature gradient across the bank.
+    automatic_action: None. Balancing is a BMS function.
+    operator_action: >-
+      Schedule a full balance charge, record the affected module, and open a work order if
+      the spread persists after balancing.
+    procedure_ref: OP-ENERGY-CELL-BALANCE
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log]
+        role: operator
+      - stage: 2
+        after_s: 86400
+        channels: [email]
+        role: maintainer
+    renotify_after_s: 0
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: [maintenance, 'off']
+        description: Balance charge or capacity test in progress.
+    correlation:
+      window_s: 3600
+      flood_threshold: 3
+    source_sections: ['37.1']
+    enabled: true
+    notes:
+      - 'Long delays deliberately: imbalance is a trend, not an event.'
+
+  - alarm_key: battery_charge_inhibited
+    name: BMS denies battery charging
+    severity: major
+    domain: energy
+    asset_id: energy.bms.power_container.01
+    point_name: charge_permissive
+    trigger:
+      operator: eq
+      value: false
+    reset:
+      operator: eq
+      value: true
+    hysteresis: null
+    on_delay_s: 60
+    off_delay_s: 60
+    trigger_expression: charge_permissive == false held 60 s
+    threshold_status: not_applicable
+    threshold_basis: Boolean permissive published by the BMS. No threshold to decide.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: suppress
+    parent_alarm_key: battery_temperature_high
+    parent_scope: related
+    data_quality_alarm_key: energy_meter_data_invalid
+    affected_assets:
+      - energy.bms.power_container.01
+      - energy.battery_bank.power_container.01
+      - energy.inverter.power_container.01
+      - energy.inverter.power_container.02
+      - energy.inverter.power_container.03
+      - energy.inverter.power_container.04
+    probable_causes:
+      - Cell temperature outside the BMS charge window.
+      - Cell voltage at the upper limit.
+      - BMS fault or contactor state preventing charge.
+      - Communication loss between BMS and inverters.
+    automatic_action: None. The charge permissive is owned by the BMS.
+    operator_action: >-
+      Read the BMS inhibit reason, confirm cell temperature and voltage, and expect PV
+      curtailment while charging is denied.
+    procedure_ref: OP-ENERGY-CHARGE-INHIBIT
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email]
+        role: operator
+      - stage: 2
+        after_s: 900
+        channels: [push]
+        role: operator
+    renotify_after_s: 1800
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: [maintenance, 'off']
+        description: BMS under maintenance.
+    correlation:
+      window_s: 900
+      flood_threshold: 3
+    source_sections: ['37.1']
+    enabled: true
+    notes:
+      - Declared a symptom of battery_temperature_high because a hot bank is the most common
+        cause of a charge inhibit; the incident then carries the thermal alarm as the root cause.
+
+  - alarm_key: battery_discharge_inhibited
+    name: BMS denies battery discharge with live load
+    severity: critical
+    domain: energy
+    asset_id: energy.bms.power_container.01
+    point_name: discharge_permissive
+    trigger:
+      operator: eq
+      value: false
+      guards:
+        - asset_id: energy.combiner.power_container.ac_01
+          point_name: power_ac_kw
+          operator: gt
+          value: 0.2
+          description: Only alarm when there is still live AC load to serve.
+    reset:
+      operator: eq
+      value: true
+    hysteresis: null
+    on_delay_s: 15
+    off_delay_s: 60
+    trigger_expression: discharge_permissive == false AND ac combiner power_ac_kw > 0.2 kW, held 15 s
+    threshold_status: commissioning_default
+    threshold_basis: >-
+      The 0.2 kW live-load guard is a metering-noise floor placeholder; real standby load on
+      the AC combiner has never been measured.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: notify_only
+    parent_alarm_key: null
+    parent_scope: related
+    data_quality_alarm_key: energy_meter_data_invalid
+    affected_assets:
+      - energy.bms.power_container.01
+      - energy.battery_bank.power_container.01
+      - energy.panel.power_container.critical_01
+      - energy.load.site.control_core_01
+    probable_causes:
+      - Cell voltage or temperature outside the BMS discharge window.
+      - Contactor fault or open contactor.
+      - BMS protective trip.
+      - Loss of BMS/inverter communication.
+    automatic_action: >-
+      None. SDD 30.8 makes this an EMERGENCY energy-state entry condition for the EMS; the
+      contactor decision is the BMS's.
+    operator_action: >-
+      Treat as imminent loss of AC supply. Confirm generator availability, protect tier 1
+      loads and prepare for black start (SDD 35).
+    procedure_ref: OP-ENERGY-DISCHARGE-INHIBIT
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email, push]
+        role: operator
+      - stage: 2
+        after_s: 300
+        channels: [voice]
+        role: operator
+      - stage: 3
+        after_s: 900
+        channels: [voice]
+        role: on_call
+    renotify_after_s: 600
+    suppression_conditions: []
+    correlation:
+      window_s: 900
+      flood_threshold: 2
+    source_sections: ['37.1', '30.8']
+    enabled: true
+    notes:
+      - Deliberately has no parent. It is the last warning before the site loses AC and must
+        never be folded into another incident as a silent symptom.
+
+  - alarm_key: inverter_fault
+    name: Hybrid inverter fault
+    severity: major
+    domain: energy
+    asset_class: inverter
+    point_name: fault_active
+    trigger:
+      operator: eq
+      value: true
+    reset:
+      operator: eq
+      value: false
+    hysteresis: null
+    on_delay_s: 30
+    off_delay_s: 120
+    trigger_expression: fault_active == true held 30 s on any inverter functional position
+    threshold_status: not_applicable
+    threshold_basis: >-
+      Normalized boolean fault flag. SDD 37.1 asks for a normalized fault class; the fault
+      class taxonomy depends on the inverter product, which is unresolved (SDD 22 item 6).
+    requires_manual_reset: false
+    maintenance_mode_behaviour: suppress
+    parent_alarm_key: null
+    parent_scope: related
+    data_quality_alarm_key: energy_meter_data_invalid
+    affected_assets:
+      - energy.combiner.power_container.ac_01
+      - energy.panel.power_container.critical_01
+      - energy.panel.power_container.general_01
+    probable_causes:
+      - DC input out of range or string fault.
+      - AC grid-forming or synchronization fault.
+      - Over-temperature derate escalating to a trip.
+      - Internal hardware fault.
+    automatic_action: None. The inverter executes its own protective shutdown.
+    operator_action: >-
+      Read the native fault code, check DC and AC isolation before touching anything, and
+      confirm the remaining inverters can carry the load.
+    procedure_ref: OP-ENERGY-INVERTER-FAULT
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email]
+        role: operator
+      - stage: 2
+        after_s: 900
+        channels: [push]
+        role: operator
+      - stage: 3
+        after_s: 3600
+        channels: [voice]
+        role: on_call
+    renotify_after_s: 1800
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: [maintenance, 'off']
+        description: Individual inverter locked out for service.
+    correlation:
+      window_s: 600
+      flood_threshold: 2
+    source_sections: ['37.1']
+    enabled: true
+    notes:
+      - 'Class-scoped: one definition instantiates against all four inverter functional positions.'
+      - Flood threshold 2 so that a common-cause event across inverters opens one incident.
+
+  - alarm_key: inverter_overload_risk
+    name: Inverter approaching power limit
+    severity: major
+    domain: energy
+    asset_class: inverter
+    point_name: power_ac_kw
+    trigger:
+      operator: ge
+      value: 9.0
+    reset:
+      operator: lt
+      value: 8.0
+    hysteresis: 1.0
+    on_delay_s: 60
+    off_delay_s: 300
+    trigger_expression: power_ac_kw >= 9.0 kW held 60 s; clears below 8.0 kW held 300 s
+    threshold_status: derived_from_design_document
+    threshold_basis: >-
+      90 % alarm / 80 % reset of the 10 kW per-inverter rating that the v0.3 register states
+      for the four hybrid-inverter functional positions. The rating is stated; the actual
+      load that reaches it is not, because site loads are unmeasured.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: suppress
+    parent_alarm_key: null
+    parent_scope: related
+    data_quality_alarm_key: energy_meter_data_invalid
+    affected_assets:
+      - energy.combiner.power_container.ac_01
+      - energy.panel.power_container.general_01
+      - energy.load.site.workshop_heavy_01
+    probable_causes:
+      - Simultaneous start of large discretionary loads.
+      - One or more parallel inverters offline, concentrating load.
+      - Load restoration group released too quickly after an outage (FR-103).
+    automatic_action: None. Load shedding is the EMS's decision under SDD 32.
+    operator_action: >-
+      Identify the load causing the surge, defer workshop or charging loads, and confirm the
+      restoration sequence is not releasing groups simultaneously.
+    procedure_ref: OP-ENERGY-INVERTER-OVERLOAD
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email]
+        role: operator
+      - stage: 2
+        after_s: 900
+        channels: [push]
+        role: operator
+    renotify_after_s: 1800
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: [maintenance, 'off']
+        description: Inverter under load-bank testing.
+    correlation:
+      window_s: 600
+      flood_threshold: 3
+    source_sections: ['37.1', '33']
+    enabled: true
+
+  - alarm_key: pv_generation_underperformance
+    name: PV generation below expectation
+    severity: warning
+    domain: energy
+    asset_id: energy.pv_array.agrivoltaic_field.01
+    point_name: power_dc_kw
+    trigger:
+      operator: lt
+      value: 4.5
+      guards:
+        - asset_id: site.geographic_zone.agrivoltaic_field.01
+          point_name: solar_irradiance_w_m2
+          operator: ge
+          value: 600
+          description: Only meaningful under usable irradiance; darkness is not underperformance.
+    reset:
+      operator: ge
+      value: 9.0
+    hysteresis: 4.5
+    on_delay_s: 900
+    off_delay_s: 900
+    trigger_expression: power_dc_kw < 4.5 kW while irradiance >= 600 W/m2, held 900 s
+    threshold_status: commissioning_default
+    threshold_basis: >-
+      10 % of the 45 kWdc array target as an alarm floor and 20 % as the reset, gated on
+      600 W/m2 irradiance. SDD 37.1 asks for irradiance-normalised output against a model.
+      No model exists and array stringing and MPPT allocation are unresolved, so this is a
+      crude stand-in that must be replaced once a performance model is commissioned.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: suppress
+    parent_alarm_key: inverter_fault
+    parent_scope: related
+    data_quality_alarm_key: energy_meter_data_invalid
+    affected_assets:
+      - energy.pv_array.agrivoltaic_field.01
+      - energy.combiner.agrivoltaic_field.dc_01
+      - energy.pv_row.agrivoltaic_field.01
+      - energy.pv_row.agrivoltaic_field.02
+      - energy.pv_row.agrivoltaic_field.03
+      - energy.pv_row.agrivoltaic_field.04
+    probable_causes:
+      - Soiling, snow or agrivoltaic canopy shading.
+      - String, combiner or DC disconnect fault.
+      - Inverter MPPT fault or curtailment because the BMS denies charge.
+      - Irradiance sensor mis-sited or miscalibrated.
+    automatic_action: None. Advisory only.
+    operator_action: >-
+      Compare rows against each other, inspect for soiling or shading, and confirm the array
+      is not being curtailed because charging is inhibited.
+    procedure_ref: OP-ENERGY-PV-UNDERPERFORMANCE
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log]
+        role: operator
+      - stage: 2
+        after_s: 86400
+        channels: [email]
+        role: maintainer
+    renotify_after_s: 0
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: [maintenance, 'off']
+        description: Array section isolated for work.
+      - type: manual
+        description: Suppressed during intentional PV curtailment by the EMS surplus-dispatch logic (SDD 36).
+    correlation:
+      window_s: 3600
+      flood_threshold: 3
+    source_sections: ['37.1', '36']
+    enabled: true
+    notes:
+      - Uses parent_scope "related" so an inverter fault anywhere on the array's own feed path
+        claims this alarm as a symptom instead of raising a second notification.
+
+  - alarm_key: generator_start_failed
+    name: Generator start sequence failed
+    severity: critical
+    domain: energy
+    asset_id: energy.generator.site.01
+    point_name: start_failure_active
+    trigger:
+      operator: eq
+      value: true
+    reset:
+      operator: eq
+      value: false
+    hysteresis: null
+    on_delay_s: 0
+    off_delay_s: 0
+    trigger_expression: start_failure_active == true, no delay
+    threshold_status: not_applicable
+    threshold_basis: Boolean condition published by the native generator controller once its attempt policy is exhausted.
+    requires_manual_reset: true
+    maintenance_mode_behaviour: notify_only
+    parent_alarm_key: null
+    parent_scope: related
+    data_quality_alarm_key: energy_meter_data_invalid
+    affected_assets:
+      - energy.generator.site.01
+      - energy.ats.power_container.site_01
+      - energy.battery_bank.power_container.01
+      - energy.load.site.control_core_01
+    probable_causes:
+      - Start battery flat or disconnected.
+      - Fuel starvation or fuel level below the start permissive.
+      - Shutdown-class engine fault.
+      - Generator not in automatic/remote-enabled mode, or a maintenance lockout is in place.
+    automatic_action: >-
+      None. SDD 34.7 requires the platform to stop asking: repeated cranking beyond the
+      controller's attempt policy must not be initiated by this platform.
+    operator_action: >-
+      Attend the generator, read the native controller fault, and reset explicitly. Until then
+      treat available battery energy as the entire remaining reserve.
+    procedure_ref: OP-ENERGY-GENERATOR-START-FAILURE
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email, push]
+        role: operator
+      - stage: 2
+        after_s: 600
+        channels: [voice]
+        role: operator
+      - stage: 3
+        after_s: 1800
+        channels: [voice]
+        role: on_call
+    renotify_after_s: 900
+    suppression_conditions: []
+    correlation:
+      window_s: 900
+      flood_threshold: 2
+    source_sections: ['37.1', '34.7']
+    enabled: true
+    notes:
+      - requires_manual_reset per SDD 34.7 "Require explicit reset after repeated failure".
+
+  - alarm_key: generator_fuel_low
+    name: Generator fuel low
+    severity: warning
+    domain: energy
+    asset_id: energy.generator.site.01
+    point_name: fuel_level_pct
+    trigger:
+      operator: lt
+      value: 25
+    reset:
+      operator: ge
+      value: 35
+    hysteresis: 10
+    on_delay_s: 600
+    off_delay_s: 600
+    trigger_expression: fuel_level_pct < 25 % held 600 s; clears at >= 35 % held 600 s
+    threshold_status: commissioning_default
+    threshold_basis: >-
+      SDD 34.2 requires a minimum-start fuel permissive but no value exists, because fuel
+      type, tank size and rated power are all open_fields on the generator. 25 % / 35 % is a
+      placeholder that cannot be converted into run hours until the fuel system is specified.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: suppress
+    parent_alarm_key: null
+    parent_scope: related
+    data_quality_alarm_key: energy_meter_data_invalid
+    affected_assets:
+      - energy.generator.site.01
+    probable_causes:
+      - Extended generator run without refuelling.
+      - Fuel delivery not scheduled.
+      - Leak or theft.
+      - Level sensor drift or wrong tank geometry.
+    automatic_action: None.
+    operator_action: Arrange refuelling before the level crosses the start permissive; verify the level physically.
+    procedure_ref: OP-ENERGY-GENERATOR-FUEL
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log]
+        role: operator
+      - stage: 2
+        after_s: 21600
+        channels: [email]
+        role: operator
+    renotify_after_s: 0
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: [maintenance, 'off']
+        description: Generator isolated for service.
+    correlation:
+      window_s: 3600
+      flood_threshold: 2
+    source_sections: ['37.1', '34.2']
+    enabled: true
+
+  - alarm_key: transfer_failed
+    name: Source transfer did not complete
+    severity: critical
+    domain: energy
+    asset_id: energy.ats.power_container.site_01
+    point_name: fault_active
+    trigger:
+      operator: eq
+      value: true
+    reset:
+      operator: eq
+      value: false
+    hysteresis: null
+    on_delay_s: 0
+    off_delay_s: 0
+    trigger_expression: fault_active == true on the site source transfer assembly
+    threshold_status: not_applicable
+    threshold_basis: Boolean fault flag. The transfer architecture itself is unresolved (generator open_fields).
+    requires_manual_reset: true
+    maintenance_mode_behaviour: notify_only
+    parent_alarm_key: null
+    parent_scope: related
+    data_quality_alarm_key: energy_meter_data_invalid
+    affected_assets:
+      - energy.ats.power_container.site_01
+      - energy.generator.site.01
+      - energy.combiner.power_container.ac_01
+      - energy.panel.power_container.critical_01
+    probable_causes:
+      - Transfer mechanism jammed or lost control power.
+      - Source not stable long enough to satisfy the transfer permissive.
+      - Inverter and generator synchronization mismatch.
+      - Control wiring or interposing relay failure.
+    automatic_action: >-
+      None. Transfer is executed by the native inverter/ATS sequence (SDD 34.3 step 4); the
+      platform must not drive contactors.
+    operator_action: >-
+      Attend the transfer assembly, determine which step failed, and do not attempt repeated
+      remote transfers. Restore supply manually only under the lockout procedure.
+    procedure_ref: OP-ENERGY-TRANSFER-FAILURE
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email, push]
+        role: operator
+      - stage: 2
+        after_s: 300
+        channels: [voice]
+        role: operator
+      - stage: 3
+        after_s: 1200
+        channels: [voice]
+        role: on_call
+    renotify_after_s: 900
+    suppression_conditions: []
+    correlation:
+      window_s: 900
+      flood_threshold: 2
+    source_sections: ['37.1', '34.3', '34.6']
+    enabled: true
+
+  - alarm_key: load_shed_failed
+    name: Load shed command did not take effect
+    severity: major
+    domain: energy
+    asset_class: load
+    point_name: shed_state
+    trigger:
+      operator: eq
+      value: shed_pending
+    reset:
+      operator: in
+      values: [shed, connected, locked_out]
+    hysteresis: null
+    on_delay_s: 120
+    off_delay_s: 30
+    trigger_expression: shed_state == shed_pending held 120 s
+    threshold_status: commissioning_default
+    threshold_basis: >-
+      120 s is a placeholder for "longer than any load group should need to shed". SDD 11
+      leaves acceptable command latency per subsystem undefined (SDD 22 item 11).
+    requires_manual_reset: false
+    maintenance_mode_behaviour: suppress
+    parent_alarm_key: null
+    parent_scope: related
+    data_quality_alarm_key: energy_meter_data_invalid
+    affected_assets:
+      - energy.panel.power_container.critical_01
+      - energy.panel.power_container.general_01
+    probable_causes:
+      - Load controller offline or command not acknowledged.
+      - Local manual override holding the load on.
+      - Minimum on-time interlock still running.
+      - Contactor or relay failure.
+    automatic_action: >-
+      None from the alarm engine. SDD 32.3 requires the EMS to proceed to the next shedding
+      group rather than retry indefinitely.
+    operator_action: Confirm whether the load is physically still drawing power, and shed manually if reserve is falling.
+    procedure_ref: OP-ENERGY-SHED-FAILURE
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email]
+        role: operator
+      - stage: 2
+        after_s: 900
+        channels: [push]
+        role: operator
+    renotify_after_s: 1800
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: [maintenance, manual, 'off']
+        description: Load group deliberately under local manual control.
+    correlation:
+      window_s: 600
+      flood_threshold: 3
+    source_sections: ['37.1', '32.3']
+    enabled: true
+
+  - alarm_key: load_restore_failed
+    name: Load did not return after restoration
+    severity: warning
+    domain: energy
+    asset_class: load
+    point_name: shed_state
+    trigger:
+      operator: eq
+      value: restore_pending
+    reset:
+      operator: in
+      values: [connected, shed, locked_out]
+    hysteresis: null
+    on_delay_s: 180
+    off_delay_s: 30
+    trigger_expression: shed_state == restore_pending held 180 s
+    threshold_status: commissioning_default
+    threshold_basis: >-
+      180 s placeholder allowing for the staggered restart delays SDD 33.2 requires; the real
+      value follows from the restart_delay_s configured per load group, which is not yet set.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: suppress
+    parent_alarm_key: null
+    parent_scope: related
+    data_quality_alarm_key: energy_meter_data_invalid
+    affected_assets:
+      - energy.panel.power_container.general_01
+    probable_causes:
+      - Restart delay or minimum off-time still running.
+      - Local controller did not accept the restore command.
+      - Equipment tripped on the previous outage and needs a manual reset.
+    automatic_action: None. Simultaneous restart is explicitly prohibited by FR-103.
+    operator_action: Check the load locally for a tripped protection device before forcing a restore.
+    procedure_ref: OP-ENERGY-RESTORE-FAILURE
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log]
+        role: operator
+      - stage: 2
+        after_s: 3600
+        channels: [email]
+        role: operator
+    renotify_after_s: 0
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: [maintenance, manual, 'off']
+        description: Load group deliberately under local manual control.
+    correlation:
+      window_s: 900
+      flood_threshold: 4
+    source_sections: ['37.1', '33.2']
+    enabled: true
+
+  - alarm_key: energy_meter_data_invalid
+    name: Required energy measurement bad or stale
+    severity: major
+    domain: energy
+    asset_id: null
+    asset_class: null
+    point_name: null
+    trigger:
+      operator: quality_in
+      values: [bad, stale]
+    reset:
+      operator: not_in
+      values: [bad, stale]
+    hysteresis: null
+    on_delay_s: 120
+    off_delay_s: 120
+    trigger_expression: >-
+      Raised by the evaluator against the specific point whose quality is bad or stale when an
+      energy alarm would otherwise have used that value.
+    threshold_status: not_applicable
+    threshold_basis: >-
+      Quality-driven. SDD 26.6 forbids treating a dead sensor as a healthy in-range reading, so
+      an energy alarm never triggers on bad or stale data; this alarm is raised instead.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: downgrade
+    parent_alarm_key: null
+    parent_scope: any
+    data_quality_alarm_key: null
+    affected_assets: []
+    probable_causes:
+      - Meter, BMS or inverter gateway offline.
+      - Modbus/SNMP polling failure or address change after a firmware update.
+      - MQTT bridge or broker outage.
+      - Point binding not yet commissioned (binding_status still tbd).
+    automatic_action: >-
+      The dependent energy alarms are held rather than evaluated. Safety-critical permissives
+      must not default to permissive on missing data (SDD 26.6).
+    operator_action: >-
+      Restore the measurement path before trusting any energy decision that depends on it, and
+      check the point binding rather than the point identity.
+    procedure_ref: OP-PLATFORM-ENERGY-DATA-QUALITY
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email]
+        role: operator
+      - stage: 2
+        after_s: 1800
+        channels: [push]
+        role: maintainer
+    renotify_after_s: 3600
+    suppression_conditions:
+      - type: manual
+        description: >-
+          Quality code "maintenance" already means the device is intentionally unavailable, so it
+          is not a blocking quality. A device under test is downgraded rather than silenced: a
+          meter that never comes back is exactly the failure this alarm exists to catch.
+    correlation:
+      window_s: 900
+      flood_threshold: 4
+    source_sections: ['37.1', '26.6', '12.1']
+    enabled: true
+    notes:
+      - Instantiated dynamically against whichever point went bad; it has no fixed asset scope.
+      - Flood threshold 4 so that a gateway outage produces one data-quality incident, not one alarm per point.
+
+  - alarm_key: critical_load_growth
+    name: Critical baseline load above planning envelope
+    severity: warning
+    domain: energy
+    asset_id: energy.load.site.control_core_01
+    point_name: power_kw
+    trigger:
+      operator: gt
+      value: 3.0
+    reset:
+      operator: le
+      value: 2.5
+    hysteresis: 0.5
+    on_delay_s: 3600
+    off_delay_s: 3600
+    trigger_expression: control-core power_kw > 3.0 kW held 3600 s; clears at <= 2.5 kW held 3600 s
+    threshold_status: commissioning_default
+    threshold_basis: >-
+      Pure placeholder. The README states the measured rack, cooling and pump loads are
+      deliberately unresolved, so there is no planning envelope to compare against yet. The
+      value exists so the alarm is exercisable and must be replaced by the measured baseline
+      captured during the SDD 39 verification cases.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: suppress
+    parent_alarm_key: null
+    parent_scope: related
+    data_quality_alarm_key: energy_meter_data_invalid
+    affected_assets:
+      - energy.load.site.control_core_01
+      - energy.load.site.server_rack_01
+      - energy.battery_bank.power_container.01
+    probable_causes:
+      - New always-on equipment added to the critical tier without a load record.
+      - Workload migrated onto the critical core from a discretionary tier.
+      - Load classification drift between the register and reality.
+    automatic_action: None.
+    operator_action: Re-measure the critical baseline, update the load records (SDD 31.1) and re-derive autonomy figures.
+    procedure_ref: OP-ENERGY-CRITICAL-LOAD-REVIEW
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log]
+        role: operator
+      - stage: 2
+        after_s: 604800
+        channels: [email]
+        role: maintainer
+    renotify_after_s: 0
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: [maintenance, 'off']
+        description: Critical core under test.
+    correlation:
+      window_s: 3600
+      flood_threshold: 3
+    source_sections: ['37.1', '31.1', '39']
+    enabled: true
+
+  - alarm_key: ups_runtime_low
+    name: Rack UPS runtime below graceful-shutdown need
+    severity: major
+    domain: energy
+    asset_id: energy.ups.rack_01.01
+    point_name: runtime_remaining_min
+    trigger:
+      operator: lt
+      value: 10
+    reset:
+      operator: ge
+      value: 20
+    hysteresis: 10
+    on_delay_s: 30
+    off_delay_s: 300
+    trigger_expression: runtime_remaining_min < 10 min held 30 s; clears at >= 20 min held 300 s
+    threshold_status: commissioning_default
+    threshold_basis: >-
+      A graceful shutdown of the R740xd plus both SC200 arrays has never been timed, so the
+      10 min alarm / 20 min reset pair is a placeholder. FR-801 requires the shutdown to be
+      coordinated against remaining reserve, which means this threshold must come from a
+      measured shutdown duration.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: suppress
+    parent_alarm_key: ups_on_battery
+    parent_scope: same_asset
+    data_quality_alarm_key: energy_meter_data_invalid
+    affected_assets:
+      - energy.ups.rack_01.01
+      - it.server.rack_01.r740xd_01
+      - it.storage_array.rack_01.sc200_01
+      - it.storage_array.rack_01.sc200_02
+      - it.switch.rack_01.catalyst_2960x_01
+    probable_causes:
+      - UPS running on battery after loss of the critical panel feed.
+      - Rack load higher than the UPS was sized for.
+      - Aged UPS battery string.
+    automatic_action: >-
+      None from the alarm engine. Graceful shutdown coordination is FR-801 work owned by the
+      platform's shutdown logic, not by alarm handling.
+    operator_action: >-
+      Confirm the shutdown sequence has started or start it, and restore the upstream feed.
+      Do not rely on the runtime estimate if the battery age is unknown.
+    procedure_ref: OP-IT-UPS-RUNTIME
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email, push]
+        role: operator
+      - stage: 2
+        after_s: 300
+        channels: [voice]
+        role: operator
+    renotify_after_s: 600
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: [maintenance, 'off']
+        description: UPS self-test or battery replacement in progress.
+    correlation:
+      window_s: 900
+      flood_threshold: 2
+    source_sections: ['37.1', '12.9']
+    enabled: true
+    notes:
+      - Declared a symptom of ups_on_battery on the same asset, which is itself a symptom of
+        power_container_ac_bus_lost. That is the chain that collapses a container outage into
+        one incident.
+
+  - alarm_key: power_container_cooling_failed
+    name: Power container battery-zone cooling failed
+    severity: critical
+    domain: structure
+    asset_id: structure.room.power_container.battery_zone
+    point_name: temperature_air_c
+    trigger:
+      operator: gt
+      value: 40
+    reset:
+      operator: le
+      value: 35
+    hysteresis: 5
+    on_delay_s: 600
+    off_delay_s: 900
+    trigger_expression: battery-zone temperature_air_c > 40 degC held 600 s; clears at <= 35 degC held 900 s
+    threshold_status: commissioning_default
+    threshold_basis: >-
+      SDD 22 item 12 leaves the container's physical separation and independent cooling
+      strategy undecided, so no design temperature exists. 40 degC / 35 degC is a conservative
+      placeholder chosen to sit above the battery HVAC control band and below any plausible
+      cell limit.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: notify_only
+    parent_alarm_key: null
+    parent_scope: related
+    data_quality_alarm_key: sensor_data_invalid
+    affected_assets:
+      - structure.room.power_container.battery_zone
+      - energy.battery_bank.power_container.01
+      - energy.load.site.battery_hvac_01
+      - structure.structure.power_container.01
+    probable_causes:
+      - Battery-zone HVAC failed or was shed as a load.
+      - Airflow path blocked or shared uncontrolled airflow with the server zone.
+      - Ambient extreme beyond the cooling design.
+      - Excess heat from sustained high battery current.
+    automatic_action: >-
+      None. SDD 16.1 requires this failure mode to be survivable without the platform; local
+      protection acts on its own.
+    operator_action: >-
+      Attend the container, restore cooling or open it under the safe-entry procedure, and
+      reduce battery charge/discharge demand.
+    procedure_ref: OP-STRUCTURE-CONTAINER-COOLING
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email, push]
+        role: operator
+      - stage: 2
+        after_s: 600
+        channels: [voice]
+        role: operator
+      - stage: 3
+        after_s: 1800
+        channels: [voice]
+        role: on_call
+    renotify_after_s: 900
+    suppression_conditions: []
+    correlation:
+      window_s: 1800
+      flood_threshold: 3
+    source_sections: ['37.1', '16.1', '22']
+    enabled: true
+
+  # -- Power container common-mode domain, SDD 16.1 -----------------------
+
+  - alarm_key: power_container_ac_bus_lost
+    name: Power container AC bus de-energized
+    severity: critical
+    domain: energy
+    asset_id: energy.disconnect.power_container.ac_main_01
+    point_name: energized_state
+    trigger:
+      operator: eq
+      value: false
+    reset:
+      operator: eq
+      value: true
+    hysteresis: null
+    on_delay_s: 10
+    off_delay_s: 60
+    trigger_expression: main AC disconnect energized_state == false held 10 s
+    threshold_status: not_applicable
+    threshold_basis: >-
+      Boolean bus state. The 10 s on-delay exists so a transfer between inverter and generator
+      supply does not raise a site-wide outage incident.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: notify_only
+    parent_alarm_key: null
+    parent_scope: related
+    data_quality_alarm_key: energy_meter_data_invalid
+    affected_assets:
+      - energy.disconnect.power_container.ac_main_01
+      - energy.panel.power_container.critical_01
+      - energy.panel.power_container.general_01
+      - energy.ups.rack_01.01
+      - it.rack.power_container.01
+      - structure.structure.power_container.01
+    probable_causes:
+      - All inverters offline, tripped or in a shutdown-class fault.
+      - BMS denied discharge with no generator support.
+      - Main AC disconnect opened manually or tripped.
+      - Container-level electrical fault.
+    automatic_action: >-
+      None. This is the SDD 16.1 common-mode failure the platform is required to assume it
+      cannot fix; local controllers keep their subsystems safe without the server rack.
+    operator_action: >-
+      Establish whether the container itself is safe to approach before restoring anything.
+      Follow the black-start narrative (SDD 35) rather than re-energizing ad hoc.
+    procedure_ref: OP-ENERGY-CONTAINER-OUTAGE
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email, push]
+        role: operator
+      - stage: 2
+        after_s: 300
+        channels: [voice]
+        role: operator
+      - stage: 3
+        after_s: 900
+        channels: [voice]
+        role: on_call
+    renotify_after_s: 900
+    suppression_conditions: []
+    correlation:
+      window_s: 1800
+      flood_threshold: 2
+      is_root_candidate: true
+    source_sections: ['16.1', '14.2', '35']
+    enabled: true
+    notes:
+      - This is the designed root cause for container-outage correlation. Everything the main
+        AC disconnect feeds becomes a member alarm of one incident instead of its own notification.
+
+  - alarm_key: power_container_water_ingress
+    name: Power container fluid detected
+    severity: emergency
+    domain: safety
+    asset_id: safety.safety_sensor.power_container.nbes0308_01
+    point_name: leak_active
+    trigger:
+      operator: eq
+      value: true
+    reset:
+      operator: eq
+      value: false
+    hysteresis: null
+    on_delay_s: 0
+    off_delay_s: 0
+    trigger_expression: leak_active == true, no delay
+    threshold_status: not_applicable
+    threshold_basis: Boolean rope/spot detector state.
+    requires_manual_reset: true
+    maintenance_mode_behaviour: notify_only
+    parent_alarm_key: null
+    parent_scope: related
+    data_quality_alarm_key: sensor_data_invalid
+    affected_assets:
+      - safety.safety_sensor.power_container.nbes0308_01
+      - structure.structure.power_container.01
+      - energy.battery_bank.power_container.01
+      - it.rack.power_container.01
+    probable_causes:
+      - Roof, seal or penetration leak.
+      - HVAC condensate overflow.
+      - Coolant or plumbing failure inside the container.
+    automatic_action: >-
+      None from this platform. Severity emergency means local alarms and protective actions
+      execute independently (SDD 14.1); the platform reports and escalates only.
+    operator_action: >-
+      Do not enter until electrical isolation is confirmed. Water in the combined battery,
+      power and server container is the SDD 16.1 common-mode scenario.
+    procedure_ref: OP-SAFETY-CONTAINER-WATER-INGRESS
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email, push, voice]
+        role: operator
+      - stage: 2
+        after_s: 300
+        channels: [voice]
+        role: on_call
+    renotify_after_s: 600
+    suppression_conditions: []
+    correlation:
+      window_s: 1800
+      flood_threshold: 2
+      is_root_candidate: true
+    source_sections: ['14.1', '16.1', '12.9']
+    enabled: true
+    notes:
+      - Emergency severity is never suppressed and never self-clears.
+
+  - alarm_key: rack_smoke_detected
+    name: Rack smoke detected
+    severity: emergency
+    domain: safety
+    asset_id: safety.safety_sensor.rack_01.nbes0307_01
+    point_name: smoke_active
+    trigger:
+      operator: eq
+      value: true
+    reset:
+      operator: eq
+      value: false
+    hysteresis: null
+    on_delay_s: 0
+    off_delay_s: 0
+    trigger_expression: smoke_active == true, no delay
+    threshold_status: not_applicable
+    threshold_basis: Boolean detector state.
+    requires_manual_reset: true
+    maintenance_mode_behaviour: notify_only
+    parent_alarm_key: null
+    parent_scope: related
+    data_quality_alarm_key: sensor_data_invalid
+    affected_assets:
+      - safety.safety_sensor.rack_01.nbes0307_01
+      - it.rack.power_container.01
+      - structure.room.power_container.server_zone
+      - safety.alarm_output.rack_01.beacon_01
+    probable_causes:
+      - Equipment fire or overheating component.
+      - Cable or PSU failure.
+      - Smoke migrating from the battery zone through a shared airflow path.
+    automatic_action: >-
+      None from this platform. Detection, local sounder and any suppression act independently
+      of the digital twin (SDD 14.1).
+    operator_action: Evacuate, isolate, and do not re-energize the rack until the cause is identified.
+    procedure_ref: OP-SAFETY-RACK-SMOKE
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email, push, voice]
+        role: operator
+      - stage: 2
+        after_s: 300
+        channels: [voice]
+        role: on_call
+    renotify_after_s: 600
+    suppression_conditions: []
+    correlation:
+      window_s: 1800
+      flood_threshold: 2
+      is_root_candidate: true
+    source_sections: ['14.1', '16.1', '12.9']
+    enabled: true
+
+  - alarm_key: server_zone_temperature_high
+    name: Server zone temperature high
+    severity: major
+    domain: structure
+    asset_id: structure.room.power_container.server_zone
+    point_name: temperature_air_c
+    trigger:
+      operator: gt
+      value: 32
+    reset:
+      operator: le
+      value: 28
+    hysteresis: 4
+    on_delay_s: 600
+    off_delay_s: 900
+    trigger_expression: server-zone temperature_air_c > 32 degC held 600 s; clears at <= 28 degC held 900 s
+    threshold_status: commissioning_default
+    threshold_basis: >-
+      Conservative rack-inlet band placeholder. The container's cooling design and the
+      separation between battery and server zones are unresolved (SDD 22 item 12), so no
+      design inlet temperature exists to alarm against.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: downgrade
+    parent_alarm_key: power_container_cooling_failed
+    parent_scope: related
+    data_quality_alarm_key: sensor_data_invalid
+    affected_assets:
+      - structure.room.power_container.server_zone
+      - it.rack.power_container.01
+      - it.server.rack_01.r740xd_01
+      - energy.load.site.rack_cooling_01
+    probable_causes:
+      - Rack cooling shed as a load or failed.
+      - Shared uncontrolled airflow path with the battery zone.
+      - Compute workload not shifted despite thermal constraint (FR-804).
+    automatic_action: None from the alarm engine.
+    operator_action: Restore cooling, suspend discretionary compute, and verify the two zones are not sharing airflow.
+    procedure_ref: OP-IT-SERVER-ZONE-THERMAL
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email]
+        role: operator
+      - stage: 2
+        after_s: 900
+        channels: [push]
+        role: operator
+    renotify_after_s: 1800
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: ['off']
+        description: Server zone intentionally out of service.
+      - type: manual
+        description: >-
+          Maintenance does not silence this alarm, it downgrades it. A zone opened for work
+          is exactly when a thermal excursion is most likely to be missed.
+    correlation:
+      window_s: 1800
+      flood_threshold: 3
+    source_sections: ['12.9', '16.1']
+    enabled: true
+
+  - alarm_key: secondary_control_node_unreachable
+    name: Secondary control node unreachable
+    severity: major
+    domain: it
+    asset_id: it.server.secondary_control_node.01
+    point_name: availability_state
+    trigger:
+      operator: in
+      values: [offline, unknown]
+    reset:
+      operator: eq
+      value: online
+    hysteresis: null
+    on_delay_s: 300
+    off_delay_s: 120
+    trigger_expression: availability_state in {offline, unknown} held 300 s
+    threshold_status: not_applicable
+    threshold_basis: Enumerated availability state. The 300 s delay tolerates a reboot or a brief link flap.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: downgrade
+    parent_alarm_key: null
+    parent_scope: any
+    data_quality_alarm_key: sensor_data_invalid
+    affected_assets:
+      - it.server.secondary_control_node.01
+      - it.application_service.rack_01.digital_twin_api_01
+    probable_causes:
+      - Secondary node powered down or lost its own supply.
+      - Network path between structures failed.
+      - Node not yet deployed; the asset is still a planned functional position.
+    automatic_action: None.
+    operator_action: >-
+      Restore the node before doing any work that could take the power container down. Without
+      it there is no independent dashboard, MQTT bridge or emergency communications path.
+    procedure_ref: OP-IT-SECONDARY-NODE
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email]
+        role: operator
+      - stage: 2
+        after_s: 3600
+        channels: [push]
+        role: maintainer
+    renotify_after_s: 7200
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: ['off']
+        description: Node intentionally decommissioned.
+    correlation:
+      window_s: 900
+      flood_threshold: 2
+    source_sections: ['16.1', '16.2']
+    enabled: true
+    notes:
+      - Deliberately has no parent and uses parent_scope "any" for nothing else to claim it.
+        The whole point of SDD 16.1 is that this node is independent of the power container, so
+        it must never be folded into a container-outage incident as a silent symptom.
+
+  # -- Datacenter and communications, SDD 12.9 ---------------------------
+
+  - alarm_key: ups_on_battery
+    name: Rack UPS running on battery
+    severity: major
+    domain: energy
+    asset_id: energy.ups.rack_01.01
+    point_name: on_battery
+    trigger:
+      operator: eq
+      value: true
+    reset:
+      operator: eq
+      value: false
+    hysteresis: null
+    on_delay_s: 15
+    off_delay_s: 60
+    trigger_expression: on_battery == true held 15 s
+    threshold_status: not_applicable
+    threshold_basis: Boolean UPS state. 15 s on-delay so a source transfer does not raise an alarm.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: suppress
+    parent_alarm_key: power_container_ac_bus_lost
+    parent_scope: related
+    data_quality_alarm_key: energy_meter_data_invalid
+    affected_assets:
+      - energy.ups.rack_01.01
+      - energy.pdu.rack_01.switched_01
+      - energy.pdu.rack_01.basic_01
+      - it.rack.power_container.01
+    probable_causes:
+      - Critical panel feed lost.
+      - Upstream inverter or transfer failure.
+      - UPS input breaker tripped.
+    automatic_action: None from the alarm engine.
+    operator_action: Determine why the upstream feed was lost before assuming the UPS is at fault.
+    procedure_ref: OP-IT-UPS-ON-BATTERY
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email]
+        role: operator
+      - stage: 2
+        after_s: 300
+        channels: [push]
+        role: operator
+    renotify_after_s: 1800
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: [maintenance]
+        description: UPS self-test.
+    correlation:
+      window_s: 1800
+      flood_threshold: 2
+    source_sections: ['12.9', '37.1']
+    enabled: true
+
+  - alarm_key: pdu_overload
+    name: Rack PDU overload
+    severity: major
+    domain: energy
+    asset_class: pdu
+    point_name: overload_active
+    trigger:
+      operator: eq
+      value: true
+    reset:
+      operator: eq
+      value: false
+    hysteresis: null
+    on_delay_s: 10
+    off_delay_s: 120
+    trigger_expression: overload_active == true held 10 s on any rack PDU
+    threshold_status: not_applicable
+    threshold_basis: >-
+      Boolean overload flag published by the PDU. Per-outlet current limits are unresolved
+      because rack circuit ratings are open_fields.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: suppress
+    parent_alarm_key: null
+    parent_scope: related
+    data_quality_alarm_key: energy_meter_data_invalid
+    affected_assets:
+      - it.rack.power_container.01
+      - it.server.rack_01.r740xd_01
+      - it.storage_array.rack_01.sc200_01
+    probable_causes:
+      - Equipment added to the rack without a load record.
+      - Load concentrated on one PDU after an upstream failure.
+      - Inrush during simultaneous restart after an outage.
+    automatic_action: >-
+      None. Outlet cycling exists but must go through the audited command path (FR-802), not
+      through alarm handling.
+    operator_action: Rebalance rack load across PDUs and record the actual per-outlet draw.
+    procedure_ref: OP-IT-PDU-OVERLOAD
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email]
+        role: operator
+      - stage: 2
+        after_s: 600
+        channels: [push]
+        role: operator
+    renotify_after_s: 1800
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: [maintenance, 'off']
+        description: PDU under service.
+    correlation:
+      window_s: 900
+      flood_threshold: 2
+    source_sections: ['12.9']
+    enabled: true
+
+  - alarm_key: rack_ats_source_lost
+    name: Rack ATS primary source lost
+    severity: major
+    domain: energy
+    asset_id: energy.ats.rack_01.ap5442_01
+    point_name: source_a_available
+    trigger:
+      operator: eq
+      value: false
+    reset:
+      operator: eq
+      value: true
+    hysteresis: null
+    on_delay_s: 10
+    off_delay_s: 60
+    trigger_expression: source_a_available == false held 10 s
+    threshold_status: not_applicable
+    threshold_basis: Boolean source-availability flag.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: suppress
+    parent_alarm_key: power_container_ac_bus_lost
+    parent_scope: related
+    data_quality_alarm_key: energy_meter_data_invalid
+    affected_assets:
+      - energy.ats.rack_01.ap5442_01
+      - it.switch.rack_01.catalyst_2960x_01
+    probable_causes:
+      - UPS output or PDU feed lost.
+      - Upstream container AC bus lost.
+      - Rack ATS input cord or breaker fault.
+    automatic_action: None. Transfer is performed by the rack ATS itself.
+    operator_action: Restore the primary source; running on the secondary source removes rack power redundancy.
+    procedure_ref: OP-IT-RACK-ATS
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email]
+        role: operator
+      - stage: 2
+        after_s: 900
+        channels: [push]
+        role: operator
+    renotify_after_s: 3600
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: [maintenance, 'off']
+        description: Rack ATS under service.
+    correlation:
+      window_s: 1800
+      flood_threshold: 2
+    source_sections: ['12.9', '16.1']
+    enabled: true
+
+  - alarm_key: core_switch_unreachable
+    name: Core access switch unreachable
+    severity: critical
+    domain: it
+    asset_id: it.switch.rack_01.catalyst_2960x_01
+    point_name: availability_state
+    trigger:
+      operator: in
+      values: [offline, unknown]
+    reset:
+      operator: eq
+      value: online
+    hysteresis: null
+    on_delay_s: 60
+    off_delay_s: 60
+    trigger_expression: availability_state in {offline, unknown} held 60 s
+    threshold_status: not_applicable
+    threshold_basis: Enumerated availability state; 60 s tolerates a switch reload.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: suppress
+    parent_alarm_key: power_container_ac_bus_lost
+    parent_scope: related
+    data_quality_alarm_key: sensor_data_invalid
+    affected_assets:
+      - it.switch.rack_01.catalyst_2960x_01
+      - it.network_segment.site.vlan_10
+      - it.network_segment.site.vlan_20
+      - it.network_segment.site.vlan_30
+      - it.router.rack_01.isr4321_01
+      - it.wireless_controller.rack_01.wlc5508_01
+    probable_causes:
+      - Rack power lost.
+      - Switch reload, crash or configuration error.
+      - Uplink or management VLAN misconfiguration.
+    automatic_action: >-
+      None. FR-803 keeps communications and alerting above noncritical compute in the load
+      priority, but that is an EMS budgeting decision.
+    operator_action: >-
+      Expect correlated loss of every managed VLAN. Restore switch power and console in
+      locally rather than trusting the management path.
+    procedure_ref: OP-IT-CORE-SWITCH
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email, push]
+        role: operator
+      - stage: 2
+        after_s: 600
+        channels: [voice]
+        role: operator
+    renotify_after_s: 900
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: [maintenance, 'off']
+        description: Switch under planned maintenance.
+    correlation:
+      window_s: 1800
+      flood_threshold: 2
+      is_root_candidate: true
+    source_sections: ['12.9']
+    enabled: true
+
+  - alarm_key: primary_server_unreachable
+    name: Primary application server unreachable
+    severity: critical
+    domain: it
+    asset_id: it.server.rack_01.r740xd_01
+    point_name: availability_state
+    trigger:
+      operator: in
+      values: [offline, unknown]
+    reset:
+      operator: eq
+      value: online
+    hysteresis: null
+    on_delay_s: 60
+    off_delay_s: 120
+    trigger_expression: availability_state in {offline, unknown} held 60 s
+    threshold_status: not_applicable
+    threshold_basis: Enumerated availability state; 60 s tolerates a reboot.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: suppress
+    parent_alarm_key: power_container_ac_bus_lost
+    parent_scope: related
+    data_quality_alarm_key: sensor_data_invalid
+    affected_assets:
+      - it.server.rack_01.r740xd_01
+      - it.application_service.rack_01.mqtt_01
+      - it.application_service.rack_01.postgres_01
+      - it.application_service.rack_01.digital_twin_api_01
+      - it.server.secondary_control_node.01
+    probable_causes:
+      - Rack power or UPS runtime exhausted.
+      - Host crash, thermal shutdown or hypervisor failure.
+      - Storage path failure.
+    automatic_action: None.
+    operator_action: >-
+      Fail over to the secondary control node for reduced dashboard and MQTT bridging
+      (SDD 16.1 mitigation 6) before troubleshooting the primary.
+    procedure_ref: OP-IT-PRIMARY-SERVER
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email, push]
+        role: operator
+      - stage: 2
+        after_s: 600
+        channels: [voice]
+        role: operator
+    renotify_after_s: 900
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: [maintenance, 'off']
+        description: Host under planned maintenance.
+    correlation:
+      window_s: 1800
+      flood_threshold: 2
+      is_root_candidate: true
+    source_sections: ['12.9', '16.1']
+    enabled: true
+
+  - alarm_key: service_unavailable
+    name: Core application service unavailable
+    severity: major
+    domain: it
+    asset_class: application_service
+    point_name: availability_state
+    trigger:
+      operator: in
+      values: [offline, unknown]
+    reset:
+      operator: eq
+      value: online
+    hysteresis: null
+    on_delay_s: 120
+    off_delay_s: 60
+    trigger_expression: availability_state in {offline, unknown} held 120 s on any core service
+    threshold_status: not_applicable
+    threshold_basis: Enumerated availability state; 120 s tolerates a service restart.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: suppress
+    parent_alarm_key: primary_server_unreachable
+    parent_scope: related
+    data_quality_alarm_key: sensor_data_invalid
+    affected_assets:
+      - it.server.rack_01.r740xd_01
+    probable_causes:
+      - Host unavailable.
+      - Service crashed or failed a dependency such as PostgreSQL or MQTT.
+      - Configuration change not rolled back.
+    automatic_action: None.
+    operator_action: Check the host first; eleven services share one host, so one host failure explains all of them.
+    procedure_ref: OP-IT-SERVICE-UNAVAILABLE
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email]
+        role: operator
+      - stage: 2
+        after_s: 1800
+        channels: [push]
+        role: maintainer
+    renotify_after_s: 3600
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: [maintenance, 'off']
+        description: Service stopped deliberately.
+    correlation:
+      window_s: 900
+      flood_threshold: 3
+    source_sections: ['12.9', '8']
+    enabled: true
+    notes:
+      - Class-scoped across all eleven application-service functional positions, with the host
+        as parent so a host failure produces one incident rather than eleven notifications.
+
+  - alarm_key: storage_pool_degraded
+    name: Storage array reports failed disks
+    severity: major
+    domain: it
+    asset_class: storage_array
+    point_name: disk_fault_count
+    trigger:
+      operator: ge
+      value: 1
+    reset:
+      operator: le
+      value: 0
+    hysteresis: 1
+    on_delay_s: 60
+    off_delay_s: 300
+    trigger_expression: disk_fault_count >= 1 held 60 s
+    threshold_status: derived_from_design_document
+    threshold_basis: >-
+      One failed disk is one failed disk. No judgement is being invented here; the count is
+      published by the array.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: suppress
+    parent_alarm_key: null
+    parent_scope: related
+    data_quality_alarm_key: sensor_data_invalid
+    affected_assets:
+      - it.storage_array.rack_01.sc200_01
+      - it.storage_array.rack_01.sc200_02
+      - it.server.rack_01.r740xd_01
+    probable_causes:
+      - Disk failure.
+      - Backplane, expander or cable fault.
+      - Enclosure thermal excursion.
+    automatic_action: None.
+    operator_action: Replace the disk and confirm the rebuild completes before a second failure removes redundancy.
+    procedure_ref: OP-IT-STORAGE-DEGRADED
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email]
+        role: operator
+      - stage: 2
+        after_s: 86400
+        channels: [push]
+        role: maintainer
+    renotify_after_s: 86400
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: [maintenance, 'off']
+        description: Array under service.
+    correlation:
+      window_s: 3600
+      flood_threshold: 2
+    source_sections: ['12.9']
+    enabled: true
+
+  - alarm_key: storage_capacity_high
+    name: Host storage utilization high
+    severity: warning
+    domain: it
+    asset_class: server
+    point_name: storage_used_pct
+    trigger:
+      operator: gt
+      value: 85
+    reset:
+      operator: le
+      value: 80
+    hysteresis: 5
+    on_delay_s: 900
+    off_delay_s: 900
+    trigger_expression: storage_used_pct > 85 % held 900 s; clears at <= 80 % held 900 s
+    threshold_status: commissioning_default
+    threshold_basis: >-
+      85 % / 80 % is a conventional starting pair, not a decided policy. SDD 22 item 10 leaves
+      data-retention limits to be defined against storage and power budget, and SDD 16.4 sets
+      indefinite retention for alarm and command audit, so the real ceiling follows from that work.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: suppress
+    parent_alarm_key: null
+    parent_scope: related
+    data_quality_alarm_key: sensor_data_invalid
+    affected_assets:
+      - it.server.rack_01.r740xd_01
+      - it.application_service.rack_01.historian_01
+      - it.application_service.rack_01.postgres_01
+    probable_causes:
+      - Historian retention policy not enforced.
+      - Camera footage retention competing with operational data.
+      - Backup or snapshot growth.
+    automatic_action: None.
+    operator_action: Enforce the retention policy (SDD 16.4) and export before deleting anything (FR-010).
+    procedure_ref: OP-IT-STORAGE-CAPACITY
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log]
+        role: operator
+      - stage: 2
+        after_s: 86400
+        channels: [email]
+        role: maintainer
+    renotify_after_s: 0
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: [maintenance, 'off']
+        description: Host under service.
+    correlation:
+      window_s: 3600
+      flood_threshold: 3
+    source_sections: ['12.9', '16.4']
+    enabled: true
+
+  - alarm_key: network_path_degraded
+    name: Network path packet loss high
+    severity: warning
+    domain: it
+    asset_class: router
+    point_name: packet_loss_pct
+    trigger:
+      operator: gt
+      value: 5
+    reset:
+      operator: le
+      value: 2
+    hysteresis: 3
+    on_delay_s: 300
+    off_delay_s: 300
+    trigger_expression: packet_loss_pct > 5 % held 300 s; clears at <= 2 % held 300 s
+    threshold_status: commissioning_default
+    threshold_basis: >-
+      5 % / 2 % is a generic starting band. SDD 22 item 11 leaves acceptable latency and loss
+      per subsystem undefined, so this must be revisited once the WAN and LoRaWAN architectures
+      are chosen.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: suppress
+    parent_alarm_key: core_switch_unreachable
+    parent_scope: related
+    data_quality_alarm_key: sensor_data_invalid
+    affected_assets:
+      - it.router.rack_01.isr4321_01
+      - it.switch.rack_01.catalyst_2960x_01
+    probable_causes:
+      - Upstream carrier degradation.
+      - Duplex mismatch or failing optic.
+      - Saturated uplink from a backup or replication job.
+    automatic_action: >-
+      None. FR-904 requires event data to be preserved during internet loss, which is a
+      historian and buffering responsibility, not an alarm action.
+    operator_action: Confirm whether loss is local or upstream before escalating to the carrier.
+    procedure_ref: OP-IT-NETWORK-DEGRADED
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log]
+        role: operator
+      - stage: 2
+        after_s: 3600
+        channels: [email]
+        role: maintainer
+    renotify_after_s: 0
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: [maintenance, 'off']
+        description: Router under service.
+    correlation:
+      window_s: 1800
+      flood_threshold: 3
+    source_sections: ['12.9']
+    enabled: true
+
+  - alarm_key: backup_overdue
+    name: Configuration and database backup overdue
+    severity: warning
+    domain: it
+    asset_id: it.application_service.rack_01.postgres_01
+    point_name: backup_age_h
+    trigger:
+      operator: gt
+      value: 48
+    reset:
+      operator: le
+      value: 24
+    hysteresis: 24
+    on_delay_s: 300
+    off_delay_s: 300
+    trigger_expression: backup_age_h > 48 h held 300 s; clears at <= 24 h held 300 s
+    threshold_status: commissioning_default
+    threshold_basis: >-
+      FR-805 requires automatic backup of network-device and platform configuration but sets no
+      interval, and SDD 22 item 9 leaves the offsite-backup architecture undefined. A 24 h
+      target with a 48 h alarm is a starting pair only.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: suppress
+    parent_alarm_key: null
+    parent_scope: related
+    data_quality_alarm_key: sensor_data_invalid
+    affected_assets:
+      - it.application_service.rack_01.postgres_01
+      - it.server.secondary_control_node.01
+    probable_causes:
+      - Backup job failed or was never scheduled.
+      - Target volume full or unreachable.
+      - Credentials expired.
+    automatic_action: None.
+    operator_action: >-
+      Restore the backup job. SDD 16.1 mitigation 3 requires critical configuration and asset
+      data to be replicated outside the power container, so an overdue backup is a common-mode
+      exposure, not just housekeeping.
+    procedure_ref: OP-IT-BACKUP-OVERDUE
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log]
+        role: operator
+      - stage: 2
+        after_s: 86400
+        channels: [email]
+        role: maintainer
+    renotify_after_s: 0
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: [maintenance, 'off']
+        description: Backup deliberately paused.
+    correlation:
+      window_s: 3600
+      flood_threshold: 3
+    source_sections: ['12.9', '16.1']
+    enabled: true
+
+  - alarm_key: time_sync_drift
+    name: Host clock offset high
+    severity: warning
+    domain: it
+    asset_class: server
+    point_name: clock_offset_ms
+    trigger:
+      operator: gt
+      value: 1000
+    reset:
+      operator: le
+      value: 250
+    hysteresis: 750
+    on_delay_s: 600
+    off_delay_s: 600
+    trigger_expression: clock_offset_ms > 1000 ms held 600 s; clears at <= 250 ms held 600 s
+    threshold_status: commissioning_default
+    threshold_basis: >-
+      SDD 16.3 requires every host, gateway, PLC, camera and field node to use the homestead
+      NTP service but states no tolerance. One second alarm / 250 ms reset is a starting band.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: suppress
+    parent_alarm_key: null
+    parent_scope: related
+    data_quality_alarm_key: sensor_data_invalid
+    affected_assets:
+      - it.server.rack_01.r740xd_01
+      - it.server.secondary_control_node.01
+    probable_causes:
+      - NTP service unreachable and holdover drifting.
+      - External time source lost while isolated.
+      - Virtualization clock drift.
+    automatic_action: None.
+    operator_action: >-
+      Fix time before trusting any correlated timeline. Alarm and command audit records are
+      retained indefinitely (SDD 16.4) and are worth less with a skewed clock.
+    procedure_ref: OP-IT-TIME-SYNC
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log]
+        role: operator
+      - stage: 2
+        after_s: 21600
+        channels: [email]
+        role: maintainer
+    renotify_after_s: 0
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: [maintenance, 'off']
+        description: Host under service.
+    correlation:
+      window_s: 3600
+      flood_threshold: 3
+    source_sections: ['16.3']
+    enabled: true
+
+  # -- Security, SDD 12.10 -----------------------------------------------
+
+  - alarm_key: rack_door_forced_open
+    name: Rack door forced open
+    severity: major
+    domain: security
+    asset_id: security.access_controller.rack_01.ap9361_01
+    point_name: forced_open_active
+    trigger:
+      operator: eq
+      value: true
+    reset:
+      operator: eq
+      value: false
+    hysteresis: null
+    on_delay_s: 0
+    off_delay_s: 0
+    trigger_expression: forced_open_active == true, no delay
+    threshold_status: not_applicable
+    threshold_basis: Boolean forced-entry state from the rack access controller.
+    requires_manual_reset: true
+    maintenance_mode_behaviour: notify_only
+    parent_alarm_key: null
+    parent_scope: related
+    data_quality_alarm_key: sensor_data_invalid
+    affected_assets:
+      - security.access_controller.rack_01.ap9361_01
+      - it.rack.power_container.01
+      - security.camera.rack_01.netbotz_01
+    probable_causes:
+      - Unauthorized physical access.
+      - Door opened without a valid card read.
+      - Latch or sensor fault.
+    automatic_action: None. The local access controller and beacon act independently.
+    operator_action: >-
+      Correlate against camera, motion and access-card events per FR-902 before treating it as
+      a sensor fault. Preserve the footage.
+    procedure_ref: OP-SECURITY-RACK-FORCED-ENTRY
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email, push]
+        role: operator
+      - stage: 2
+        after_s: 300
+        channels: [voice]
+        role: on_call
+    renotify_after_s: 900
+    suppression_conditions: []
+    correlation:
+      window_s: 900
+      flood_threshold: 2
+      is_root_candidate: true
+    source_sections: ['12.10']
+    enabled: true
+    notes:
+      - requires_manual_reset so a forced-entry event cannot disappear when the door is closed again.
+
+  - alarm_key: rack_door_open_extended
+    name: Rack door left open
+    severity: warning
+    domain: security
+    asset_id: security.access_controller.rack_01.ap9361_01
+    point_name: door_state
+    trigger:
+      operator: eq
+      value: open
+    reset:
+      operator: in
+      values: [closed, ajar]
+    hysteresis: null
+    on_delay_s: 600
+    off_delay_s: 30
+    trigger_expression: door_state == open held 600 s
+    threshold_status: commissioning_default
+    threshold_basis: >-
+      10 minutes is a placeholder for "longer than a normal visit". No access policy has been
+      written yet.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: suppress
+    parent_alarm_key: rack_door_forced_open
+    parent_scope: same_asset
+    data_quality_alarm_key: sensor_data_invalid
+    affected_assets:
+      - security.access_controller.rack_01.ap9361_01
+      - it.rack.power_container.01
+      - structure.room.power_container.server_zone
+    probable_causes:
+      - Work in progress with the door left open.
+      - Door not latched.
+      - Airflow deliberately altered during a thermal event.
+    automatic_action: None.
+    operator_action: Close and latch the door; an open rack door changes the server-zone airflow assumptions.
+    procedure_ref: OP-SECURITY-RACK-DOOR
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log]
+        role: operator
+      - stage: 2
+        after_s: 3600
+        channels: [email]
+        role: operator
+    renotify_after_s: 0
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: [maintenance]
+        description: Rack access expected while a work order is open.
+    correlation:
+      window_s: 900
+      flood_threshold: 3
+    source_sections: ['12.10']
+    enabled: true
+    notes:
+      - 'The canonical maintenance-suppression example: rack work makes this alarm certain and useless.'
+
+  - alarm_key: camera_tamper
+    name: Camera tamper detected
+    severity: major
+    domain: security
+    asset_class: camera
+    point_name: tamper_active
+    trigger:
+      operator: eq
+      value: true
+    reset:
+      operator: eq
+      value: false
+    hysteresis: null
+    on_delay_s: 10
+    off_delay_s: 60
+    trigger_expression: tamper_active == true held 10 s
+    threshold_status: not_applicable
+    threshold_basis: Boolean tamper state.
+    requires_manual_reset: true
+    maintenance_mode_behaviour: notify_only
+    parent_alarm_key: null
+    parent_scope: related
+    data_quality_alarm_key: sensor_data_invalid
+    affected_assets:
+      - security.camera.rack_01.netbotz_01
+      - it.rack.power_container.01
+    probable_causes:
+      - Camera physically moved, covered or obstructed.
+      - Lens defocused or sprayed.
+      - Mount vibration misread as tamper.
+    automatic_action: None.
+    operator_action: Preserve footage from before the tamper event and correlate with access and motion events (FR-902).
+    procedure_ref: OP-SECURITY-CAMERA-TAMPER
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email, push]
+        role: operator
+      - stage: 2
+        after_s: 900
+        channels: [voice]
+        role: on_call
+    renotify_after_s: 1800
+    suppression_conditions: []
+    correlation:
+      window_s: 900
+      flood_threshold: 2
+    source_sections: ['12.10']
+    enabled: true
+
+  - alarm_key: camera_offline
+    name: Camera offline
+    severity: warning
+    domain: security
+    asset_class: camera
+    point_name: availability_state
+    trigger:
+      operator: in
+      values: [offline, unknown]
+    reset:
+      operator: eq
+      value: online
+    hysteresis: null
+    on_delay_s: 120
+    off_delay_s: 60
+    trigger_expression: availability_state in {offline, unknown} held 120 s
+    threshold_status: not_applicable
+    threshold_basis: Enumerated availability state.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: suppress
+    parent_alarm_key: core_switch_unreachable
+    parent_scope: related
+    data_quality_alarm_key: sensor_data_invalid
+    affected_assets:
+      - security.camera.rack_01.netbotz_01
+      - it.network_segment.site.vlan_40
+    probable_causes:
+      - VLAN 40 path lost.
+      - PoE or camera power lost.
+      - NVR or service path unavailable.
+    automatic_action: None.
+    operator_action: >-
+      Check the camera VLAN before the camera. FR-901 keeps camera traffic in VLAN 40 and
+      retrieval on approved paths only.
+    procedure_ref: OP-SECURITY-CAMERA-OFFLINE
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log]
+        role: operator
+      - stage: 2
+        after_s: 3600
+        channels: [email]
+        role: operator
+    renotify_after_s: 0
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: [maintenance, 'off']
+        description: Camera deliberately offline.
+    correlation:
+      window_s: 1800
+      flood_threshold: 3
+    source_sections: ['12.10']
+    enabled: true
+
+  - alarm_key: alarm_beacon_unavailable
+    name: Local alarm beacon unavailable
+    severity: major
+    domain: safety
+    asset_id: safety.alarm_output.rack_01.beacon_01
+    point_name: availability_state
+    trigger:
+      operator: in
+      values: [offline, unknown]
+    reset:
+      operator: eq
+      value: online
+    hysteresis: null
+    on_delay_s: 120
+    off_delay_s: 60
+    trigger_expression: availability_state in {offline, unknown} held 120 s
+    threshold_status: not_applicable
+    threshold_basis: Enumerated availability state.
+    requires_manual_reset: false
+    maintenance_mode_behaviour: notify_only
+    parent_alarm_key: null
+    parent_scope: any
+    data_quality_alarm_key: sensor_data_invalid
+    affected_assets:
+      - safety.alarm_output.rack_01.beacon_01
+      - it.environmental_monitor.rack_01.nbrk0550_01
+      - it.rack.power_container.01
+    probable_causes:
+      - Beacon power or wiring lost.
+      - NetBotz rack monitor offline.
+      - Output relay failed.
+    automatic_action: None.
+    operator_action: >-
+      Restore local annunciation promptly. SDD 16.1 mitigation 4 requires essential alerts to
+      be able to originate from independent local devices, so a dead beacon removes the alerting
+      path that survives loss of this platform.
+    procedure_ref: OP-SAFETY-BEACON
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log, email]
+        role: operator
+      - stage: 2
+        after_s: 1800
+        channels: [push]
+        role: maintainer
+    renotify_after_s: 7200
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: ['off']
+        description: Beacon decommissioned.
+    correlation:
+      window_s: 1800
+      flood_threshold: 2
+    source_sections: ['16.1', '12.10']
+    enabled: true
+    notes:
+      - Deliberately parentless with parent_scope "any". The independent alerting path must not be
+        reported as a silent symptom of the outage it exists to survive.
+
+  # -- Platform data quality, SDD 26.6 / FR-003 --------------------------
+
+  - alarm_key: sensor_data_invalid
+    name: Sensor measurement bad or stale
+    severity: warning
+    domain: platform
+    asset_id: null
+    asset_class: null
+    point_name: null
+    trigger:
+      operator: quality_in
+      values: [bad, stale]
+    reset:
+      operator: not_in
+      values: [bad, stale]
+    hysteresis: null
+    on_delay_s: 300
+    off_delay_s: 300
+    trigger_expression: >-
+      Raised by the evaluator against the specific point whose quality is bad or stale when a
+      non-energy alarm would otherwise have used that value.
+    threshold_status: not_applicable
+    threshold_basis: >-
+      Quality-driven. A dead sensor is a dead sensor, not a healthy in-range reading (SDD 26.6).
+    requires_manual_reset: false
+    maintenance_mode_behaviour: suppress
+    parent_alarm_key: null
+    parent_scope: any
+    data_quality_alarm_key: null
+    affected_assets: []
+    probable_causes:
+      - Sensor, gateway or environmental monitor offline.
+      - Point binding not commissioned; binding_status still tbd (SDD 47).
+      - Polling interval longer than stale_after_s.
+      - MQTT bridge outage.
+    automatic_action: The dependent alarm is held rather than evaluated on untrustworthy data.
+    operator_action: Restore the measurement path, then re-enable the dependent alarm's decision.
+    procedure_ref: OP-PLATFORM-DATA-QUALITY
+    procedure_status: not_yet_written
+    escalation_path:
+      - stage: 1
+        after_s: 0
+        channels: [log]
+        role: operator
+      - stage: 2
+        after_s: 86400
+        channels: [email]
+        role: maintainer
+    renotify_after_s: 0
+    suppression_conditions:
+      - type: operating_mode
+        scope: asset
+        modes: [maintenance]
+        description: Device intentionally unavailable or under test.
+    correlation:
+      window_s: 1800
+      flood_threshold: 5
+    source_sections: ['26.6', '12.1', '47']
+    enabled: true
+    notes:
+      - Instantiated dynamically against whichever point went bad; it has no fixed asset scope.

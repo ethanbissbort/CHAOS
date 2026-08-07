@@ -1,0 +1,527 @@
+{
+  "uid": "homestead-energy",
+  "title": "Homestead — Energy",
+  "description": "Energy-management view (SDD sections 13, 30-38). Every panel reads a table the platform actually writes: energy_state_snapshot, energy_state_transitions, load_shed_actions, power_load_profiles, telemetry_samples and current_state. Panels are empty until the EMS and the ingest path are running against a loaded registry — an empty panel here means no data, never a zero.",
+  "tags": ["homestead", "energy", "sdd-38"],
+  "timezone": "browser",
+  "editable": false,
+  "graphTooltip": 1,
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-24h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "asset",
+        "label": "Energy asset",
+        "type": "query",
+        "datasource": { "type": "postgres", "uid": "homestead-pg" },
+        "refresh": 1,
+        "includeAll": true,
+        "multi": true,
+        "query": "SELECT DISTINCT asset_id FROM points WHERE asset_id LIKE 'energy.%' ORDER BY 1",
+        "current": { "text": "All", "value": "$__all" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "row",
+      "id": 1,
+      "title": "EMS state (SDD 30.7)",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "stat",
+      "id": 2,
+      "title": "Energy operating state",
+      "description": "The single site energy state the EMS publishes. COMMISSIONING until the EMS has been enabled and has evaluated at least once.",
+      "datasource": { "type": "postgres", "uid": "homestead-pg" },
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 1 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^state$/", "values": false },
+        "textMode": "value",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "SURPLUS": { "color": "blue", "index": 0 },
+                "NORMAL": { "color": "green", "index": 1 },
+                "CONSERVE": { "color": "yellow", "index": 2 },
+                "CRITICAL_RESERVE": { "color": "orange", "index": 3 },
+                "GENERATOR_SUPPORT": { "color": "orange", "index": 4 },
+                "EMERGENCY": { "color": "red", "index": 5 },
+                "BLACK_START": { "color": "purple", "index": 6 },
+                "DEGRADED_SENSOR": { "color": "yellow", "index": 7 },
+                "MAINTENANCE": { "color": "text", "index": 8 },
+                "COMMISSIONING": { "color": "text", "index": 9 }
+              }
+            }
+          ],
+          "noValue": "no EMS snapshot",
+          "color": { "mode": "fixed", "fixedColor": "text" }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "homestead-pg" },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT state FROM energy_state_snapshot ORDER BY id LIMIT 1"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "id": 3,
+      "title": "Input data quality",
+      "description": "SDD 30.5: the state machine must not act on invalid measurements. 'degraded' or 'bad' means the EMS is operating conservatively, not that the plant is healthy.",
+      "datasource": { "type": "postgres", "uid": "homestead-pg" },
+      "gridPos": { "h": 5, "w": 5, "x": 6, "y": 1 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^data_quality$/", "values": false },
+        "textMode": "value",
+        "colorMode": "background",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "good": { "color": "green", "index": 0 },
+                "degraded": { "color": "yellow", "index": 1 },
+                "bad": { "color": "red", "index": 2 },
+                "unknown": { "color": "text", "index": 3 }
+              }
+            }
+          ],
+          "noValue": "unknown",
+          "color": { "mode": "fixed", "fixedColor": "text" }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "homestead-pg" },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT data_quality FROM energy_state_snapshot ORDER BY id LIMIT 1"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "id": 4,
+      "title": "Generator request",
+      "description": "SDD 34: the EMS requests, the generator controller decides. This is the request, not the generator's actual state.",
+      "datasource": { "type": "postgres", "uid": "homestead-pg" },
+      "gridPos": { "h": 5, "w": 5, "x": 11, "y": 1 },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "/^generator_request$/",
+          "values": false
+        },
+        "textMode": "value",
+        "colorMode": "background",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "none",
+          "color": { "mode": "fixed", "fixedColor": "text" },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "homestead-pg" },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT generator_request FROM energy_state_snapshot ORDER BY id LIMIT 1"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "id": 5,
+      "title": "Since last EMS evaluation",
+      "description": "A rising number means the EMS tick has stopped. The energy state shown above is then stale and must not be trusted.",
+      "datasource": { "type": "postgres", "uid": "homestead-pg" },
+      "gridPos": { "h": 5, "w": 4, "x": 16, "y": 1 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^age_s$/", "values": false },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0,
+          "noValue": "never",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 60 },
+              { "color": "red", "value": 300 }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "homestead-pg" },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT EXTRACT(EPOCH FROM (now() - last_evaluated_at)) AS age_s FROM energy_state_snapshot ORDER BY id LIMIT 1"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "id": 6,
+      "title": "Shed groups active",
+      "description": "SDD 32: number of load-shedding groups currently commanded off.",
+      "datasource": { "type": "postgres", "uid": "homestead-pg" },
+      "gridPos": { "h": 5, "w": 4, "x": 20, "y": 1 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^shed_groups$/", "values": false },
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "homestead-pg" },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT jsonb_array_length(COALESCE(shed_groups_active, '[]'::jsonb)) AS shed_groups FROM energy_state_snapshot ORDER BY id LIMIT 1"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "id": 10,
+      "title": "Battery, generation and load",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 6 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "id": 11,
+      "title": "Battery state of charge",
+      "description": "Point soc_pct from the historian. One series per asset (battery bank, BMS). Only samples with quality = 'good' are plotted; bad-quality samples appear in the data-quality table below rather than being drawn as if they were measurements.",
+      "datasource": { "type": "postgres", "uid": "homestead-pg" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 7 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 8, "showPoints": "never" },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "homestead-pg" },
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT ts AS \"time\", asset_id AS metric, value_numeric FROM telemetry_samples WHERE point_name = 'soc_pct' AND quality = 'good' AND $__timeFilter(ts) ORDER BY ts"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "id": 12,
+      "title": "Inverter DC input and AC output",
+      "description": "Points power_dc_input_kw and power_ac_output_kw. The design basis for array and inverter capacity is an unresolved conflict (SDD 30.2, open decision 22.1) — this panel plots what is measured, not what was designed.",
+      "datasource": { "type": "postgres", "uid": "homestead-pg" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 7 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatt",
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 8, "showPoints": "never" },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "homestead-pg" },
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT ts AS \"time\", asset_id || ' dc_in' AS metric, value_numeric FROM telemetry_samples WHERE point_name = 'power_dc_input_kw' AND quality = 'good' AND $__timeFilter(ts) ORDER BY ts"
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "postgres", "uid": "homestead-pg" },
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT ts AS \"time\", asset_id || ' ac_out' AS metric, value_numeric FROM telemetry_samples WHERE point_name = 'power_ac_output_kw' AND quality = 'good' AND $__timeFilter(ts) ORDER BY ts"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "id": 13,
+      "title": "Site and panel load",
+      "description": "Points power_total_kw and power_ac_kw across energy assets — critical and general panels, meters, inverters.",
+      "datasource": { "type": "postgres", "uid": "homestead-pg" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatt",
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 8, "showPoints": "never" },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "homestead-pg" },
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT ts AS \"time\", asset_id || '/' || point_name AS metric, value_numeric FROM telemetry_samples WHERE point_name IN ('power_total_kw', 'power_ac_kw') AND quality = 'good' AND $__timeFilter(ts) ORDER BY ts"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "id": 14,
+      "title": "Energy today and available reserve",
+      "description": "Points energy_today_kwh and energy_available_kwh. energy_available_kwh is a CALC point: it is the platform's derived reserve, not a meter reading.",
+      "datasource": { "type": "postgres", "uid": "homestead-pg" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 8, "showPoints": "never" },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "homestead-pg" },
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT ts AS \"time\", asset_id || '/' || point_name AS metric, value_numeric FROM telemetry_samples WHERE point_name IN ('energy_today_kwh', 'energy_available_kwh') AND quality = 'good' AND $__timeFilter(ts) ORDER BY ts"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "id": 20,
+      "title": "Load management (SDD 31-33)",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "table",
+      "id": 21,
+      "title": "Load schedule by tier",
+      "description": "From power_load_profiles, populated by the EMS load-schedule loader. Tier 0 is physical protection and is never shed; tier 4 is opportunistic surplus. Rows are empty until data/load_schedule.yaml has been loaded (homestead-twin load-all).",
+      "datasource": { "type": "postgres", "uid": "homestead-pg" },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 24 },
+      "options": { "showHeader": true, "cellHeight": "sm" },
+      "fieldConfig": {
+        "defaults": { "custom": { "align": "auto", "filterable": true }, "mappings": [] },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "rated_kw" },
+            "properties": [{ "id": "unit", "value": "kwatt" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "estimated_kw" },
+            "properties": [{ "id": "unit", "value": "kwatt" }]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "homestead-pg" },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT COALESCE(effective_tier, base_tier) AS tier, name, asset_id, criticality, rated_power_kw AS rated_kw, estimated_power_kw AS estimated_kw, control_method, branch_circuit FROM power_load_profiles ORDER BY 1, name"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "id": 22,
+      "title": "Shed and restore actions",
+      "description": "Every shed or restore the EMS attempted, with its outcome. SDD 32.3: a shed command that fails must be visible, not retried silently.",
+      "datasource": { "type": "postgres", "uid": "homestead-pg" },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 24 },
+      "options": { "showHeader": true, "cellHeight": "sm" },
+      "fieldConfig": {
+        "defaults": { "custom": { "align": "auto", "filterable": true }, "mappings": [] },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "outcome" },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "requested": { "color": "yellow", "index": 0 },
+                      "confirmed": { "color": "green", "index": 1 },
+                      "failed": { "color": "red", "index": 2 }
+                    }
+                  }
+                ]
+              },
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "homestead-pg" },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT occurred_at, action, \"group\", asset_id, energy_state, outcome, reason FROM load_shed_actions WHERE $__timeFilter(occurred_at) ORDER BY occurred_at DESC LIMIT 200"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "id": 23,
+      "title": "Energy state transitions",
+      "description": "Append-only EMS history: what changed, what triggered it, and who or what asked. SDD 30.9 requires hysteresis and dwell — repeated fast transitions here mean the thresholds need work.",
+      "datasource": { "type": "postgres", "uid": "homestead-pg" },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 33 },
+      "options": { "showHeader": true, "cellHeight": "sm" },
+      "fieldConfig": {
+        "defaults": { "custom": { "align": "auto", "filterable": true }, "mappings": [] },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "homestead-pg" },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT occurred_at, from_state, to_state, \"trigger\", actor, reason FROM energy_state_transitions WHERE $__timeFilter(occurred_at) ORDER BY occurred_at DESC LIMIT 200"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "id": 24,
+      "title": "Energy points that are stale or bad quality",
+      "description": "An energy dashboard that hides its own blind spots is worse than no dashboard. These are energy-domain points whose last value is not 'good', or older than the point's stale_after_s. SDD 26.6 and 30.5.",
+      "datasource": { "type": "postgres", "uid": "homestead-pg" },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 33 },
+      "options": { "showHeader": true, "cellHeight": "sm" },
+      "fieldConfig": {
+        "defaults": { "custom": { "align": "auto", "filterable": true }, "mappings": [] },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "age_s" },
+            "properties": [{ "id": "unit", "value": "s" }]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "homestead-pg" },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT cs.point_id, cs.quality, cs.value_numeric, cs.unit, cs.ts, ROUND(EXTRACT(EPOCH FROM (now() - cs.ts))::numeric, 0) AS age_s, cs.stale_after_s FROM current_state cs JOIN assets a ON a.asset_id = cs.asset_id WHERE a.domain = 'energy' AND (cs.quality <> 'good' OR cs.ts IS NULL OR (cs.stale_after_s IS NOT NULL AND cs.ts < now() - make_interval(secs => cs.stale_after_s))) ORDER BY cs.ts NULLS FIRST LIMIT 100"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": 30,
+      "title": "What this dashboard does not show",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 42 },
+      "options": {
+        "mode": "markdown",
+        "content": "SDD section 38 also asks for **forecast reserve**, **PV curtailment**, **per-subsystem consumption attribution** and **cost/value modelling**. None of those are implemented, so none of them have a panel here. Adding an empty panel for an unimplemented value teaches the operator to ignore empty panels, and that habit is what makes a real gap invisible during an event.\n\nAlso absent, and deliberately: a **control** widget. Grafana is a read path. Commands go through the digital twin API so that every one of them carries a named operator, a reason, an idempotency key and an audit record (SDD 5.7, FR-004).\n\nThe **authoritative energy design is still an open conflict** (SDD 30.2, open decision 22.1): the older 12 kW / 40 kWh baseline versus the revised 45 kWdc / 800 kWh design. No threshold, axis maximum or reserve calculation on this dashboard assumes either one is correct."
+      }
+    }
+  ]
+}

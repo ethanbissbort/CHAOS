@@ -18,7 +18,7 @@ import {
   askReason, card, clear, fmtAge, fmtDateTime, fmtNumber, h, kv, requireRole,
   resultProblem, statusChip, toast,
 } from '../app.js';
-import { api, post } from '../api.js';
+import { api } from '../api.js';
 
 const AUTHORITY_COPY = {
   local: 'Local — the equipment or its own controller has authority right now.',
@@ -172,6 +172,10 @@ function interlockBlock(data) {
     } else {
       children.push(h('p', { style: 'margin-bottom:.5rem' }, statusChip('ok', 'All evaluated interlocks passed')));
     }
+    if (block.dispatch_blocker_count) {
+      children.push(h('p', { class: 'card-note', style: 'margin-top:0' },
+        `${block.dispatch_blocker_count} check${block.dispatch_blocker_count === 1 ? '' : 's'} would stop dispatch even when passing (for example, physical control being globally disabled).`));
+    }
     children.push(h('div', null, evaluated.map((entry) => h('div', { class: 'interlock' },
       entry.blocking === null || entry.blocking === undefined
         ? statusChip('no_data', 'unknown')
@@ -179,6 +183,9 @@ function interlockBlock(data) {
       h('div', null,
         h('div', { class: 'name', text: entry.name }),
         entry.detail ? h('div', { class: 'detail', text: entry.detail }) : null,
+        entry.blocks_dispatch
+          ? h('div', { class: 'detail', style: 'color:var(--sev-major)', text: 'Blocks dispatch.' })
+          : null,
         h('div', { class: 'detail', style: 'color:var(--text-faint)',
           text: `${entry.source === 'live_point' ? 'Live point' : 'From command'}`
             + (entry.command_id ? ` ${entry.command_id}` : '')
@@ -275,7 +282,9 @@ function budgetBlock(data) {
   children.push(kv([
     ['Energy state', budget.energy_state || statusChip('no_data', 'EMS not reporting')],
     ['Shed groups active', (budget.shed_groups_active || []).length ? budget.shed_groups_active.join(', ') : 'none'],
-    ['Currently shed', budget.currently_shed ? statusChip('alarm', 'YES — this load is in an active shed group') : statusChip('ok', 'no')],
+    ['Currently shed', budget.currently_shed
+      ? h('span', null, statusChip('alarm', 'YES'), ' this load sits in an active shed group')
+      : statusChip('ok', 'no')],
   ]));
 
   const leases = budget.active_leases || [];
@@ -324,59 +333,105 @@ function commandConsole(data, reload) {
 
   const select = h('select', { class: 'select-sm', id: 'cmd-point' },
     points.map((point) => h('option', {
-      value: point.point_id,
+      value: point.point_name,
       text: `${point.point_name} (${point.data_type}${point.unit ? ', ' + point.unit : ''})`,
     })));
   const commandInput = h('input', { type: 'text', class: 'input', id: 'cmd-name', value: 'set_value',
                                     placeholder: 'e.g. set_mode, set_enabled' });
   const valueInput = h('input', { type: 'text', class: 'input', id: 'cmd-value',
                                   placeholder: 'e.g. true, 21.5, "reduced_power"' });
+  const outcome = h('div', { style: 'margin-top:.7rem' });
+
+  function parseValue() {
+    if (!valueInput.value.trim()) return undefined;
+    try { return JSON.parse(valueInput.value); } catch { return valueInput.value; }
+  }
+
+  /** Render whatever the command service said, including its interlock verdicts. */
+  function showOutcome(response, wasDryRun) {
+    clear(outcome);
+    const detail = response.data && response.data.detail && typeof response.data.detail === 'object'
+      ? response.data.detail
+      : (response.data && typeof response.data === 'object' ? response.data : null);
+
+    const verdicts = detail && Array.isArray(detail.interlocks_evaluated) ? detail.interlocks_evaluated : [];
+    const denied = detail && Array.isArray(detail.denied_by) ? detail.denied_by : [];
+
+    outcome.appendChild(h('h4', { class: 'card-note',
+      style: 'margin:0 0 .3rem;text-transform:uppercase;letter-spacing:.06em',
+      text: wasDryRun ? 'Dry-run result — nothing was published' : 'Command result' }));
+    outcome.appendChild(h('p', { style: 'margin:0 0 .4rem' },
+      response.ok ? statusChip('ok', detail && detail.state ? detail.state : 'accepted')
+        : statusChip('alarm', (detail && detail.refused_by) || `HTTP ${response.status}`),
+      ' ',
+      h('span', { text: (detail && (detail.message || detail.state_reason)) || response.error || '' })));
+
+    if (denied.length) {
+      outcome.appendChild(h('p', { class: 'card-note', text: `Denied by: ${denied.join(', ')}` }));
+    }
+    if (verdicts.length) {
+      outcome.appendChild(h('div', null, verdicts.map((entry) => h('div', { class: 'interlock' },
+        entry.allowed === false ? statusChip('alarm', 'BLOCKS') : statusChip('ok', 'passes'),
+        h('div', null,
+          h('div', { class: 'name', text: entry.code || entry.name || 'interlock' }),
+          h('div', { class: 'detail', text: entry.reason || '' }),
+          entry.blocks_dispatch
+            ? h('div', { class: 'detail', style: 'color:var(--sev-major)', text: 'Would stop dispatch of a real command.' })
+            : null)))));
+    }
+  }
+
+  async function send(dryRun) {
+    if (!dryRun && !requireRole('operator')) return;
+    if (dryRun && !requireRole('viewer')) return;
+    const pointName = select.value;
+    const reason = dryRun
+      ? `Dry-run preflight from the operator console for ${pointName}`
+      : await askReason({
+        title: `Issue ${commandInput.value} to ${data.asset.name}`,
+        note: `This writes a command record with your name, your role, this reason and the current`
+          + ` operating mode (${(data.operating_mode || {}).mode || 'unset'}). Point: ${pointName}.`
+          + (commandable.allowed ? '' : ' The platform is expected to refuse this command — the reasons are listed above.'),
+        confirmLabel: 'Issue command',
+        danger: true,
+      });
+    if (!reason) return;
+
+    const response = await api.issueCommand({
+      assetId: data.asset.asset_id,
+      pointName,
+      command: commandInput.value || 'set_value',
+      value: parseValue(),
+      reason,
+      dryRun,
+    });
+
+    if (response.missing) {
+      toast('warn', 'Command endpoint not available',
+        'This node does not expose POST /commands. Nothing was sent to any equipment.');
+      return;
+    }
+    if (response.forbidden) {
+      toast('error', 'Refused', `${response.error} — your role is not sufficient.`);
+      return;
+    }
+    showOutcome(response, dryRun);
+    if (response.ok && !dryRun) {
+      toast('success', 'Command accepted', 'Watch the requested vs actual comparison above.');
+      await reload();
+    } else if (!response.ok) {
+      toast(dryRun ? 'info' : 'error', dryRun ? 'Dry run: command would be refused' : 'Command rejected',
+        response.error || `HTTP ${response.status}`);
+    }
+  }
 
   children.push(h('div', { class: 'filters', style: 'margin-top:.8rem' },
     h('label', null, h('span', { text: 'Point' }), select),
     h('label', null, h('span', { text: 'Command' }), commandInput),
     h('label', null, h('span', { text: 'Value (JSON)' }), valueInput),
-    h('button', {
-      class: 'btn btn-primary btn-sm',
-      onclick: async () => {
-        if (!requireRole('operator')) return;
-        let parsed = valueInput.value;
-        if (valueInput.value.trim()) {
-          try { parsed = JSON.parse(valueInput.value); } catch { parsed = valueInput.value; }
-        }
-        const pointId = select.value;
-        const reason = await askReason({
-          title: `Issue ${commandInput.value} to ${data.asset.name}`,
-          note: `This writes a command record with your name, your role, this reason and the current`
-            + ` operating mode (${(data.operating_mode || {}).mode || 'unset'}). Point: ${pointId}.`
-            + (commandable.allowed ? '' : ' The platform is expected to refuse this command — the reasons are listed above.'),
-          confirmLabel: 'Issue command',
-          danger: true,
-        });
-        if (!reason) return;
-
-        const response = await post('/commands', {
-          asset_id: data.asset.asset_id,
-          point_id: pointId,
-          command: commandInput.value || 'set_value',
-          value: parsed,
-          reason,
-          requires_ack: true,
-        });
-        if (response.ok) {
-          toast('success', 'Command accepted', `${response.data && response.data.command_id ? response.data.command_id : ''} — watch the requested vs actual comparison above.`);
-          await reload();
-        } else if (response.missing) {
-          toast('warn', 'Command endpoint not available',
-            'This node does not expose POST /commands yet. Nothing was sent to any equipment.');
-        } else if (response.forbidden) {
-          toast('error', 'Refused', `${response.error} — your role is not sufficient.`);
-        } else {
-          toast('error', 'Command rejected', response.error || `HTTP ${response.status}`);
-        }
-      },
-      text: 'Issue command…',
-    })));
+    h('button', { class: 'btn btn-sm', onclick: () => send(true), text: 'Preflight (dry run)' }),
+    h('button', { class: 'btn btn-primary btn-sm', onclick: () => send(false), text: 'Issue command…' })));
+  children.push(outcome);
 
   children.push(h('p', { class: 'card-note',
     text: 'Every command is recorded with the issuer, the reason, the operating mode and the interlocks evaluated (SDD 5.7, FR-004). A reason is mandatory before the request is sent.' }));

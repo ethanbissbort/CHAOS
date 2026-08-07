@@ -180,7 +180,9 @@ function buildMap(payload, ctx) {
     const geometry = feature.geometry;
     if (geometry.type === 'Point') {
       const [x, y] = project(geometry.coordinates);
-      const r = Math.max(home.w / 90, 3);
+      // Sizes are a fraction of the framed area, never an absolute floor: with a
+      // single surveyed asset the frame is tiny and a floor would fill the screen.
+      const r = home.w / 90;
       group.appendChild(svgEl('path', {
         d: markerPath(style.shape, x, y, r),
         fill: stroke, 'fill-opacity': 0.75, stroke, 'stroke-width': r * 0.28,
@@ -191,10 +193,11 @@ function buildMap(payload, ctx) {
           stroke: 'var(--sev-critical)', 'stroke-width': r * 0.25, 'stroke-dasharray': `${r} ${r * 0.6}`,
         }));
       }
-      group.appendChild(svgEl('text', {
-        x: x + r * 1.8, y: y + r * 0.6, 'font-size': Math.max(home.w / 70, 3.5),
-        fill: 'var(--text-dim)',
-      }, props.name || props.asset_id));
+      if (features.length <= 60) {
+        group.appendChild(svgEl('text', {
+          x: x + r * 1.9, y: y + r * 0.7, 'font-size': home.w / 80, fill: 'var(--text-dim)',
+        }, props.name || props.asset_id));
+      }
     } else {
       const rings = geometry.type === 'Polygon' ? geometry.coordinates
         : geometry.type === 'MultiPolygon' ? geometry.coordinates.flat()

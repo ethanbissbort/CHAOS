@@ -1,0 +1,67 @@
+# Grafana datasource provisioning (SDD section 8.6).
+#
+# Two datasources, and the split matters:
+#
+#   homestead-pg   The platform's own PostgreSQL. Everything the digital twin
+#                  produces lives here: the registry, the relational historian
+#                  (telemetry_samples), the current-state cache, EMS state,
+#                  alarms and the command audit. This is where the honest data is.
+#
+#   prometheus     Infrastructure liveness only (hosts, switches, UPS, PDUs,
+#                  NetBotz once exporters exist). See deploy/prometheus/prometheus.yml
+#                  for what is actually being scraped today -- currently just
+#                  Prometheus itself.
+#
+# Values come from the environment set in deploy/docker-compose.yml. No
+# credential is written into this file.
+
+apiVersion: 1
+
+deleteDatasources:
+  - name: homestead-pg
+    orgId: 1
+  - name: prometheus
+    orgId: 1
+
+datasources:
+  - name: homestead-pg
+    uid: homestead-pg
+    type: postgres
+    access: proxy
+    orgId: 1
+    isDefault: true
+    url: ${HOMESTEAD_PG_HOST}
+    user: ${HOMESTEAD_PG_USER}
+    database: ${HOMESTEAD_PG_DB}
+    secureJsonData:
+      password: ${HOMESTEAD_PG_PASSWORD}
+    jsonData:
+      # Compose-internal traffic on the private bridge network. Set to
+      # verify-full with a CA once PostgreSQL is reached across a VLAN.
+      sslmode: disable
+      postgresVersion: 1600
+      # PostGIS is installed by deploy/postgres/init.sql; this lets Grafana
+      # offer geo panels once the Location geometry column is enabled.
+      timescaledb: false
+      maxOpenConns: 8
+      maxIdleConns: 2
+      connMaxLifetime: 14400
+    editable: false
+
+  - name: prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    orgId: 1
+    isDefault: false
+    # Both compose files set HOMESTEAD_PROMETHEUS_URL explicitly. Grafana's
+    # provisioning interpolation has no shell-style defaults, so an unset
+    # variable would be substituted as an empty string.
+    #
+    # The secondary control node has no Prometheus; it points this at an
+    # unreachable host so the datasource reports down rather than pretending.
+    url: ${HOMESTEAD_PROMETHEUS_URL}
+    jsonData:
+      httpMethod: POST
+      timeInterval: 30s
+    editable: false
