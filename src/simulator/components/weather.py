@@ -68,7 +68,7 @@ _MODE_BASE = {
     "clear": 0.04,
     "light": 0.25,
     "variable": 0.45,
-    "overcast": 0.88,
+    "overcast": 0.95,
     "passing_clouds": 0.10,
     "storm": 0.97,
 }

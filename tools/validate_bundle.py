@@ -23,10 +23,11 @@ What this does
 
 Usage::
 
-    python3 tools/validate_bundle.py                 # human summary
-    python3 tools/validate_bundle.py --json          # machine-readable
-    python3 tools/validate_bundle.py --strict        # warnings become errors
+    python3 tools/validate_bundle.py                  # human summary
+    python3 tools/validate_bundle.py --json           # machine-readable
+    python3 tools/validate_bundle.py --strict         # warnings become errors
     python3 tools/validate_bundle.py --timestamp ...  # pin the report timestamp
+    python3 tools/validate_bundle.py --root /tmp/pkg  # validate a copy of the package
 
 The report timestamp comes from ``--timestamp``, then from
 ``$HOMESTEAD_VALIDATION_TIMESTAMP``, then from the real clock. No clock is
@@ -55,10 +56,22 @@ from validate_registry_refs import (  # noqa: E402
     check_document,
 )
 
+#: Package root. ``--root`` rebinds these so a copy of the package can be
+#: validated without touching the working tree -- which is what the tests do,
+#: and what a release pipeline wants when it validates an extracted artifact.
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data"
 SCHEMA_DIR = ROOT / "schemas"
 REPORT_PATH = ROOT / "validation_report.json"
+
+
+def configure_root(root: Path) -> None:
+    """Point discovery at ``root`` instead of the repository this script lives in."""
+    global ROOT, DATA_DIR, SCHEMA_DIR, REPORT_PATH
+    ROOT = root.resolve()
+    DATA_DIR = ROOT / "data"
+    SCHEMA_DIR = ROOT / "schemas"
+    REPORT_PATH = ROOT / "validation_report.json"
 
 #: Documents whose schema file is not named after the data file.
 SCHEMA_STEM_ALIASES = {"homestead_asset_register": "asset_register"}
@@ -806,9 +819,18 @@ def main(argv: list[str] | None = None) -> int:
         "--timestamp",
         help="Report timestamp. Falls back to $HOMESTEAD_VALIDATION_TIMESTAMP, then the current UTC time.",
     )
-    parser.add_argument("--report", type=Path, default=REPORT_PATH, help="Where to write validation_report.json.")
+    parser.add_argument(
+        "--root",
+        type=Path,
+        help="Package root containing data/ and schemas/. Defaults to this script's repository.",
+    )
+    parser.add_argument("--report", type=Path, help="Where to write validation_report.json.")
     parser.add_argument("--no-report", action="store_true", help="Do not write the report file.")
     args = parser.parse_args(argv)
+
+    if args.root is not None:
+        configure_root(args.root)
+    report_path = args.report or REPORT_PATH
 
     report = Report()
     documents = discover_and_validate(report)
@@ -823,7 +845,7 @@ def main(argv: list[str] | None = None) -> int:
     payload = build_report_payload(report, documents, timestamp, args.strict)
 
     if not args.no_report:
-        args.report.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        report_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
     if args.json:
         print(json.dumps(payload, indent=2, ensure_ascii=False))

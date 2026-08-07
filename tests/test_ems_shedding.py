@@ -302,7 +302,7 @@ def test_rejected_shed_escalates_and_is_not_assumed_off(
     assert not states[COMPUTE].is_shed
     assert states[COMPUTE].shed_failed
     # The alarm reached the bus.
-    message = bus.last(f"homestead/energy/site/load_opportunistic_compute_01/alarm/load_shed_failed")
+    message = bus.last("homestead/energy/site/load_opportunistic_compute_01/alarm/load_shed_failed")
     assert message is not None
     assert json.loads(message.text)["detail"]["severity"] == "major"
 

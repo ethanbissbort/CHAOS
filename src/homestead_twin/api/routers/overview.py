@@ -27,9 +27,11 @@ still being built out.
 from __future__ import annotations
 
 import datetime as dt
+import logging
 from collections import Counter, defaultdict
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Sequence
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import case, func, select
@@ -55,6 +57,8 @@ from homestead_twin.models import (
     PowerLoadProfile,
     utcnow,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["overview"])
 
@@ -545,6 +549,7 @@ def _evaluate_metric(snapshot: RegistrySnapshot, spec: MetricSpec) -> dict:
 
     candidate_points = 0
     fallback_status = STATUS_NO_POINTS
+    saw_stale_value = False
     for source in spec.sources:
         matches = _matching_points(snapshot, source)
         candidate_points += len(matches)
@@ -600,7 +605,11 @@ def _evaluate_metric(snapshot: RegistrySnapshot, spec: MetricSpec) -> dict:
                 timestamps.append(ts)
 
         if not numeric:
-            # Points matched but nothing usable: keep looking at the next source.
+            # Points matched but nothing usable right now. A point that reported
+            # and went quiet is a different fact from one that never reported --
+            # the first means an instrument or link has failed.
+            if stale_count:
+                saw_stale_value = True
             continue
 
         if source.aggregate == "mean":
@@ -640,6 +649,13 @@ def _evaluate_metric(snapshot: RegistrySnapshot, spec: MetricSpec) -> dict:
             )
         return _unavailable(spec, STATUS_NO_POINTS)
 
+    if saw_stale_value:
+        return _unavailable(
+            spec,
+            STATUS_STALE,
+            "The last reported value is older than its stale window. Treat this as unknown: "
+            "the instrument or its link has stopped reporting, it is not reading zero.",
+        )
     return _unavailable(spec, fallback_status)
 
 
@@ -789,7 +805,9 @@ def _subsystem_rollup(reader: Reader, settings: Settings, detailed: bool = False
     asset_domains = {a.asset_id: a.domain for a in assets}
     alarms_by_domain: dict[str, list[Alarm]] = defaultdict(list)
     for alarm in alarms:
-        domain = asset_domains.get(alarm.asset_id or "", "site" if alarm.asset_id is None else "site")
+        # An alarm with no asset, or one naming an asset the registry no longer
+        # holds, still has to be counted somewhere: it belongs to the site.
+        domain = asset_domains.get(alarm.asset_id or "", "site")
         alarms_by_domain[domain].append(alarm)
 
     point_stats = _domain_point_stats(reader, settings)
@@ -1145,9 +1163,13 @@ def _energy_block(reader: Reader, snapshot: RegistrySnapshot) -> dict:
         return {
             "available": False,
             "value": None,
-            "status": STATUS_NO_DATA if row else STATUS_NO_DATA,
+            "status": STATUS_NO_DATA,
             "source": None,
-            "note": "The EMS has not published this derived value yet.",
+            "note": (
+                "The EMS has not published this derived value yet."
+                if row
+                else "The EMS has never published a state snapshot."
+            ),
         }
 
     # Reserve percentage: the EMS derived value wins, measured SOC is the fallback.

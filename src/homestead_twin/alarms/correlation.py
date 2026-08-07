@@ -50,7 +50,6 @@ from homestead_twin.alarms.definitions import correlation_settings, definition_m
 from homestead_twin.alarms.evaluator import (
     ACTIVE_STATES,
     CLOSED_STATES,
-    OPEN_STATES,
     SuppressionReason,
     as_utc,
     severity_rank,

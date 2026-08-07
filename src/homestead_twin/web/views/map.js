@@ -144,16 +144,22 @@ function buildMap(payload, ctx) {
   svg.appendChild(layer);
 
   // A faint graticule so pan/zoom is legible without pretending to be a basemap.
+  // It is drawn well outside the framed box: the SVG letterboxes its viewBox, so
+  // the visible area is always larger than the data extent.
   const grid = svgEl('g', { opacity: '0.35' });
-  const step = Math.max(10, Math.round((home.w / 8) / 10) * 10);
-  for (let x = Math.floor(home.x / step) * step; x < home.x + home.w; x += step) {
+  const step = Math.max(home.w / 10, 1);
+  const gx0 = home.x - home.w * 2;
+  const gx1 = home.x + home.w * 3;
+  const gy0 = home.y - home.h * 2;
+  const gy1 = home.y + home.h * 3;
+  for (let x = Math.ceil(gx0 / step) * step; x < gx1; x += step) {
     grid.appendChild(svgEl('line', {
-      x1: x, y1: home.y, x2: x, y2: home.y + home.h, stroke: 'var(--line)', 'stroke-width': 0.6,
+      x1: x, y1: gy0, x2: x, y2: gy1, stroke: 'var(--line)', 'stroke-width': step / 90,
     }));
   }
-  for (let y = Math.floor(home.y / step) * step; y < home.y + home.h; y += step) {
+  for (let y = Math.ceil(gy0 / step) * step; y < gy1; y += step) {
     grid.appendChild(svgEl('line', {
-      x1: home.x, y1: y, x2: home.x + home.w, y2: y, stroke: 'var(--line)', 'stroke-width': 0.6,
+      x1: gx0, y1: y, x2: gx1, y2: y, stroke: 'var(--line)', 'stroke-width': step / 90,
     }));
   }
   layer.appendChild(grid);

@@ -495,46 +495,92 @@ def test_validate_bundle_covers_every_extension_document():
         assert entry["json_mirror"] is not None, stem
 
 
-def test_validator_discovers_documents_rather_than_hard_coding_them():
-    """A data/*.yaml with no schema warns; it must not crash the build."""
-    probe_yaml = DATA_DIR / "_pytest_probe.yaml"
-    probe_json = DATA_DIR / "_pytest_probe.json"
-    probe_yaml.write_text("document_type: pytest_probe\nvalue: 1\n", encoding="utf-8")
-    probe_json.write_text('{\n  "document_type": "pytest_probe",\n  "value": 1\n}\n', encoding="utf-8")
-    try:
-        relaxed = subprocess.run(
-            [sys.executable, str(TOOLS_DIR / "validate_bundle.py"), "--json", "--no-report"],
-            capture_output=True,
-            text=True,
-            cwd=ROOT,
-        )
-        payload = json.loads(relaxed.stdout)
-        assert relaxed.returncode == 0
-        assert payload["result"] == "PASS"
-        assert any("_pytest_probe" in warning for warning in payload["warnings"])
+@pytest.fixture()
+def package_copy(tmp_path: Path) -> Path:
+    """A throwaway copy of data/ and schemas/, so tests never mutate the working tree.
 
-        strict = subprocess.run(
-            [sys.executable, str(TOOLS_DIR / "validate_bundle.py"), "--strict", "--json", "--no-report"],
-            capture_output=True,
-            text=True,
-            cwd=ROOT,
-        )
-        assert strict.returncode == 1, "--strict must fail on warnings"
-    finally:
-        probe_yaml.unlink(missing_ok=True)
-        probe_json.unlink(missing_ok=True)
+    Other agents run this validator against the same checkout; a stray schemaless
+    document in data/ would break their --strict build.
+    """
+    import shutil
+
+    root = tmp_path / "package"
+    (root).mkdir()
+    shutil.copytree(DATA_DIR, root / "data")
+    shutil.copytree(SCHEMA_DIR, root / "schemas")
+    return root
 
 
-def test_validator_rejects_a_mirror_that_drifted(tmp_path):
-    """A JSON mirror that no longer matches its YAML is an error, not a warning."""
-    sys.path.insert(0, str(TOOLS_DIR))
-    import validate_bundle
+def run_validator(root: Path, *flags: str) -> tuple[int, dict]:
+    result = subprocess.run(
+        [sys.executable, str(TOOLS_DIR / "validate_bundle.py"), "--root", str(root), "--json", *flags],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+    )
+    return result.returncode, json.loads(result.stdout)
 
-    report = validate_bundle.Report()
-    report.documents["probe"] = validate_bundle.DocumentResult(name="probe", data_path="data/probe.yaml")
-    report.error("probe", "probe.json: JSON mirror is not content-equal to probe.yaml")
-    assert report.documents["probe"].status == "FAIL"
-    assert report.errors
+
+def test_validator_warns_rather_than_crashing_on_a_schemaless_document(package_copy: Path):
+    """Auto-discovery: a data/*.yaml with no schema yet is a warning, not a build break.
+
+    Parallel work streams add a data document before its schema lands. That must
+    not fail the build for everyone else.
+    """
+    (package_copy / "data" / "_probe.yaml").write_text("document_type: probe\nvalue: 1\n", encoding="utf-8")
+    (package_copy / "data" / "_probe.json").write_text(
+        '{\n  "document_type": "probe",\n  "value": 1\n}\n', encoding="utf-8"
+    )
+
+    code, payload = run_validator(package_copy)
+    assert code == 0
+    assert payload["result"] == "PASS"
+    assert any("_probe" in warning for warning in payload["warnings"])
+    assert "_probe" in {entry["document"] for entry in payload["documents"]}
+
+    strict_code, strict_payload = run_validator(package_copy, "--strict")
+    assert strict_code == 1, "--strict must turn warnings into failures"
+    assert strict_payload["result"] == "FAIL"
+
+
+def test_validator_fails_when_a_json_mirror_drifts(package_copy: Path):
+    mirror = package_copy / "data" / "water_points.json"
+    document = json.loads(mirror.read_text(encoding="utf-8"))
+    document["schema_version"] = "0.0.0-drifted"
+    mirror.write_text(json.dumps(document, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+    code, payload = run_validator(package_copy)
+    assert code == 1
+    assert any("not content-equal" in error for error in payload["errors"]), payload["errors"]
+
+
+def test_validator_fails_when_a_json_mirror_is_missing(package_copy: Path):
+    (package_copy / "data" / "rack_layout.json").unlink()
+    code, payload = run_validator(package_copy)
+    assert code == 1
+    assert any("mirror" in error and "missing" in error for error in payload["errors"]), payload["errors"]
+
+
+def test_validator_writes_a_report_with_the_supplied_timestamp(package_copy: Path):
+    stamp = "2099-01-02T03:04:05Z"
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(TOOLS_DIR / "validate_bundle.py"),
+            "--root",
+            str(package_copy),
+            "--timestamp",
+            stamp,
+        ],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    payload = json.loads((package_copy / "validation_report.json").read_text(encoding="utf-8"))
+    assert payload["validation_timestamp"] == stamp
+    assert payload["result"] == "PASS"
+    assert payload["counts"]["documents_validated"] >= 10
 
 
 def test_validator_detects_overlapping_rack_units():

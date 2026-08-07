@@ -23,7 +23,7 @@ import yaml
 from homestead_twin.alarms.correlation import CorrelationEngine, DependencyGraph
 from homestead_twin.alarms.definitions import sync_definitions
 from homestead_twin.alarms.evaluator import AlarmEvaluator, SuppressionReason
-from homestead_twin.alarms.notify import Notifier, build_channels
+from homestead_twin.alarms.notify import Notifier, build_channels, notification_detail
 from homestead_twin.alarms.service import AlarmEngineService
 from homestead_twin.config import DATA_DIR
 from homestead_twin.models.alarms import Alarm, AlarmDefinition, Incident, NotificationLog
@@ -292,14 +292,20 @@ def test_power_container_outage_produces_one_incident(db_session, engine_parts, 
         )
         assert symptom.state == "active"        # suppressed means "not notified", not "dropped"
 
-    # --- one notification, not fifteen ------------------------------------
+    # --- one notification, not twenty-two ---------------------------------
     logs = db_session.query(NotificationLog).all()
     assert {log.incident_id for log in logs} == {incident.id}
-    per_alarm = [log for log in logs if log.incident_id is None]
-    assert per_alarm == []
-    channels = {log.channel for log in logs}
-    assert channels == {"log"}                   # only the log backend is enabled
-    assert len(logs) == 1
+    assert [log for log in logs if log.incident_id is None] == []   # no per-alarm messages
+
+    # One dispatch = one escalation stage told once. The channel fan-out below is
+    # the same message on several transports, not several notifications.
+    dispatches = {
+        (log.incident_id, notification_detail(log)["stage"]) for log in logs
+    }
+    assert len(dispatches) == 1
+    assert {log.channel for log in logs} == {"log", "email", "push"}
+    assert [log.status for log in logs if log.channel == "log"] == ["sent"]
+    assert all(log.status == "not_configured" for log in logs if log.channel != "log")
 
     body = logs[0].body
     assert "power_container_ac_bus_lost" in body
@@ -441,12 +447,22 @@ def test_flood_guard_collapses_many_alarms_of_one_definition(db_session, engine_
 
     open_incidents = incidents(db_session, "open")
     assert len(open_incidents) == 1
-    assert len(correlator.incident_members(open_incidents[0].id)) == len(services)
-    assert db_session.query(NotificationLog).count() == 1
-    assert sum(1 for a in raised if a.suppressed) == len(services)
-    assert any(
-        SuppressionReason.kind(a.suppression_reason) == SuppressionReason.FLOOD for a in raised
+    incident = open_incidents[0]
+    assert len(correlator.incident_members(incident.id)) == len(services)
+    assert "Flood guard engaged" in incident.summary
+
+    logs = db_session.query(NotificationLog).all()
+    assert {(log.incident_id, notification_detail(log)["stage"]) for log in logs} == {
+        (incident.id, 1)
+    }
+    # Every service alarm except the incident's anchor is recorded but not notified.
+    suppressed = [a for a in raised if a.suppressed]
+    assert len(suppressed) == len(services) - 1
+    assert all(
+        SuppressionReason.kind(a.suppression_reason) == SuppressionReason.FLOOD
+        for a in suppressed
     )
+    assert all(a.state == "active" for a in raised)
 
 
 def test_two_unrelated_alarms_stay_two_incidents(db_session, engine_parts):
@@ -520,7 +536,8 @@ def test_unconfigured_channels_record_an_honest_failure(db_session, settings, de
         record = by_channel[name]
         assert record.status == "not_configured"
         assert "No message was sent" in record.detail
-        assert record.recipient is None
+        # The intended role is recorded; no address was ever resolved.
+        assert record.recipient in (None, "operator", "on_call")
     assert "CUCM" in by_channel["voice"].detail       # FR-007 names the escalation path
 
 
@@ -535,10 +552,9 @@ def test_critical_alarm_escalates_then_stops_on_acknowledgement(db_session, engi
     assert stage1 >= 1
 
     # Stage 2 of generator_start_failed fires at +600 s.
-    notifier.dispatch_pending(at(300))
-    assert db_session.query(NotificationLog).count() == stage1     # nothing new yet
+    assert notifier.dispatch_pending(at(300)).dispatches == 0       # nothing due yet
 
-    notifier.dispatch_pending(at(600))
+    assert notifier.dispatch_pending(at(600)).dispatches == 1
     escalated = db_session.query(NotificationLog).count()
     assert escalated > stage1
 
@@ -546,31 +562,39 @@ def test_critical_alarm_escalates_then_stops_on_acknowledgement(db_session, engi
         a for a in open_alarms(db_session) if a.alarm_key == "generator_start_failed"
     )
     evaluator.acknowledge(alarm, "ops.alice", "On my way to the generator.", at(700))
-    notifier.dispatch_pending(at(3600))
-    assert db_session.query(NotificationLog).count() == escalated   # escalation stopped
+    # Stage 3 is due at +1800 s and the re-notify timer has long expired, but the
+    # alarm is acknowledged: escalation stops. It is not cleared, only owned.
+    assert notifier.dispatch_pending(at(3600)).dispatches == 0
+    assert db_session.query(NotificationLog).count() == escalated
+    assert alarm.state == "acknowledged" 
 
 
 def test_unacknowledged_critical_alarm_is_re_notified(db_session, engine_parts):
-    evaluator, correlator, notifier = engine_parts
-    set_state(db_session, "energy.ats.power_container.site_01", "fault_active", True)
-    evaluator.evaluate(at(0))
-    correlator.correlate(at(0))
-    notifier.dispatch_pending(at(0))
-    first = db_session.query(NotificationLog).count()
-
-    definition = db_session.get(AlarmDefinition, "transfer_failed")
     from homestead_twin.alarms.definitions import definition_meta
 
+    evaluator, correlator, notifier = engine_parts
+    definition = db_session.get(AlarmDefinition, "generator_start_failed")
     renotify = definition_meta(definition)["renotify_after_s"]
+    stage_two_at = definition.escalation_path[1]["after_s"]
     assert renotify > 0
 
-    notifier.dispatch_pending(at(renotify - 1))
-    assert db_session.query(NotificationLog).count() == first
+    set_state(db_session, "energy.generator.site.01", "start_failure_active", True)
+    evaluator.evaluate(at(0))
+    correlator.correlate(at(0))
 
-    notifier.dispatch_pending(at(renotify))
-    records = db_session.query(NotificationLog).all()
-    assert len(records) > first
-    assert any("unacknowledged" in (r.subject or "") for r in records)
+    result = notifier.dispatch_pending(at(0))          # stage 1
+    assert result.dispatches == 1
+    result = notifier.dispatch_pending(at(stage_two_at))   # stage 2
+    assert result.dispatches == 1 and result.escalated == 1
+
+    # Still inside the re-notification window: say nothing new.
+    assert notifier.dispatch_pending(at(stage_two_at + renotify - 1)).dispatches == 0
+
+    result = notifier.dispatch_pending(at(stage_two_at + renotify))
+    assert result.dispatches == 1
+    assert any(
+        "unacknowledged" in (r.subject or "") for r in db_session.query(NotificationLog).all()
+    )
 
 
 def test_maintenance_suppressed_alarms_are_not_notified(db_session, engine_parts):
@@ -615,18 +639,24 @@ def test_service_runs_a_whole_cycle_without_sleeping(session_factory, bus, setti
     set_state(db_session, SERVER, "availability_state", "offline")
     db_session.commit()
 
-    service.evaluate_once(at(0))
-    result = service.evaluate_once(at(600))
+    first = service.evaluate_once(at(0))
+    assert first.evaluation.detected            # candidates only, still in on-delay
+    assert first.correlation.opened == []       # a transient must not open an incident
+    assert first.notification.dispatches == 0
 
+    result = service.evaluate_once(at(600))
     assert result.evaluation.activated
-    assert result.correlation.opened or result.correlation.updated
+    assert len(result.correlation.opened) == 1
+    assert result.notification.dispatches == 1
     assert service.cycles == 2
     assert service.last_error is None
 
     fresh = session_factory()
     try:
         assert len([i for i in fresh.query(Incident).all() if i.state == "open"]) == 1
-        assert fresh.query(NotificationLog).count() == 1
+        logs = fresh.query(NotificationLog).all()
+        assert {log.incident_id for log in logs} == {result.correlation.opened[0].id}
+        assert sum(1 for log in logs if log.status == "sent") == 1
     finally:
         fresh.close()
 

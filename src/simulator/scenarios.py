@@ -280,7 +280,7 @@ def _overcast_winter_day() -> Scenario:
 
 def _passing_clouds() -> Scenario:
     config = _base_config(
-        start=SUMMER_START + dt.timedelta(hours=2),
+        start=SUMMER_START + dt.timedelta(hours=5),  # 09:00 local
         weather=WeatherConfig(
             cloud_mode="passing_clouds",
             cloud_period_s=600.0,

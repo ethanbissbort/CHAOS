@@ -425,12 +425,26 @@ function commandConsole(data, reload) {
     }
   }
 
+  const dryButton = h('button', { class: 'btn btn-sm', text: 'Preflight (dry run)' });
+  const sendButton = h('button', { class: 'btn btn-primary btn-sm', text: 'Issue command…' });
+
+  // Guard against a double press firing two real commands at the equipment.
+  async function guarded(dryRun) {
+    dryButton.disabled = true;
+    sendButton.disabled = true;
+    try { await send(dryRun); } finally {
+      dryButton.disabled = false;
+      sendButton.disabled = false;
+    }
+  }
+  dryButton.addEventListener('click', () => guarded(true));
+  sendButton.addEventListener('click', () => guarded(false));
+
   children.push(h('div', { class: 'filters', style: 'margin-top:.8rem' },
     h('label', null, h('span', { text: 'Point' }), select),
     h('label', null, h('span', { text: 'Command' }), commandInput),
     h('label', null, h('span', { text: 'Value (JSON)' }), valueInput),
-    h('button', { class: 'btn btn-sm', onclick: () => send(true), text: 'Preflight (dry run)' }),
-    h('button', { class: 'btn btn-primary btn-sm', onclick: () => send(false), text: 'Issue command…' })));
+    dryButton, sendButton));
   children.push(outcome);
 
   children.push(h('p', { class: 'card-note',

@@ -470,6 +470,31 @@ def test_service_tick_publishes_state_and_budgets(session_factory, bus, settings
     assert bus.last("homestead/energy/site/load_spa_01/power_budget_kw") is not None
 
 
+def test_snapshot_derived_blob_is_readable_by_other_subsystems(
+    session_factory, bus, settings, energy_db, db_session, client
+):
+    """The overview roll-up reads flat scalars; the EMS keeps the provenance."""
+    from homestead_twin.ems import RecordingCommandPort
+    from homestead_twin.ems.service import EnergyManagerService
+
+    set_state(db_session, "NORMAL")
+    EnergyManagerService(
+        session_factory,
+        bus,
+        settings.model_copy(update={"ems_enabled": True}),
+        command_port=RecordingCommandPort(),
+    ).tick(utcnow())
+
+    derived = client.get("/api/v1/energy/state").json()["derived"]
+    # Flat projection for consumers that should not know this module's shape.
+    assert derived["reserve_pct"] == HEALTHY_INPUTS["battery_soc_pct"]
+    assert derived["autonomy_critical_h"] is not None
+    # Full provenance is still there for the energy dashboard.
+    assert derived["values"]["autonomy_critical_h"]["basis"]
+    assert derived["values"]["autonomy_critical_h"]["inputs"]
+    assert "generator" in derived
+
+
 def test_service_tick_is_a_no_op_when_disabled(session_factory, bus, settings, energy_db):
     from homestead_twin.ems.service import EnergyManagerService
 

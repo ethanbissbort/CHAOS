@@ -202,6 +202,16 @@ export async function getFirst(paths) {
 
 /* ------------------------------------------------------- endpoint calls --- */
 
+/** crypto.randomUUID needs a secure context; a LAN deployment over plain HTTP
+ *  is not one, so fall back to a time-plus-entropy key. */
+function newIdempotencyKey() {
+  if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+    return `ui-${window.crypto.randomUUID()}`;
+  }
+  return `ui-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+
 export const api = {
   overview: (alarmLimit = 8) => get(`/overview?alarm_limit=${encodeURIComponent(alarmLimit)}`),
   subsystems: () => get('/overview/subsystems'),
@@ -237,7 +247,16 @@ export const api = {
 
   /** POST /commands rejects unknown fields, so this mirrors CommandCreate exactly. */
   issueCommand: ({ assetId, pointName, command, value, reason, dryRun = false }) => {
-    const body = { asset_id: assetId, command, reason, dry_run: Boolean(dryRun), requires_ack: true };
+    const body = {
+      asset_id: assetId,
+      command,
+      reason,
+      dry_run: Boolean(dryRun),
+      requires_ack: true,
+      // A fresh key per attempt: a deliberate second press (or a repeated
+      // preflight) is a new intent, not an accidental duplicate submit.
+      idempotency_key: newIdempotencyKey(),
+    };
     if (pointName) body.point_name = pointName;
     if (value !== undefined) body.value = value;
     return post('/commands', body);

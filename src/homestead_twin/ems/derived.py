@@ -82,13 +82,30 @@ class DerivedEnergyState:
         derived = self.values.get(key)
         return bool(derived and derived.valid)
 
+    #: Keys the snapshot blob uses for structure; a derived value may not
+    #: shadow one of them.
+    RESERVED_KEYS = ("at", "values", "tier_load_kw", "tier_load_valid", "generator", "black_start")
+
     def as_dict(self) -> dict[str, Any]:
-        return {
+        """Snapshot form.
+
+        Carries the full provenance under ``values`` *and* a flat
+        ``name -> scalar`` projection alongside it. The flat projection is what
+        other subsystems (the overview/home-screen roll-up) read, so they do not
+        have to know this module's internal shape; an invalid value is ``None``
+        there rather than a number without its validity flag.
+        """
+        payload: dict[str, Any] = {
             "at": self.at.isoformat(),
             "values": {key: value.as_dict() for key, value in sorted(self.values.items())},
             "tier_load_kw": {str(tier): round(kw, 4) for tier, kw in sorted(self.tier_load_kw.items())},
             "tier_load_valid": self.tier_load_valid,
         }
+        for key, value in sorted(self.values.items()):
+            if key in self.RESERVED_KEYS:
+                continue
+            payload[key] = value.value if value.valid else None
+        return payload
 
     def summary(self) -> dict[str, Any]:
         """Compact form for a state-transition record."""

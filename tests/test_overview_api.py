@@ -658,11 +658,50 @@ def test_stale_telemetry_is_not_treated_as_live(client, seeded, db_session):
     db_session.commit()
 
     pv = client.get(OVERVIEW).json()["energy"]["pv_production_kw"]
-    # The array reading is stale, so the aggregate falls through to the inverter
-    # proxy source; with no inverter it must report unavailable, never 0.
+    # A point that reported and went quiet is not the same as one that never
+    # reported, and neither is a reading of zero.
     assert pv["value"] is None
     assert pv["available"] is False
-    assert pv["status"] in ("no_data", "stale")
+    assert pv["status"] == "stale"
+    assert "not reading zero" in pv["note"]
+
+
+def test_interlocks_accept_the_command_services_record_shape(client, seeded, db_session):
+    """The command router records {code, allowed, blocks_dispatch}; older
+    producers record {name, passed}. Both must survive the round trip."""
+    command = db_session.get(Command, "cmd-0001")
+    command.interlocks_evaluated = [
+        {
+            "code": "physical_control_disabled",
+            "allowed": True,
+            "reason": "Dry run: interlocks evaluated, nothing will be published",
+            "detail": {"allow_physical_control": False, "dry_run": True},
+            "blocks_dispatch": True,
+            "override_by": None,
+        },
+        {
+            "code": "asset_not_operational",
+            "allowed": False,
+            "reason": "Asset status is 'planned'",
+            "blocks_dispatch": True,
+        },
+    ]
+    db_session.commit()
+
+    interlocks = client.get(CONTROL_URL).json()["interlocks"]
+    by_name = {entry["name"]: entry for entry in interlocks["evaluated"]}
+    assert by_name["asset_not_operational"]["passed"] is False
+    assert by_name["asset_not_operational"]["blocking"] is True
+    # Passing but still dispatch-blocking must not read as "all clear".
+    assert by_name["physical_control_disabled"]["passed"] is True
+    assert by_name["physical_control_disabled"]["blocking"] is False
+    assert by_name["physical_control_disabled"]["blocks_dispatch"] is True
+    assert by_name["physical_control_disabled"]["context"] == {
+        "allow_physical_control": False,
+        "dry_run": True,
+    }
+    assert interlocks["blocking_count"] == 1
+    assert interlocks["dispatch_blocker_count"] == 2
 
 
 # ---------------------------------------------------------------------------
