@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "homestead-twin"
 version = "0.4.0"
-description = "Homestead Digital Twin and Master Control Platform"
+description = "Project CHAOS — Central Homestead Automation and Operation System"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "Apache-2.0" }

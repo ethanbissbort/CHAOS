@@ -1,4 +1,6 @@
-# Homestead Digital Twin
+# Project CHAOS
+
+**C**entral **H**omestead **A**utomation and **O**peration **S**ystem
 
 A local-first operational control plane for an off-grid homestead: an
 authoritative asset and point registry, telemetry ingest, an energy-management
@@ -255,6 +257,8 @@ Full procedure, including broker credentials and the safety gate:
 | [`docs/api.md`](docs/api.md) | Endpoint reference, roles, error semantics |
 | [`docs/network-and-trust-boundaries.md`](docs/network-and-trust-boundaries.md) | SDD 49 item 3: VLANs, trust boundaries, firewall flows, service identities |
 | [`docs/secondary-control-node.md`](docs/secondary-control-node.md) | SDD 49 item 6: what survives loss of the power container |
+| [`docs/design-decisions/`](docs/design-decisions/) | The SDD section 22 open decisions, made decidable. All still *proposed* |
+| [`docs/water-control-narrative.md`](docs/water-control-narrative.md) | Water-system control narrative (SDD 49 item 5) |
 | [`deploy/mosquitto/README.md`](deploy/mosquitto/README.md) | Per-device credentials and topic-prefix ACLs |
 
 ---
