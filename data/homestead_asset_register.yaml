@@ -1,0 +1,4057 @@
+schema_version: 0.3.0
+document_type: asset_register
+registry_id: homestead.primary.v0_3
+generated_at: '2026-08-06T18:51:57Z'
+site_id: site.site.primary.01
+design_basis:
+  authoritative_design_document: Homestead_Digital_Twin_Software_Design_Document_v0.2.md
+  design_stage: pre-procurement_and_pre-site-deployment
+  source_documents:
+  - Homestead_Digital_Twin_Software_Design_Document_v0.2.md
+  - Homestead Datacenter Rack and Power Infrastructure Overview(1).pdf
+  - Argivoltaic System Design(1).png
+  - 35 Mwh-yr Solar and Battery Design(1).png
+  open_design_conflicts:
+  - conflict_id: energy.capacity_revision
+    current_working_target: 45 kWdc PV, four 10 kW hybrid inverters, 800 kWh nominal / 640 kWh usable battery
+    predecessor_design: 26.4 kWdc PV, two 10 kW inverters, 240 kWh usable LiFePO4 battery
+    treatment: Preserved as unresolved. The v0.3 register uses the revised target for functional asset count but leaves chemistry,
+      module count, topology, and procurement model unresolved.
+  - conflict_id: power_container.common_failure_domain
+    current_plan: Power conversion, battery, utilities, and primary rack share a 20-foot container.
+    treatment: Register includes a physically separate secondary control node as a required planned asset.
+assets:
+- asset_id: site.site.primary.01
+  domain: site
+  asset_class: site
+  name: Primary Homestead Site
+  status: concept
+  criticality: critical
+  control_authority: supervisory
+  functional_position: true
+  parent_id: null
+  location: {}
+  properties:
+    timezone: America/Toronto
+    site_address_status: TBD
+    boundary_status: TBD
+    design_phase: pre_land_acquisition_or_pre_deployment
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - common_monitored
+  source_refs:
+  - &id001
+    document: Homestead_Digital_Twin_Software_Design_Document_v0.2.md
+    section: 3, 25-29
+  notes: []
+  open_fields:
+  - property_coordinates
+  - survey_boundary
+  - jurisdiction
+  - final_climate_profile
+  tags: []
+- asset_id: site.geographic_zone.agrivoltaic_field.01
+  domain: site
+  asset_class: geographic_zone
+  name: Agrivoltaic Field
+  status: planned
+  criticality: important
+  control_authority: none
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    land_use: dual_use_solar_and_crop_production
+    design_area_acres: 0.5
+    area_basis: conceptual
+    row_count: 4
+    crop_alley_count: 3
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - &id003
+    document: Argivoltaic System Design(1).png
+    section: System summary and field diagram
+  notes: []
+  open_fields:
+  - final_polygon
+  - slope
+  - drainage_geometry
+  - soil_profile
+  - service_lane_dimensions
+  tags: []
+- asset_id: site.geographic_zone.orchard.01
+  domain: site
+  asset_class: geographic_zone
+  name: Orchard and Food Forest Zone
+  status: planned
+  criticality: important
+  control_authority: none
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    land_use: orchard_food_forest
+    geometry_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - final_polygon
+  - irrigation_subzones
+  tags: []
+- asset_id: structure.structure.power_container.01
+  domain: structure
+  asset_class: structure
+  name: Power, Utilities, Battery and Server Container
+  status: planned
+  criticality: critical
+  control_authority: none
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    structure_type: 20_ft_shipping_container
+    combined_failure_domain: true
+    fire_zone_status: TBD
+    envelope_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id001
+  - &id002
+    document: Homestead Datacenter Rack and Power Infrastructure Overview(1).pdf
+    section: Core rack, network, power, VLAN, and NetBotz descriptions
+  notes:
+  - Combined battery, power-conversion, utilities, and server functions create a common-mode failure domain.
+  open_fields:
+  - exact_container_model
+  - insulation_system
+  - fire_separation
+  - ventilation_zones
+  - floor_loading
+  - egress
+  - secondary_control_node_location
+  tags: []
+- asset_id: structure.room.power_container.power_zone
+  domain: structure
+  asset_class: room
+  name: Power Conversion Zone
+  status: planned
+  criticality: critical
+  control_authority: none
+  functional_position: true
+  parent_id: structure.structure.power_container.01
+  location: {}
+  properties:
+    environmental_class: electrical_power_zone
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - physical_partition
+  - cooling_setpoints
+  tags: []
+- asset_id: structure.room.power_container.battery_zone
+  domain: structure
+  asset_class: room
+  name: Battery Zone
+  status: planned
+  criticality: critical
+  control_authority: none
+  functional_position: true
+  parent_id: structure.structure.power_container.01
+  location: {}
+  properties:
+    environmental_class: battery_energy_storage_zone
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - physical_partition
+  - ventilation
+  - temperature_limits
+  - chemistry_final
+  tags: []
+- asset_id: structure.room.power_container.server_zone
+  domain: structure
+  asset_class: room
+  name: Server and Network Zone
+  status: planned
+  criticality: critical
+  control_authority: none
+  functional_position: true
+  parent_id: structure.structure.power_container.01
+  location: {}
+  properties:
+    environmental_class: it_equipment_zone
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id001
+  - *id002
+  notes: []
+  open_fields:
+  - cooling_architecture
+  - airflow_partition
+  - target_temperature
+  - humidity_limits
+  tags: []
+- asset_id: energy.pv_array.agrivoltaic_field.01
+  domain: energy
+  asset_class: pv_array
+  name: Agrivoltaic PV Array
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: site.geographic_zone.agrivoltaic_field.01
+  location:
+    zone_id: site.geographic_zone.agrivoltaic_field.01
+  properties:
+    rated_kwdc: 45.0
+    rated_kwdc_status: revised_design_target
+    module_count: 100
+    module_rating_w: 450
+    module_type: bifacial
+    orientation: true_south
+    tilt_deg: 30
+    mounting: ground_mounted_agrivoltaic_canopy
+    row_count: 4
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - common_monitored
+  source_refs:
+  - *id003
+  - *id001
+  notes:
+  - Electrical stringing, combiner count, and MPPT allocation are not established by the field-layout diagram.
+  open_fields:
+  - module_make_model
+  - electrical_stringing
+  - combiner_topology
+  - mppt_mapping
+  - row_spacing
+  tags: []
+- asset_id: energy.pv_row.agrivoltaic_field.01
+  domain: energy
+  asset_class: pv_row
+  name: Agrivoltaic Canopy Row 1
+  status: planned
+  criticality: important
+  control_authority: none
+  functional_position: true
+  parent_id: energy.pv_array.agrivoltaic_field.01
+  location:
+    zone_id: site.geographic_zone.agrivoltaic_field.01
+    row_number: 1
+  properties:
+    module_count: 25
+    module_rating_w: 450
+    row_dc_capacity_kw: 11.25
+    orientation: true_south
+    tilt_deg: 30
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id003
+  notes: []
+  open_fields:
+  - electrical_string_membership
+  - exact_geometry
+  - service_disconnect
+  tags: []
+- asset_id: energy.pv_row.agrivoltaic_field.02
+  domain: energy
+  asset_class: pv_row
+  name: Agrivoltaic Canopy Row 2
+  status: planned
+  criticality: important
+  control_authority: none
+  functional_position: true
+  parent_id: energy.pv_array.agrivoltaic_field.01
+  location:
+    zone_id: site.geographic_zone.agrivoltaic_field.01
+    row_number: 2
+  properties:
+    module_count: 25
+    module_rating_w: 450
+    row_dc_capacity_kw: 11.25
+    orientation: true_south
+    tilt_deg: 30
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id003
+  notes: []
+  open_fields:
+  - electrical_string_membership
+  - exact_geometry
+  - service_disconnect
+  tags: []
+- asset_id: energy.pv_row.agrivoltaic_field.03
+  domain: energy
+  asset_class: pv_row
+  name: Agrivoltaic Canopy Row 3
+  status: planned
+  criticality: important
+  control_authority: none
+  functional_position: true
+  parent_id: energy.pv_array.agrivoltaic_field.01
+  location:
+    zone_id: site.geographic_zone.agrivoltaic_field.01
+    row_number: 3
+  properties:
+    module_count: 25
+    module_rating_w: 450
+    row_dc_capacity_kw: 11.25
+    orientation: true_south
+    tilt_deg: 30
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id003
+  notes: []
+  open_fields:
+  - electrical_string_membership
+  - exact_geometry
+  - service_disconnect
+  tags: []
+- asset_id: energy.pv_row.agrivoltaic_field.04
+  domain: energy
+  asset_class: pv_row
+  name: Agrivoltaic Canopy Row 4
+  status: planned
+  criticality: important
+  control_authority: none
+  functional_position: true
+  parent_id: energy.pv_array.agrivoltaic_field.01
+  location:
+    zone_id: site.geographic_zone.agrivoltaic_field.01
+    row_number: 4
+  properties:
+    module_count: 25
+    module_rating_w: 450
+    row_dc_capacity_kw: 11.25
+    orientation: true_south
+    tilt_deg: 30
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id003
+  notes: []
+  open_fields:
+  - electrical_string_membership
+  - exact_geometry
+  - service_disconnect
+  tags: []
+- asset_id: energy.inverter.power_container.01
+  domain: energy
+  asset_class: inverter
+  name: Hybrid Inverter 1
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: structure.room.power_container.power_zone
+  location:
+    structure_id: structure.structure.power_container.01
+    room_id: structure.room.power_container.power_zone
+  properties:
+    rated_power_kw: 10.0
+    rated_power_status: revised_design_target
+    topology: parallel_hybrid_inverter
+    nominal_ac_output: 120_240_v_split_phase
+    make_model: TBD
+  external_identifiers: []
+  network:
+    vlan_id: 30
+    subnet: 10.10.30.0/24
+    management_ip: TBD
+    protocols:
+    - modbus_tcp_or_vendor_api_TBD
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - common_commandable
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - manufacturer
+  - model
+  - modbus_map
+  - parallel_master_role
+  - serial_number
+  - firmware
+  tags: []
+- asset_id: energy.inverter.power_container.02
+  domain: energy
+  asset_class: inverter
+  name: Hybrid Inverter 2
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: structure.room.power_container.power_zone
+  location:
+    structure_id: structure.structure.power_container.01
+    room_id: structure.room.power_container.power_zone
+  properties:
+    rated_power_kw: 10.0
+    rated_power_status: revised_design_target
+    topology: parallel_hybrid_inverter
+    nominal_ac_output: 120_240_v_split_phase
+    make_model: TBD
+  external_identifiers: []
+  network:
+    vlan_id: 30
+    subnet: 10.10.30.0/24
+    management_ip: TBD
+    protocols:
+    - modbus_tcp_or_vendor_api_TBD
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - common_commandable
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - manufacturer
+  - model
+  - modbus_map
+  - parallel_master_role
+  - serial_number
+  - firmware
+  tags: []
+- asset_id: energy.inverter.power_container.03
+  domain: energy
+  asset_class: inverter
+  name: Hybrid Inverter 3
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: structure.room.power_container.power_zone
+  location:
+    structure_id: structure.structure.power_container.01
+    room_id: structure.room.power_container.power_zone
+  properties:
+    rated_power_kw: 10.0
+    rated_power_status: revised_design_target
+    topology: parallel_hybrid_inverter
+    nominal_ac_output: 120_240_v_split_phase
+    make_model: TBD
+  external_identifiers: []
+  network:
+    vlan_id: 30
+    subnet: 10.10.30.0/24
+    management_ip: TBD
+    protocols:
+    - modbus_tcp_or_vendor_api_TBD
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - common_commandable
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - manufacturer
+  - model
+  - modbus_map
+  - parallel_master_role
+  - serial_number
+  - firmware
+  tags: []
+- asset_id: energy.inverter.power_container.04
+  domain: energy
+  asset_class: inverter
+  name: Hybrid Inverter 4
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: structure.room.power_container.power_zone
+  location:
+    structure_id: structure.structure.power_container.01
+    room_id: structure.room.power_container.power_zone
+  properties:
+    rated_power_kw: 10.0
+    rated_power_status: revised_design_target
+    topology: parallel_hybrid_inverter
+    nominal_ac_output: 120_240_v_split_phase
+    make_model: TBD
+  external_identifiers: []
+  network:
+    vlan_id: 30
+    subnet: 10.10.30.0/24
+    management_ip: TBD
+    protocols:
+    - modbus_tcp_or_vendor_api_TBD
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - common_commandable
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - manufacturer
+  - model
+  - modbus_map
+  - parallel_master_role
+  - serial_number
+  - firmware
+  tags: []
+- asset_id: energy.battery_bank.power_container.01
+  domain: energy
+  asset_class: battery_bank
+  name: Main Homestead Battery Bank
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: structure.room.power_container.battery_zone
+  location:
+    structure_id: structure.structure.power_container.01
+    room_id: structure.room.power_container.battery_zone
+  properties:
+    nominal_capacity_kwh: 800.0
+    usable_capacity_kwh: 640.0
+    capacity_status: revised_design_target_conflicts_with_earlier_240_kwh_design
+    chemistry: TBD
+    nominal_dc_voltage_v: TBD
+    reserve_policy: EMS_configured
+  external_identifiers: []
+  network:
+    vlan_id: 30
+    subnet: 10.10.30.0/24
+    management_ip: TBD
+    protocols:
+    - modbus_tcp_or_can_gateway_TBD
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - common_commandable
+  source_refs:
+  - *id001
+  - &id004
+    document: 35 Mwh-yr Solar and Battery Design(1).png
+    section: Earlier 26.4 kWdc / 240 kWh design; retained as conflicting predecessor
+  notes:
+  - The 800/640 kWh target conflicts with the earlier 240 kWh LiFePO4 design image. No chemistry or module count is treated
+    as authoritative in this register.
+  open_fields:
+  - chemistry
+  - manufacturer
+  - model
+  - module_count
+  - nominal_dc_voltage
+  - rack_layout
+  - fire_test_certification
+  - service_disconnects
+  tags: []
+- asset_id: energy.bms.power_container.01
+  domain: energy
+  asset_class: bms
+  name: Main Battery Management System
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: structure.room.power_container.battery_zone
+  location: {}
+  properties:
+    protected_asset_ids:
+    - energy.battery_bank.power_container.01
+    make_model: TBD
+  external_identifiers: []
+  network:
+    vlan_id: 30
+    subnet: 10.10.30.0/24
+    management_ip: TBD
+    protocols:
+    - TBD
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - common_commandable
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - architecture
+  - redundancy
+  - protocol
+  - register_map
+  tags: []
+- asset_id: energy.combiner.agrivoltaic_field.dc_01
+  domain: energy
+  asset_class: combiner
+  name: PV DC Combiner Assembly
+  status: planned
+  criticality: critical
+  control_authority: none
+  functional_position: true
+  parent_id: site.geographic_zone.agrivoltaic_field.01
+  location: {}
+  properties:
+    combiner_type: dc
+    input_count: TBD
+    surge_protection: required
+    make_model: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id001
+  - *id004
+  notes: []
+  open_fields:
+  - input_count
+  - fuse_ratings
+  - spd_model
+  - enclosure_rating
+  - string_monitoring
+  tags: []
+- asset_id: energy.disconnect.power_container.dc_main_01
+  domain: energy
+  asset_class: disconnect
+  name: Main DC Disconnect
+  status: planned
+  criticality: critical
+  control_authority: manual
+  functional_position: true
+  parent_id: structure.room.power_container.power_zone
+  location: {}
+  properties:
+    disconnect_type: dc_main
+    rated_voltage_v: TBD
+    rated_current_a: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id004
+  - *id001
+  notes: []
+  open_fields:
+  - rating
+  - model
+  - lockout_procedure
+  tags: []
+- asset_id: energy.combiner.power_container.ac_01
+  domain: energy
+  asset_class: combiner
+  name: Hybrid Inverter AC Combiner
+  status: planned
+  criticality: critical
+  control_authority: none
+  functional_position: true
+  parent_id: structure.room.power_container.power_zone
+  location: {}
+  properties:
+    combiner_type: ac
+    input_count: 4
+    surge_protection: required
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - breaker_ratings
+  - bus_rating
+  - spd_model
+  tags: []
+- asset_id: energy.disconnect.power_container.ac_main_01
+  domain: energy
+  asset_class: disconnect
+  name: Main AC Disconnect
+  status: planned
+  criticality: critical
+  control_authority: manual
+  functional_position: true
+  parent_id: structure.room.power_container.power_zone
+  location: {}
+  properties:
+    disconnect_type: ac_main
+    rated_voltage_v: 240
+    rated_current_a: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id004
+  - *id001
+  notes: []
+  open_fields:
+  - rating
+  - model
+  - lockout_procedure
+  tags: []
+- asset_id: energy.panel.power_container.critical_01
+  domain: energy
+  asset_class: panel
+  name: Critical Loads Distribution Panel
+  status: planned
+  criticality: critical
+  control_authority: none
+  functional_position: true
+  parent_id: structure.room.power_container.power_zone
+  location: {}
+  properties:
+    nominal_voltage_v: 240
+    phase_configuration: 120_240_v_split_phase
+    panel_role: critical_loads
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - bus_rating_a
+  - breaker_schedule
+  - metering
+  tags: []
+- asset_id: energy.panel.power_container.general_01
+  domain: energy
+  asset_class: panel
+  name: General and Deferrable Loads Panel
+  status: planned
+  criticality: important
+  control_authority: none
+  functional_position: true
+  parent_id: structure.room.power_container.power_zone
+  location: {}
+  properties:
+    nominal_voltage_v: 240
+    phase_configuration: 120_240_v_split_phase
+    panel_role: noncritical_and_deferrable
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - bus_rating_a
+  - breaker_schedule
+  - metering
+  tags: []
+- asset_id: energy.generator.site.01
+  domain: energy
+  asset_class: generator
+  name: Emergency Backup Generator
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    fuel_type: TBD
+    rated_power_kw: TBD
+    auto_start_required: true
+    generator_design_status: unresolved
+  external_identifiers: []
+  network:
+    vlan_id: 30
+    subnet: 10.10.30.0/24
+    management_ip: TBD
+    protocols:
+    - dry_contact_or_modbus_TBD
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - common_commandable
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - fuel_type
+  - rated_power
+  - make_model
+  - location
+  - fuel_storage
+  - start_battery
+  - exercise_schedule
+  tags: []
+- asset_id: energy.ats.power_container.site_01
+  domain: energy
+  asset_class: ats
+  name: Site Source Transfer Assembly
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: structure.room.power_container.power_zone
+  location: {}
+  properties:
+    source_a_id: energy.combiner.power_container.ac_01
+    source_b_id: energy.generator.site.01
+    transfer_policy: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - common_commandable
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - make_model
+  - transfer_rating
+  - neutral_switching
+  - control_interface
+  tags: []
+- asset_id: it.rack.power_container.01
+  domain: it
+  asset_class: rack
+  name: Primary 42U Homestead Rack
+  status: planned
+  criticality: critical
+  control_authority: none
+  functional_position: true
+  parent_id: structure.room.power_container.server_zone
+  location:
+    structure_id: structure.structure.power_container.01
+    room_id: structure.room.power_container.server_zone
+    rack_id: rack_01
+  properties:
+    u_height: 42
+    power_feed_status: planned
+    access_controlled: true
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - rack_environment
+  source_refs:
+  - *id002
+  - *id001
+  notes: []
+  open_fields:
+  - rack_make_model
+  - rack_unit_elevation
+  - cooling_airflow
+  - grounding_bond
+  tags: []
+- asset_id: energy.ups.rack_01.01
+  domain: energy
+  asset_class: ups
+  name: APC Smart-UPS 1500
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.rack.power_container.01
+  location:
+    rack_id: it.rack.power_container.01
+    rack_units: TBD
+  properties:
+    manufacturer: APC
+    model_family: Smart-UPS
+    rated_w: 1500
+    rated_va: TBD
+    battery_type: TBD
+  external_identifiers: []
+  network:
+    vlan_id: 10
+    subnet: 10.10.10.0/24
+    management_ip: DHCP_or_static_TBD
+    protocols:
+    - snmp
+    - https
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - common_commandable
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - exact_model
+  - network_management_card_model
+  - battery_age
+  - rack_units
+  tags: []
+- asset_id: energy.pdu.rack_01.switched_01
+  domain: energy
+  asset_class: pdu
+  name: 10-Outlet Individually Switched Rack PDU
+  status: planned
+  criticality: critical
+  control_authority: supervisory
+  functional_position: true
+  parent_id: it.rack.power_container.01
+  location:
+    rack_id: it.rack.power_container.01
+    rack_units: TBD
+  properties:
+    manufacturer: APC
+    model: TBD
+    outlet_count: 10
+    switching: per_outlet
+    nominal_voltage_v: 120
+  external_identifiers: []
+  network:
+    vlan_id: 10
+    subnet: 10.10.10.0/24
+    management_ip: TBD
+    protocols:
+    - snmp
+    - https
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - common_commandable
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - exact_model
+  - current_rating
+  - outlet_map
+  tags: []
+- asset_id: energy.pdu.rack_01.basic_01
+  domain: energy
+  asset_class: pdu
+  name: 8-Outlet Basic Rack PDU
+  status: planned
+  criticality: important
+  control_authority: manual
+  functional_position: true
+  parent_id: it.rack.power_container.01
+  location:
+    rack_id: it.rack.power_container.01
+    rack_units: TBD
+  properties:
+    manufacturer: APC_or_existing
+    model: TBD
+    outlet_count: 8
+    switching: single_master_or_basic
+    nominal_voltage_v: 120
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - exact_model
+  - current_rating
+  - outlet_map
+  tags: []
+- asset_id: energy.pdu.rack_01.ap9570_01
+  domain: energy
+  asset_class: pdu
+  name: APC AP9570 208 V Reserve PDU
+  status: reserve
+  criticality: important
+  control_authority: manual
+  functional_position: true
+  parent_id: it.rack.power_container.01
+  location:
+    rack_id: it.rack.power_container.01
+    rack_units: TBD
+  properties:
+    manufacturer: APC
+    model: AP9570
+    outlet_count: 4
+    outlet_type: C19
+    nominal_voltage_v: 208
+    input_current_a: 30
+    continuous_capacity_kw_approx: 5.0
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id002
+  notes:
+  - Reserved for possible future 208-240 V rack distribution.
+  open_fields:
+  - deployment_decision
+  - feed_architecture
+  - rack_units
+  tags: []
+- asset_id: energy.ats.rack_01.ap5442_01
+  domain: energy
+  asset_class: ats
+  name: APC Rack ATS AP5442
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.rack.power_container.01
+  location:
+    rack_id: it.rack.power_container.01
+    rack_units: TBD
+  properties:
+    manufacturer: APC
+    model: AP5442
+    nominal_voltage_v: 120
+    rated_current_a: 16
+    source_a_id: energy.ups.rack_01.01
+    source_b_id: TBD_secondary_source
+  external_identifiers: []
+  network:
+    vlan_id: 10
+    subnet: 10.10.10.0/24
+    management_ip: TBD
+    protocols:
+    - snmp
+    - https
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - secondary_source
+  - deployment_scope
+  - rack_units
+  tags: []
+- asset_id: it.server.rack_01.r740xd_01
+  domain: it
+  asset_class: server
+  name: Dell PowerEdge R740xd
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.rack.power_container.01
+  location:
+    rack_id: it.rack.power_container.01
+    rack_units: TBD
+  properties:
+    manufacturer: Dell
+    model: PowerEdge R740xd
+    cpu_configuration: 2x Intel Xeon Gold 6254
+    memory_gb: 768
+    optane_persistent_memory_gb: 768
+    local_storage: 8x 1.2 TB 12G SAS SSD
+    roles:
+    - virtualization_host
+    - fast_storage
+    - core_services
+  external_identifiers: []
+  network:
+    vlan_id: 20
+    subnet: 10.10.20.0/24
+    management_vlan_id: 10
+    management_ip: iDRAC_DHCP_or_static_TBD
+    protocols:
+    - redfish
+    - snmp
+    - ssh
+    - hypervisor_api_TBD
+  power:
+    feed_asset_id: energy.pdu.rack_01.switched_01
+    nominal_voltage_v: 120
+    typical_power_kw: null
+    max_power_kw: null
+    control_method: switched_pdu_plus_idrac
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - network_device
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - hypervisor
+  - rack_units
+  - nic_mapping
+  - power_measurement
+  - serial_number
+  tags: []
+- asset_id: it.server.rack_01.t7820_01
+  domain: it
+  asset_class: server
+  name: Dell Precision T7820
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.rack.power_container.01
+  location:
+    rack_id: it.rack.power_container.01
+    rack_units: TBD
+  properties:
+    manufacturer: Dell
+    model: Precision T7820
+    cpu_configuration: 2x Intel Xeon Platinum 8137M
+    memory_gb: 384
+    local_storage: 1x 2 TB NVMe + 1x 4 TB NVMe
+    roles:
+    - auxiliary_compute
+    - rendering
+    - data_processing
+  external_identifiers: []
+  network:
+    vlan_id: 20
+    subnet: 10.10.20.0/24
+    management_ip: TBD
+    protocols:
+    - snmp_or_os_agent
+    - ssh
+  power:
+    feed_asset_id: energy.pdu.rack_01.switched_01
+    nominal_voltage_v: 120
+    typical_power_kw: null
+    max_power_kw: null
+    control_method: switched_pdu_plus_os_shutdown
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - network_device
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - rack_mount_method
+  - rack_units
+  - nic_mapping
+  - power_measurement
+  - serial_number
+  tags: []
+- asset_id: it.storage_array.rack_01.sc200_01
+  domain: it
+  asset_class: storage_array
+  name: Dell Compellent SC200 Storage Array 1
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.rack.power_container.01
+  location:
+    rack_id: it.rack.power_container.01
+    rack_units: TBD
+  properties:
+    manufacturer: Dell
+    model: Compellent SC200
+    bay_count: 12
+    drives: 12x 12 TB 12G SAS HDD
+    controller_paths: dual 12G SAS
+    host_attachment: dual SFF-8644 to R740xd
+    topology_status: two ZFS vdevs with dedicated hot spare for each per project plan
+  external_identifiers: []
+  network: {}
+  power:
+    feed_asset_id: energy.pdu.rack_01.switched_01
+    nominal_voltage_v: 120
+    control_method: switched_pdu
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - exact_vdev_layout
+  - disk_serials
+  - rack_units
+  - power_measurement
+  tags: []
+- asset_id: it.storage_array.rack_01.sc200_02
+  domain: it
+  asset_class: storage_array
+  name: Dell Compellent SC200 Storage Array 2
+  status: reserve
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.rack.power_container.01
+  location:
+    rack_id: it.rack.power_container.01
+    rack_units: TBD
+  properties:
+    manufacturer: Dell
+    model: Compellent SC200
+    bay_count: 12
+    deployment_role: expansion_or_backup
+    drive_population_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - drive_population
+  - topology
+  - host_attachment
+  - rack_units
+  tags: []
+- asset_id: it.switch.rack_01.catalyst_2960x_01
+  domain: it
+  asset_class: switch
+  name: Cisco Catalyst 2960-X Core Access Switch
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.rack.power_container.01
+  location:
+    rack_id: it.rack.power_container.01
+    rack_units: TBD
+  properties:
+    manufacturer: Cisco
+    model: Catalyst 2960-X
+    vlan_role: core_access_and_segmentation
+  external_identifiers: []
+  network:
+    vlan_id: 10
+    subnet: 10.10.10.0/24
+    management_ip: TBD
+    protocols:
+    - snmp
+    - ssh
+    - syslog
+  power:
+    feed_asset_id: energy.ats.rack_01.ap5442_01
+    nominal_voltage_v: 120
+    control_method: rack_ats_and_pdu
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - network_device
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - exact_model_suffix
+  - port_map
+  - trunk_map
+  - configuration_backup_path
+  - rack_units
+  tags: []
+- asset_id: it.switch.rack_01.arista_7050qx_01
+  domain: it
+  asset_class: switch
+  name: Arista 7050QX High-Speed Switch
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.rack.power_container.01
+  location:
+    rack_id: it.rack.power_container.01
+    rack_units: TBD
+  properties:
+    manufacturer: Arista
+    model: 7050QX
+    vlan_role: 10_40_gbe_server_and_storage_backbone
+  external_identifiers: []
+  network:
+    vlan_id: 10
+    subnet: 10.10.10.0/24
+    management_ip: TBD
+    protocols:
+    - snmp
+    - ssh
+    - syslog
+  power:
+    feed_asset_id: energy.pdu.rack_01.switched_01
+    nominal_voltage_v: 120
+    control_method: switched_pdu
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - network_device
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - port_map
+  - mlag_status
+  - configuration_backup_path
+  - rack_units
+  tags: []
+- asset_id: it.router.rack_01.isr4321_01
+  domain: it
+  asset_class: router
+  name: Cisco ISR 4321 WAN and Voice Gateway
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.rack.power_container.01
+  location:
+    rack_id: it.rack.power_container.01
+    rack_units: TBD
+  properties:
+    manufacturer: Cisco
+    model: ISR 4321
+    routing_role:
+    - wan_router
+    - voice_gateway
+    - did_termination
+    - vpn
+  external_identifiers: []
+  network:
+    vlan_id: 10
+    subnet: 10.10.10.0/24
+    management_ip: TBD
+    protocols:
+    - snmp
+    - ssh
+    - syslog
+  power:
+    feed_asset_id: energy.ats.rack_01.ap5442_01
+    nominal_voltage_v: 120
+    control_method: rack_ats_and_pdu
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - network_device
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - wan_provider
+  - sip_or_pstn_interface
+  - did_number
+  - port_map
+  - rack_units
+  tags: []
+- asset_id: it.wireless_controller.rack_01.wlc5508_01
+  domain: it
+  asset_class: wireless_controller
+  name: Cisco AIR-CT5508 Wireless LAN Controller
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.rack.power_container.01
+  location:
+    rack_id: it.rack.power_container.01
+    rack_units: TBD
+  properties:
+    manufacturer: Cisco
+    model: AIR-CT5508-K9
+    managed_ap_capacity: 500
+    planned_ap_count: 5
+  external_identifiers: []
+  network:
+    vlan_id: 10
+    subnet: 10.10.10.0/24
+    management_ip: TBD
+    protocols:
+    - snmp
+    - ssh_or_https
+    - syslog
+  power:
+    feed_asset_id: energy.pdu.rack_01.switched_01
+    nominal_voltage_v: 120
+    control_method: switched_pdu
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - network_device
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - software_version
+  - ap_manager_interfaces
+  - ssid_map
+  - rack_units
+  tags: []
+- asset_id: it.access_point.property.aironet_3702e_01
+  domain: it
+  asset_class: access_point
+  name: Cisco Aironet 3702e Access Point 1
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    coordinates_status: TBD
+    structure_or_zone: TBD
+  properties:
+    manufacturer: Cisco
+    model: Aironet 3702e
+    controller_id: it.wireless_controller.rack_01.wlc5508_01
+    external_antenna_status: TBD
+  external_identifiers: []
+  network:
+    vlan_id: 10
+    subnet: 10.10.10.0/24
+    management_ip: DHCP_TBD
+    protocols:
+    - CAPWAP
+    - snmp_via_controller
+  power:
+    feed_asset_id: PoE_port_TBD
+    nominal_voltage_v: 48
+    control_method: PoE_switch_port
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - network_device
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - coordinates
+  - antenna_model
+  - switch_port
+  - coverage_role
+  tags: []
+- asset_id: it.access_point.property.aironet_3702e_02
+  domain: it
+  asset_class: access_point
+  name: Cisco Aironet 3702e Access Point 2
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    coordinates_status: TBD
+    structure_or_zone: TBD
+  properties:
+    manufacturer: Cisco
+    model: Aironet 3702e
+    controller_id: it.wireless_controller.rack_01.wlc5508_01
+    external_antenna_status: TBD
+  external_identifiers: []
+  network:
+    vlan_id: 10
+    subnet: 10.10.10.0/24
+    management_ip: DHCP_TBD
+    protocols:
+    - CAPWAP
+    - snmp_via_controller
+  power:
+    feed_asset_id: PoE_port_TBD
+    nominal_voltage_v: 48
+    control_method: PoE_switch_port
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - network_device
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - coordinates
+  - antenna_model
+  - switch_port
+  - coverage_role
+  tags: []
+- asset_id: it.access_point.property.aironet_3702e_03
+  domain: it
+  asset_class: access_point
+  name: Cisco Aironet 3702e Access Point 3
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    coordinates_status: TBD
+    structure_or_zone: TBD
+  properties:
+    manufacturer: Cisco
+    model: Aironet 3702e
+    controller_id: it.wireless_controller.rack_01.wlc5508_01
+    external_antenna_status: TBD
+  external_identifiers: []
+  network:
+    vlan_id: 10
+    subnet: 10.10.10.0/24
+    management_ip: DHCP_TBD
+    protocols:
+    - CAPWAP
+    - snmp_via_controller
+  power:
+    feed_asset_id: PoE_port_TBD
+    nominal_voltage_v: 48
+    control_method: PoE_switch_port
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - network_device
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - coordinates
+  - antenna_model
+  - switch_port
+  - coverage_role
+  tags: []
+- asset_id: it.access_point.property.aironet_3702e_04
+  domain: it
+  asset_class: access_point
+  name: Cisco Aironet 3702e Access Point 4
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    coordinates_status: TBD
+    structure_or_zone: TBD
+  properties:
+    manufacturer: Cisco
+    model: Aironet 3702e
+    controller_id: it.wireless_controller.rack_01.wlc5508_01
+    external_antenna_status: TBD
+  external_identifiers: []
+  network:
+    vlan_id: 10
+    subnet: 10.10.10.0/24
+    management_ip: DHCP_TBD
+    protocols:
+    - CAPWAP
+    - snmp_via_controller
+  power:
+    feed_asset_id: PoE_port_TBD
+    nominal_voltage_v: 48
+    control_method: PoE_switch_port
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - network_device
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - coordinates
+  - antenna_model
+  - switch_port
+  - coverage_role
+  tags: []
+- asset_id: it.access_point.property.aironet_3702e_05
+  domain: it
+  asset_class: access_point
+  name: Cisco Aironet 3702e Access Point 5
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    coordinates_status: TBD
+    structure_or_zone: TBD
+  properties:
+    manufacturer: Cisco
+    model: Aironet 3702e
+    controller_id: it.wireless_controller.rack_01.wlc5508_01
+    external_antenna_status: TBD
+  external_identifiers: []
+  network:
+    vlan_id: 10
+    subnet: 10.10.10.0/24
+    management_ip: DHCP_TBD
+    protocols:
+    - CAPWAP
+    - snmp_via_controller
+  power:
+    feed_asset_id: PoE_port_TBD
+    nominal_voltage_v: 48
+    control_method: PoE_switch_port
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - network_device
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - coordinates
+  - antenna_model
+  - switch_port
+  - coverage_role
+  tags: []
+- asset_id: it.network_segment.site.vlan_10
+  domain: it
+  asset_class: network_segment
+  name: VLAN 10 — Management and out-of-band
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    vlan_id: 10
+    subnet: 10.10.10.0/24
+    purpose: Management and out-of-band
+    default_inter_vlan_policy: deny_except_explicit_allow
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id002
+  - *id001
+  notes: []
+  open_fields:
+  - dhcp_scope
+  - gateway_ip
+  - firewall_rules
+  - dns_policy
+  tags: []
+- asset_id: it.network_segment.site.vlan_20
+  domain: it
+  asset_class: network_segment
+  name: VLAN 20 — Servers and core services
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    vlan_id: 20
+    subnet: 10.10.20.0/24
+    purpose: Servers and core services
+    default_inter_vlan_policy: deny_except_explicit_allow
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id002
+  - *id001
+  notes: []
+  open_fields:
+  - dhcp_scope
+  - gateway_ip
+  - firewall_rules
+  - dns_policy
+  tags: []
+- asset_id: it.network_segment.site.vlan_30
+  domain: it
+  asset_class: network_segment
+  name: VLAN 30 — Automation and IoT
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    vlan_id: 30
+    subnet: 10.10.30.0/24
+    purpose: Automation and IoT
+    default_inter_vlan_policy: deny_except_explicit_allow
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id002
+  - *id001
+  notes: []
+  open_fields:
+  - dhcp_scope
+  - gateway_ip
+  - firewall_rules
+  - dns_policy
+  tags: []
+- asset_id: it.network_segment.site.vlan_40
+  domain: it
+  asset_class: network_segment
+  name: VLAN 40 — Cameras and NVR
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    vlan_id: 40
+    subnet: 10.10.40.0/24
+    purpose: Cameras and NVR
+    default_inter_vlan_policy: deny_except_explicit_allow
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id002
+  - *id001
+  notes: []
+  open_fields:
+  - dhcp_scope
+  - gateway_ip
+  - firewall_rules
+  - dns_policy
+  tags: []
+- asset_id: it.network_segment.site.vlan_50
+  domain: it
+  asset_class: network_segment
+  name: VLAN 50 — Guest Wi-Fi
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    vlan_id: 50
+    subnet: 10.10.50.0/24
+    purpose: Guest Wi-Fi
+    default_inter_vlan_policy: deny_except_explicit_allow
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id002
+  - *id001
+  notes: []
+  open_fields:
+  - dhcp_scope
+  - gateway_ip
+  - firewall_rules
+  - dns_policy
+  tags: []
+- asset_id: it.network_segment.site.vlan_60
+  domain: it
+  asset_class: network_segment
+  name: VLAN 60 — Voice and telephony
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    vlan_id: 60
+    subnet: 10.10.60.0/24
+    purpose: Voice and telephony
+    default_inter_vlan_policy: deny_except_explicit_allow
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id002
+  - *id001
+  notes: []
+  open_fields:
+  - dhcp_scope
+  - gateway_ip
+  - firewall_rules
+  - dns_policy
+  tags: []
+- asset_id: it.voice_endpoint.site.cp8851_01
+  domain: it
+  asset_class: voice_endpoint
+  name: Cisco CP-8851 Desk Phone 1
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    manufacturer: Cisco
+    model: CP-8851-K9
+    extension_status: TBD
+    mobility: fixed
+  external_identifiers: []
+  network:
+    vlan_id: 60
+    subnet: 10.10.60.0/24
+    management_ip: DHCP_TBD
+    protocols:
+    - SCCP_or_SIP_TBD
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - location
+  - extension
+  - switch_port
+  tags: []
+- asset_id: it.voice_endpoint.site.cp8851_02
+  domain: it
+  asset_class: voice_endpoint
+  name: Cisco CP-8851 Desk Phone 2
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    manufacturer: Cisco
+    model: CP-8851-K9
+    extension_status: TBD
+    mobility: fixed
+  external_identifiers: []
+  network:
+    vlan_id: 60
+    subnet: 10.10.60.0/24
+    management_ip: DHCP_TBD
+    protocols:
+    - SCCP_or_SIP_TBD
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - location
+  - extension
+  - switch_port
+  tags: []
+- asset_id: it.voice_endpoint.site.cp7925g_ex_01
+  domain: it
+  asset_class: voice_endpoint
+  name: Cisco CP-7925G-EX Rugged Wireless Phone 1
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    manufacturer: Cisco
+    model: CP-7925G-EX-K9
+    extension_status: TBD
+    mobility: wireless_rugged
+  external_identifiers: []
+  network:
+    vlan_id: 60
+    subnet: 10.10.60.0/24
+    management_ip: DHCP_TBD
+    protocols:
+    - SCCP_or_SIP_TBD
+    - '802.11'
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - extension
+  - charging_location
+  - battery_inventory
+  tags: []
+- asset_id: it.voice_endpoint.site.cp7925g_ex_02
+  domain: it
+  asset_class: voice_endpoint
+  name: Cisco CP-7925G-EX Rugged Wireless Phone 2
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    manufacturer: Cisco
+    model: CP-7925G-EX-K9
+    extension_status: TBD
+    mobility: wireless_rugged
+  external_identifiers: []
+  network:
+    vlan_id: 60
+    subnet: 10.10.60.0/24
+    management_ip: DHCP_TBD
+    protocols:
+    - SCCP_or_SIP_TBD
+    - '802.11'
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - extension
+  - charging_location
+  - battery_inventory
+  tags: []
+- asset_id: it.application_service.rack_01.opnsense_01
+  domain: it
+  asset_class: application_service
+  name: OPNsense Firewall VM
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.server.rack_01.r740xd_01
+  location: {}
+  properties:
+    service_role: routing_firewall_reverse_proxy
+    deployment_status_note: active_or_planned
+    host_status: R740xd proposed; final VM placement TBD
+  external_identifiers: []
+  network:
+    vlan_id: 20
+    subnet: 10.10.20.0/24
+    management_ip: TBD
+    protocols:
+    - https_or_service_native_TBD
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - common_monitored
+  source_refs:
+  - *id001
+  - *id002
+  notes: []
+  open_fields:
+  - vm_name
+  - ip_address
+  - port
+  - container_or_vm
+  - backup_policy
+  - ha_role
+  tags: []
+- asset_id: it.application_service.rack_01.pihole_01
+  domain: it
+  asset_class: application_service
+  name: Pi-hole DNS VM
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.server.rack_01.r740xd_01
+  location: {}
+  properties:
+    service_role: internal_dns
+    deployment_status_note: active_or_planned
+    host_status: R740xd proposed; final VM placement TBD
+  external_identifiers: []
+  network:
+    vlan_id: 20
+    subnet: 10.10.20.0/24
+    management_ip: TBD
+    protocols:
+    - https_or_service_native_TBD
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - common_monitored
+  source_refs:
+  - *id001
+  - *id002
+  notes: []
+  open_fields:
+  - vm_name
+  - ip_address
+  - port
+  - container_or_vm
+  - backup_policy
+  - ha_role
+  tags: []
+- asset_id: it.application_service.rack_01.cucm_01
+  domain: it
+  asset_class: application_service
+  name: Cisco Unified Communications Manager VM
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.server.rack_01.r740xd_01
+  location: {}
+  properties:
+    service_role: voice_call_control
+    deployment_status_note: active_or_planned
+    host_status: R740xd proposed; final VM placement TBD
+  external_identifiers: []
+  network:
+    vlan_id: 20
+    subnet: 10.10.20.0/24
+    management_ip: TBD
+    protocols:
+    - https_or_service_native_TBD
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - common_monitored
+  source_refs:
+  - *id001
+  - *id002
+  notes: []
+  open_fields:
+  - vm_name
+  - ip_address
+  - port
+  - container_or_vm
+  - backup_policy
+  - ha_role
+  tags: []
+- asset_id: it.application_service.rack_01.mqtt_01
+  domain: it
+  asset_class: application_service
+  name: Mosquitto MQTT Broker
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.server.rack_01.r740xd_01
+  location: {}
+  properties:
+    service_role: telemetry_message_bus
+    deployment_status_note: planned
+    host_status: R740xd proposed; final VM placement TBD
+  external_identifiers: []
+  network:
+    vlan_id: 20
+    subnet: 10.10.20.0/24
+    management_ip: TBD
+    protocols:
+    - https_or_service_native_TBD
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - common_monitored
+  source_refs:
+  - *id001
+  - *id002
+  notes: []
+  open_fields:
+  - vm_name
+  - ip_address
+  - port
+  - container_or_vm
+  - backup_policy
+  - ha_role
+  tags: []
+- asset_id: it.application_service.rack_01.postgres_01
+  domain: it
+  asset_class: application_service
+  name: PostgreSQL and PostGIS
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.server.rack_01.r740xd_01
+  location: {}
+  properties:
+    service_role: authoritative_asset_registry
+    deployment_status_note: planned
+    host_status: R740xd proposed; final VM placement TBD
+  external_identifiers: []
+  network:
+    vlan_id: 20
+    subnet: 10.10.20.0/24
+    management_ip: TBD
+    protocols:
+    - https_or_service_native_TBD
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - common_monitored
+  source_refs:
+  - *id001
+  - *id002
+  notes: []
+  open_fields:
+  - vm_name
+  - ip_address
+  - port
+  - container_or_vm
+  - backup_policy
+  - ha_role
+  tags: []
+- asset_id: it.application_service.rack_01.digital_twin_api_01
+  domain: it
+  asset_class: application_service
+  name: Digital Twin API
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.server.rack_01.r740xd_01
+  location: {}
+  properties:
+    service_role: asset_state_and_command_api
+    deployment_status_note: planned
+    host_status: R740xd proposed; final VM placement TBD
+  external_identifiers: []
+  network:
+    vlan_id: 20
+    subnet: 10.10.20.0/24
+    management_ip: TBD
+    protocols:
+    - https_or_service_native_TBD
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - common_monitored
+  source_refs:
+  - *id001
+  - *id002
+  notes: []
+  open_fields:
+  - vm_name
+  - ip_address
+  - port
+  - container_or_vm
+  - backup_policy
+  - ha_role
+  tags: []
+- asset_id: it.application_service.rack_01.node_red_01
+  domain: it
+  asset_class: application_service
+  name: Node-RED Supervisory Rules
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.server.rack_01.r740xd_01
+  location: {}
+  properties:
+    service_role: supervisory_workflows
+    deployment_status_note: planned
+    host_status: R740xd proposed; final VM placement TBD
+  external_identifiers: []
+  network:
+    vlan_id: 20
+    subnet: 10.10.20.0/24
+    management_ip: TBD
+    protocols:
+    - https_or_service_native_TBD
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - common_monitored
+  source_refs:
+  - *id001
+  - *id002
+  notes: []
+  open_fields:
+  - vm_name
+  - ip_address
+  - port
+  - container_or_vm
+  - backup_policy
+  - ha_role
+  tags: []
+- asset_id: it.application_service.rack_01.home_assistant_01
+  domain: it
+  asset_class: application_service
+  name: Home Assistant
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.server.rack_01.r740xd_01
+  location: {}
+  properties:
+    service_role: device_integration_and_operator_ui
+    deployment_status_note: planned
+    host_status: R740xd proposed; final VM placement TBD
+  external_identifiers: []
+  network:
+    vlan_id: 20
+    subnet: 10.10.20.0/24
+    management_ip: TBD
+    protocols:
+    - https_or_service_native_TBD
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - common_monitored
+  source_refs:
+  - *id001
+  - *id002
+  notes: []
+  open_fields:
+  - vm_name
+  - ip_address
+  - port
+  - container_or_vm
+  - backup_policy
+  - ha_role
+  tags: []
+- asset_id: it.application_service.rack_01.historian_01
+  domain: it
+  asset_class: application_service
+  name: Time-Series Historian
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.server.rack_01.r740xd_01
+  location: {}
+  properties:
+    service_role: influxdb_or_timescaledb
+    deployment_status_note: planned
+    host_status: R740xd proposed; final VM placement TBD
+  external_identifiers: []
+  network:
+    vlan_id: 20
+    subnet: 10.10.20.0/24
+    management_ip: TBD
+    protocols:
+    - https_or_service_native_TBD
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - common_monitored
+  source_refs:
+  - *id001
+  - *id002
+  notes: []
+  open_fields:
+  - vm_name
+  - ip_address
+  - port
+  - container_or_vm
+  - backup_policy
+  - ha_role
+  tags: []
+- asset_id: it.application_service.rack_01.grafana_01
+  domain: it
+  asset_class: application_service
+  name: Grafana
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.server.rack_01.r740xd_01
+  location: {}
+  properties:
+    service_role: operational_dashboards
+    deployment_status_note: planned
+    host_status: R740xd proposed; final VM placement TBD
+  external_identifiers: []
+  network:
+    vlan_id: 20
+    subnet: 10.10.20.0/24
+    management_ip: TBD
+    protocols:
+    - https_or_service_native_TBD
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - common_monitored
+  source_refs:
+  - *id001
+  - *id002
+  notes: []
+  open_fields:
+  - vm_name
+  - ip_address
+  - port
+  - container_or_vm
+  - backup_policy
+  - ha_role
+  tags: []
+- asset_id: it.application_service.rack_01.prometheus_01
+  domain: it
+  asset_class: application_service
+  name: Prometheus
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.server.rack_01.r740xd_01
+  location: {}
+  properties:
+    service_role: infrastructure_monitoring
+    deployment_status_note: planned
+    host_status: R740xd proposed; final VM placement TBD
+  external_identifiers: []
+  network:
+    vlan_id: 20
+    subnet: 10.10.20.0/24
+    management_ip: TBD
+    protocols:
+    - https_or_service_native_TBD
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - common_monitored
+  source_refs:
+  - *id001
+  - *id002
+  notes: []
+  open_fields:
+  - vm_name
+  - ip_address
+  - port
+  - container_or_vm
+  - backup_policy
+  - ha_role
+  tags: []
+- asset_id: it.environmental_monitor.power_container.netbotz_500_01
+  domain: it
+  asset_class: environmental_monitor
+  name: APC NetBotz 500 Wall-Mount Appliance
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: structure.room.power_container.server_zone
+  location: {}
+  properties:
+    manufacturer: APC
+    model_family: NetBotz 500
+    managed_sensor_status: TBD
+    camera_present: true
+  external_identifiers: []
+  network:
+    vlan_id: 10
+    subnet: 10.10.10.0/24
+    management_ip: TBD
+    protocols:
+    - snmp
+    - https
+    - email_alert
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - common_monitored
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - exact_model
+  - sensor_port_map
+  - firmware
+  - camera_model
+  tags: []
+- asset_id: it.environmental_monitor.rack_01.nbrk0550_01
+  domain: it
+  asset_class: environmental_monitor
+  name: APC NetBotz Rack Monitor 550
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.rack.power_container.01
+  location: {}
+  properties:
+    manufacturer: APC
+    model: NBRK0550
+    managed_sensor_status: TBD
+  external_identifiers: []
+  network:
+    vlan_id: 10
+    subnet: 10.10.10.0/24
+    management_ip: TBD
+    protocols:
+    - snmp
+    - https
+    - email_alert
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - common_monitored
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - sensor_port_map
+  - firmware
+  - wireless_coordinator
+  tags: []
+- asset_id: it.environmental_monitor.rack_01.ap9320_01
+  domain: it
+  asset_class: environmental_monitor
+  name: APC AP9320 Environmental Management Unit
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.rack.power_container.01
+  location: {}
+  properties:
+    manufacturer: APC
+    model: AP9320
+    managed_sensor_status: door_contact_and_alarm_beacon_noted
+  external_identifiers: []
+  network:
+    vlan_id: 10
+    subnet: 10.10.10.0/24
+    management_ip: TBD
+    protocols:
+    - snmp
+    - https
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - sensor_map
+  - role_overlap_with_netbotz
+  tags: []
+- asset_id: it.environmental_monitor.rack_01.ap92200_01
+  domain: it
+  asset_class: environmental_monitor
+  name: APC InfraStruXure Manager AP92200
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.rack.power_container.01
+  location: {}
+  properties:
+    manufacturer: APC
+    model: AP92200
+    managed_sensor_status: aggregates_APC_devices
+  external_identifiers: []
+  network:
+    vlan_id: 10
+    subnet: 10.10.10.0/24
+    management_ip: TBD
+    protocols:
+    - snmp
+    - https
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id002
+  notes:
+  - Role may be superseded by NetBotz/EcoStruxure and the homestead digital-twin stack; retain until migration decision.
+  open_fields:
+  - deployment_decision
+  - firmware_support
+  - integration_path
+  tags: []
+- asset_id: security.access_controller.rack_01.ap9361_01
+  domain: security
+  asset_class: access_controller
+  name: APC AP9361 Rack Access PX-HID
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.rack.power_container.01
+  location: {}
+  properties:
+    manufacturer: APC
+    model: AP9361
+    credential_type_status: HID_proximity
+  external_identifiers: []
+  network:
+    vlan_id: 10
+    subnet: 10.10.10.0/24
+    management_ip: TBD
+    protocols:
+    - snmp
+    - https
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - credential_inventory
+  - door_lock_map
+  - alert_integration
+  tags: []
+- asset_id: security.camera.rack_01.netbotz_01
+  domain: security
+  asset_class: camera
+  name: NetBotz Rack Camera
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.rack.power_container.01
+  location: {}
+  properties:
+    manufacturer: APC_or_NetBotz
+    model_status: TBD
+    recording_destination_status: NetBotz_or_NVR_TBD
+  external_identifiers: []
+  network:
+    vlan_id: 40
+    subnet: 10.10.40.0/24
+    management_ip: TBD
+    protocols:
+    - NetBotz_native_or_RTSP_TBD
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - model
+  - recording_path
+  - retention
+  tags: []
+- asset_id: safety.safety_sensor.rack_01.ap9512thblk_01
+  domain: safety
+  asset_class: safety_sensor
+  name: Rack Temperature and Humidity Sensor
+  status: planned
+  criticality: critical
+  control_authority: safety_interlock
+  functional_position: true
+  parent_id: it.rack.power_container.01
+  location: {}
+  properties:
+    manufacturer: APC
+    model: AP9512THBLK
+    sensor_type: temperature_humidity
+    deployment_status_note: procured_or_planned
+    range_status: per_manufacturer
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - exact_location
+  - sensor_port
+  - calibration_or_self_test_interval
+  tags: []
+- asset_id: safety.safety_sensor.rack_01.ap9512tblk_01
+  domain: safety
+  asset_class: safety_sensor
+  name: Rack Temperature Sensor
+  status: planned
+  criticality: critical
+  control_authority: safety_interlock
+  functional_position: true
+  parent_id: it.rack.power_container.01
+  location: {}
+  properties:
+    manufacturer: APC
+    model: AP9512TBLK
+    sensor_type: temperature
+    deployment_status_note: procured_or_planned
+    range_status: per_manufacturer
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - exact_location
+  - sensor_port
+  - calibration_or_self_test_interval
+  tags: []
+- asset_id: safety.safety_sensor.rack_01.nbes0307_01
+  domain: safety
+  asset_class: safety_sensor
+  name: Rack Smoke Sensor
+  status: planned
+  criticality: critical
+  control_authority: safety_interlock
+  functional_position: true
+  parent_id: it.rack.power_container.01
+  location: {}
+  properties:
+    manufacturer: APC
+    model: NBES0307
+    sensor_type: smoke
+    deployment_status_note: planned
+    range_status: per_manufacturer
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - exact_location
+  - sensor_port
+  - calibration_or_self_test_interval
+  tags: []
+- asset_id: safety.safety_sensor.power_container.nbes0308_01
+  domain: safety
+  asset_class: safety_sensor
+  name: Power Container Fluid Detection Sensor
+  status: planned
+  criticality: critical
+  control_authority: safety_interlock
+  functional_position: true
+  parent_id: structure.structure.power_container.01
+  location: {}
+  properties:
+    manufacturer: APC
+    model: NBES0308
+    sensor_type: fluid_leak
+    deployment_status_note: planned
+    range_status: per_manufacturer
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - exact_location
+  - sensor_port
+  - calibration_or_self_test_interval
+  tags: []
+- asset_id: safety.alarm_output.rack_01.beacon_01
+  domain: safety
+  asset_class: alarm_output
+  name: Rack Alarm Beacon
+  status: planned
+  criticality: important
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: it.rack.power_container.01
+  location: {}
+  properties:
+    output_type: visual_beacon
+    activation_method: NetBotz_or_AP9320
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id002
+  notes: []
+  open_fields:
+  - model
+  - wiring
+  - alarm_mapping
+  tags: []
+- asset_id: it.server.secondary_control_node.01
+  domain: it
+  asset_class: server
+  name: Secondary Low-Power Homestead Control Node
+  status: planned
+  criticality: critical
+  control_authority: vendor_native
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_id: TBD_physically_separate_from_power_container
+  properties:
+    manufacturer: TBD
+    model: TBD
+    cpu_configuration: low_power_TBD
+    memory_gb: TBD
+    roles:
+    - secondary_control
+    - configuration_replica
+    - independent_alerting
+    must_be_outside_common_failure_domain: true
+  external_identifiers: []
+  network:
+    vlan_id: 20
+    subnet: 10.10.20.0/24
+    management_ip: TBD
+    protocols:
+    - TBD
+  power:
+    feed_asset_id: independent_critical_power_TBD
+    control_method: local
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - host_structure
+  - hardware
+  - independent_power
+  - replication_method
+  - services
+  tags: []
+- asset_id: energy.load.site.control_core_01
+  domain: energy
+  asset_class: load
+  name: Critical Control and Communications Core
+  status: planned
+  criticality: critical
+  control_authority: supervisory
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    load_tier: 1
+    planning_baseline_kw: 0.25
+    restoration_policy: never_shed_except_physical_emergency
+    control_method: automatic_supervisory
+    rated_power_kw: TBD
+  external_identifiers: []
+  network: {}
+  power:
+    feed_asset_id: energy.panel.power_container.critical_01
+    typical_power_kw: 0.25
+    max_power_kw: null
+    control_method: automatic_supervisory
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - ems_load
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - branch_circuit
+  - rated_power
+  - measured_idle_power
+  - measured_peak_power
+  - contactor_or_api
+  - restart_delay_s
+  tags: []
+- asset_id: energy.load.site.server_rack_01
+  domain: energy
+  asset_class: load
+  name: Primary Server Rack
+  status: planned
+  criticality: critical
+  control_authority: supervisory
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    load_tier: 2
+    planning_baseline_kw: 1.5
+    restoration_policy: graceful_shutdown_then_shed
+    control_method: automatic_supervisory
+    rated_power_kw: TBD
+  external_identifiers: []
+  network: {}
+  power:
+    feed_asset_id: energy.panel.power_container.critical_01
+    typical_power_kw: 1.5
+    max_power_kw: null
+    control_method: automatic_supervisory
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - ems_load
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - branch_circuit
+  - rated_power
+  - measured_idle_power
+  - measured_peak_power
+  - contactor_or_api
+  - restart_delay_s
+  tags: []
+- asset_id: energy.load.site.rack_cooling_01
+  domain: energy
+  asset_class: load
+  name: Rack Cooling
+  status: planned
+  criticality: critical
+  control_authority: supervisory
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    load_tier: 1
+    planning_baseline_kw: null
+    restoration_policy: temperature_governed_never_shed_while_rack_energized
+    control_method: automatic_supervisory
+    rated_power_kw: TBD
+  external_identifiers: []
+  network: {}
+  power:
+    feed_asset_id: energy.panel.power_container.critical_01
+    typical_power_kw: null
+    max_power_kw: null
+    control_method: automatic_supervisory
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - ems_load
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - branch_circuit
+  - rated_power
+  - measured_idle_power
+  - measured_peak_power
+  - contactor_or_api
+  - restart_delay_s
+  tags: []
+- asset_id: energy.load.site.battery_hvac_01
+  domain: energy
+  asset_class: load
+  name: Battery-Zone HVAC
+  status: planned
+  criticality: critical
+  control_authority: supervisory
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    load_tier: 1
+    planning_baseline_kw: null
+    restoration_policy: battery_temperature_governed
+    control_method: automatic_supervisory
+    rated_power_kw: TBD
+  external_identifiers: []
+  network: {}
+  power:
+    feed_asset_id: energy.panel.power_container.critical_01
+    typical_power_kw: null
+    max_power_kw: null
+    control_method: automatic_supervisory
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - ems_load
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - branch_circuit
+  - rated_power
+  - measured_idle_power
+  - measured_peak_power
+  - contactor_or_api
+  - restart_delay_s
+  tags: []
+- asset_id: energy.load.site.water_pumping_01
+  domain: energy
+  asset_class: load
+  name: Well and Essential Water Pumping
+  status: planned
+  criticality: critical
+  control_authority: supervisory
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    load_tier: 2
+    planning_baseline_kw: null
+    restoration_policy: water_reserve_and_energy_budget
+    control_method: automatic_supervisory
+    rated_power_kw: TBD
+  external_identifiers: []
+  network: {}
+  power:
+    feed_asset_id: energy.panel.power_container.critical_01
+    typical_power_kw: null
+    max_power_kw: null
+    control_method: automatic_supervisory
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - ems_load
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - branch_circuit
+  - rated_power
+  - measured_idle_power
+  - measured_peak_power
+  - contactor_or_api
+  - restart_delay_s
+  tags: []
+- asset_id: energy.load.site.irrigation_01
+  domain: energy
+  asset_class: load
+  name: Irrigation Pumping and Valves
+  status: planned
+  criticality: important
+  control_authority: supervisory
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    load_tier: 3
+    planning_baseline_kw: null
+    restoration_policy: weather_and_soil_deferrable
+    control_method: automatic_supervisory
+    rated_power_kw: TBD
+  external_identifiers: []
+  network: {}
+  power:
+    feed_asset_id: energy.panel.power_container.general_01
+    typical_power_kw: null
+    max_power_kw: null
+    control_method: automatic_supervisory
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - ems_load
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - branch_circuit
+  - rated_power
+  - measured_idle_power
+  - measured_peak_power
+  - contactor_or_api
+  - restart_delay_s
+  tags: []
+- asset_id: energy.load.site.greenhouse_climate_01
+  domain: energy
+  asset_class: load
+  name: Greenhouse Climate Control
+  status: planned
+  criticality: critical
+  control_authority: supervisory
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    load_tier: 2
+    planning_baseline_kw: null
+    restoration_policy: crop_survival_minimum_then_reduced_power
+    control_method: automatic_supervisory
+    rated_power_kw: TBD
+  external_identifiers: []
+  network: {}
+  power:
+    feed_asset_id: energy.panel.power_container.critical_01
+    typical_power_kw: null
+    max_power_kw: null
+    control_method: automatic_supervisory
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - ems_load
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - branch_circuit
+  - rated_power
+  - measured_idle_power
+  - measured_peak_power
+  - contactor_or_api
+  - restart_delay_s
+  tags: []
+- asset_id: energy.load.site.greenhouse_lighting_01
+  domain: energy
+  asset_class: load
+  name: Greenhouse Grow Lighting
+  status: planned
+  criticality: important
+  control_authority: supervisory
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    load_tier: 3
+    planning_baseline_kw: null
+    restoration_policy: photoperiod_shift_and_dimming
+    control_method: automatic_supervisory
+    rated_power_kw: TBD
+  external_identifiers: []
+  network: {}
+  power:
+    feed_asset_id: energy.panel.power_container.general_01
+    typical_power_kw: null
+    max_power_kw: null
+    control_method: automatic_supervisory
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - ems_load
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - branch_circuit
+  - rated_power
+  - measured_idle_power
+  - measured_peak_power
+  - contactor_or_api
+  - restart_delay_s
+  tags: []
+- asset_id: energy.load.site.spa_01
+  domain: energy
+  asset_class: load
+  name: Hydrothermal Spa Pavilion
+  status: planned
+  criticality: discretionary
+  control_authority: supervisory
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    load_tier: 4
+    planning_baseline_kw: null
+    restoration_policy: deny_or_terminate_on_reserve_threshold
+    control_method: operator_request_with_power_lease
+    rated_power_kw: TBD
+  external_identifiers: []
+  network: {}
+  power:
+    feed_asset_id: energy.panel.power_container.general_01
+    typical_power_kw: null
+    max_power_kw: null
+    control_method: operator_request_with_power_lease
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - ems_load
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - branch_circuit
+  - rated_power
+  - measured_idle_power
+  - measured_peak_power
+  - contactor_or_api
+  - restart_delay_s
+  tags: []
+- asset_id: energy.load.site.workshop_heavy_01
+  domain: energy
+  asset_class: load
+  name: Workshop Heavy Machinery
+  status: planned
+  criticality: discretionary
+  control_authority: supervisory
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    load_tier: 4
+    planning_baseline_kw: null
+    restoration_policy: operator_request_with_power_lease
+    control_method: operator_request_with_power_lease
+    rated_power_kw: TBD
+  external_identifiers: []
+  network: {}
+  power:
+    feed_asset_id: energy.panel.power_container.general_01
+    typical_power_kw: null
+    max_power_kw: null
+    control_method: operator_request_with_power_lease
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - ems_load
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - branch_circuit
+  - rated_power
+  - measured_idle_power
+  - measured_peak_power
+  - contactor_or_api
+  - restart_delay_s
+  tags: []
+- asset_id: energy.load.site.tool_charging_01
+  domain: energy
+  asset_class: load
+  name: Tool and Equipment Battery Charging
+  status: planned
+  criticality: discretionary
+  control_authority: supervisory
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    load_tier: 4
+    planning_baseline_kw: null
+    restoration_policy: schedule_to_pv_surplus
+    control_method: automatic_supervisory
+    rated_power_kw: TBD
+  external_identifiers: []
+  network: {}
+  power:
+    feed_asset_id: energy.panel.power_container.general_01
+    typical_power_kw: null
+    max_power_kw: null
+    control_method: automatic_supervisory
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - ems_load
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - branch_circuit
+  - rated_power
+  - measured_idle_power
+  - measured_peak_power
+  - contactor_or_api
+  - restart_delay_s
+  tags: []
+- asset_id: energy.load.site.opportunistic_compute_01
+  domain: energy
+  asset_class: load
+  name: Opportunistic Compute Workloads
+  status: planned
+  criticality: discretionary
+  control_authority: supervisory
+  functional_position: true
+  parent_id: site.site.primary.01
+  location: {}
+  properties:
+    load_tier: 5
+    planning_baseline_kw: null
+    restoration_policy: immediate_graceful_preemption
+    control_method: automatic_supervisory
+    rated_power_kw: TBD
+  external_identifiers: []
+  network: {}
+  power:
+    feed_asset_id: energy.panel.power_container.general_01
+    typical_power_kw: null
+    max_power_kw: null
+    control_method: automatic_supervisory
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs:
+  - ems_load
+  source_refs:
+  - *id001
+  notes: []
+  open_fields:
+  - branch_circuit
+  - rated_power
+  - measured_idle_power
+  - measured_peak_power
+  - contactor_or_api
+  - restart_delay_s
+  tags: []
+relationships:
+- relationship_id: rel.0001
+  from_asset_id: energy.pv_row.agrivoltaic_field.01
+  relationship_type: part_of
+  to_asset_id: energy.pv_array.agrivoltaic_field.01
+  status: planned
+  notes: []
+- relationship_id: rel.0002
+  from_asset_id: energy.pv_row.agrivoltaic_field.02
+  relationship_type: part_of
+  to_asset_id: energy.pv_array.agrivoltaic_field.01
+  status: planned
+  notes: []
+- relationship_id: rel.0003
+  from_asset_id: energy.pv_row.agrivoltaic_field.03
+  relationship_type: part_of
+  to_asset_id: energy.pv_array.agrivoltaic_field.01
+  status: planned
+  notes: []
+- relationship_id: rel.0004
+  from_asset_id: energy.pv_row.agrivoltaic_field.04
+  relationship_type: part_of
+  to_asset_id: energy.pv_array.agrivoltaic_field.01
+  status: planned
+  notes: []
+- relationship_id: rel.0005
+  from_asset_id: energy.inverter.power_container.01
+  relationship_type: located_in
+  to_asset_id: structure.room.power_container.power_zone
+  status: planned
+  notes: []
+- relationship_id: rel.0006
+  from_asset_id: energy.pv_array.agrivoltaic_field.01
+  relationship_type: feeds
+  to_asset_id: energy.inverter.power_container.01
+  status: planned
+  notes:
+  - Final MPPT and DC combiner allocation TBD.
+- relationship_id: rel.0007
+  from_asset_id: energy.inverter.power_container.02
+  relationship_type: located_in
+  to_asset_id: structure.room.power_container.power_zone
+  status: planned
+  notes: []
+- relationship_id: rel.0008
+  from_asset_id: energy.pv_array.agrivoltaic_field.01
+  relationship_type: feeds
+  to_asset_id: energy.inverter.power_container.02
+  status: planned
+  notes:
+  - Final MPPT and DC combiner allocation TBD.
+- relationship_id: rel.0009
+  from_asset_id: energy.inverter.power_container.03
+  relationship_type: located_in
+  to_asset_id: structure.room.power_container.power_zone
+  status: planned
+  notes: []
+- relationship_id: rel.0010
+  from_asset_id: energy.pv_array.agrivoltaic_field.01
+  relationship_type: feeds
+  to_asset_id: energy.inverter.power_container.03
+  status: planned
+  notes:
+  - Final MPPT and DC combiner allocation TBD.
+- relationship_id: rel.0011
+  from_asset_id: energy.inverter.power_container.04
+  relationship_type: located_in
+  to_asset_id: structure.room.power_container.power_zone
+  status: planned
+  notes: []
+- relationship_id: rel.0012
+  from_asset_id: energy.pv_array.agrivoltaic_field.01
+  relationship_type: feeds
+  to_asset_id: energy.inverter.power_container.04
+  status: planned
+  notes:
+  - Final MPPT and DC combiner allocation TBD.
+- relationship_id: rel.0013
+  from_asset_id: energy.bms.power_container.01
+  relationship_type: controls
+  to_asset_id: energy.battery_bank.power_container.01
+  status: planned
+  notes: []
+- relationship_id: rel.0014
+  from_asset_id: energy.battery_bank.power_container.01
+  relationship_type: feeds
+  to_asset_id: energy.inverter.power_container.01
+  status: planned
+  notes: []
+- relationship_id: rel.0015
+  from_asset_id: energy.battery_bank.power_container.01
+  relationship_type: feeds
+  to_asset_id: energy.inverter.power_container.02
+  status: planned
+  notes: []
+- relationship_id: rel.0016
+  from_asset_id: energy.battery_bank.power_container.01
+  relationship_type: feeds
+  to_asset_id: energy.inverter.power_container.03
+  status: planned
+  notes: []
+- relationship_id: rel.0017
+  from_asset_id: energy.battery_bank.power_container.01
+  relationship_type: feeds
+  to_asset_id: energy.inverter.power_container.04
+  status: planned
+  notes: []
+- relationship_id: rel.0018
+  from_asset_id: energy.inverter.power_container.01
+  relationship_type: feeds
+  to_asset_id: energy.combiner.power_container.ac_01
+  status: planned
+  notes: []
+- relationship_id: rel.0019
+  from_asset_id: energy.inverter.power_container.02
+  relationship_type: feeds
+  to_asset_id: energy.combiner.power_container.ac_01
+  status: planned
+  notes: []
+- relationship_id: rel.0020
+  from_asset_id: energy.inverter.power_container.03
+  relationship_type: feeds
+  to_asset_id: energy.combiner.power_container.ac_01
+  status: planned
+  notes: []
+- relationship_id: rel.0021
+  from_asset_id: energy.inverter.power_container.04
+  relationship_type: feeds
+  to_asset_id: energy.combiner.power_container.ac_01
+  status: planned
+  notes: []
+- relationship_id: rel.0022
+  from_asset_id: energy.pv_array.agrivoltaic_field.01
+  relationship_type: feeds
+  to_asset_id: energy.combiner.agrivoltaic_field.dc_01
+  status: planned
+  notes: []
+- relationship_id: rel.0023
+  from_asset_id: energy.combiner.agrivoltaic_field.dc_01
+  relationship_type: feeds
+  to_asset_id: energy.disconnect.power_container.dc_main_01
+  status: planned
+  notes: []
+- relationship_id: rel.0024
+  from_asset_id: energy.disconnect.power_container.dc_main_01
+  relationship_type: feeds
+  to_asset_id: energy.inverter.power_container.01
+  status: planned
+  notes:
+  - Diagrammatic relationship only; final parallel DC topology TBD.
+- relationship_id: rel.0025
+  from_asset_id: energy.combiner.power_container.ac_01
+  relationship_type: feeds
+  to_asset_id: energy.disconnect.power_container.ac_main_01
+  status: planned
+  notes: []
+- relationship_id: rel.0026
+  from_asset_id: energy.disconnect.power_container.ac_main_01
+  relationship_type: feeds
+  to_asset_id: energy.panel.power_container.critical_01
+  status: planned
+  notes: []
+- relationship_id: rel.0027
+  from_asset_id: energy.disconnect.power_container.ac_main_01
+  relationship_type: feeds
+  to_asset_id: energy.panel.power_container.general_01
+  status: planned
+  notes: []
+- relationship_id: rel.0028
+  from_asset_id: energy.generator.site.01
+  relationship_type: backs_up
+  to_asset_id: energy.combiner.power_container.ac_01
+  status: planned
+  notes: []
+- relationship_id: rel.0029
+  from_asset_id: energy.generator.site.01
+  relationship_type: feeds
+  to_asset_id: energy.ats.power_container.site_01
+  status: planned
+  notes: []
+- relationship_id: rel.0030
+  from_asset_id: energy.panel.power_container.critical_01
+  relationship_type: feeds
+  to_asset_id: energy.ups.rack_01.01
+  status: planned
+  notes: []
+- relationship_id: rel.0031
+  from_asset_id: energy.ups.rack_01.01
+  relationship_type: feeds
+  to_asset_id: energy.pdu.rack_01.switched_01
+  status: planned
+  notes: []
+- relationship_id: rel.0032
+  from_asset_id: energy.ups.rack_01.01
+  relationship_type: feeds
+  to_asset_id: energy.pdu.rack_01.basic_01
+  status: planned
+  notes: []
+- relationship_id: rel.0033
+  from_asset_id: energy.ats.rack_01.ap5442_01
+  relationship_type: feeds
+  to_asset_id: it.switch.rack_01.catalyst_2960x_01
+  status: planned
+  notes:
+  - Planned example critical single-corded load; final outlet mapping TBD.
+- relationship_id: rel.0034
+  from_asset_id: it.access_point.property.aironet_3702e_01
+  relationship_type: managed_by
+  to_asset_id: it.wireless_controller.rack_01.wlc5508_01
+  status: planned
+  notes: []
+- relationship_id: rel.0035
+  from_asset_id: it.access_point.property.aironet_3702e_02
+  relationship_type: managed_by
+  to_asset_id: it.wireless_controller.rack_01.wlc5508_01
+  status: planned
+  notes: []
+- relationship_id: rel.0036
+  from_asset_id: it.access_point.property.aironet_3702e_03
+  relationship_type: managed_by
+  to_asset_id: it.wireless_controller.rack_01.wlc5508_01
+  status: planned
+  notes: []
+- relationship_id: rel.0037
+  from_asset_id: it.access_point.property.aironet_3702e_04
+  relationship_type: managed_by
+  to_asset_id: it.wireless_controller.rack_01.wlc5508_01
+  status: planned
+  notes: []
+- relationship_id: rel.0038
+  from_asset_id: it.access_point.property.aironet_3702e_05
+  relationship_type: managed_by
+  to_asset_id: it.wireless_controller.rack_01.wlc5508_01
+  status: planned
+  notes: []
+- relationship_id: rel.0039
+  from_asset_id: it.network_segment.site.vlan_10
+  relationship_type: managed_by
+  to_asset_id: it.switch.rack_01.catalyst_2960x_01
+  status: planned
+  notes: []
+- relationship_id: rel.0040
+  from_asset_id: it.network_segment.site.vlan_20
+  relationship_type: managed_by
+  to_asset_id: it.switch.rack_01.catalyst_2960x_01
+  status: planned
+  notes: []
+- relationship_id: rel.0041
+  from_asset_id: it.network_segment.site.vlan_30
+  relationship_type: managed_by
+  to_asset_id: it.switch.rack_01.catalyst_2960x_01
+  status: planned
+  notes: []
+- relationship_id: rel.0042
+  from_asset_id: it.network_segment.site.vlan_40
+  relationship_type: managed_by
+  to_asset_id: it.switch.rack_01.catalyst_2960x_01
+  status: planned
+  notes: []
+- relationship_id: rel.0043
+  from_asset_id: it.network_segment.site.vlan_50
+  relationship_type: managed_by
+  to_asset_id: it.switch.rack_01.catalyst_2960x_01
+  status: planned
+  notes: []
+- relationship_id: rel.0044
+  from_asset_id: it.network_segment.site.vlan_60
+  relationship_type: managed_by
+  to_asset_id: it.switch.rack_01.catalyst_2960x_01
+  status: planned
+  notes: []
+- relationship_id: rel.0045
+  from_asset_id: it.server.rack_01.r740xd_01
+  relationship_type: hosts
+  to_asset_id: it.application_service.rack_01.opnsense_01
+  status: planned
+  notes: []
+- relationship_id: rel.0046
+  from_asset_id: it.server.rack_01.r740xd_01
+  relationship_type: hosts
+  to_asset_id: it.application_service.rack_01.pihole_01
+  status: planned
+  notes: []
+- relationship_id: rel.0047
+  from_asset_id: it.server.rack_01.r740xd_01
+  relationship_type: hosts
+  to_asset_id: it.application_service.rack_01.cucm_01
+  status: planned
+  notes: []
+- relationship_id: rel.0048
+  from_asset_id: it.server.rack_01.r740xd_01
+  relationship_type: hosts
+  to_asset_id: it.application_service.rack_01.mqtt_01
+  status: planned
+  notes: []
+- relationship_id: rel.0049
+  from_asset_id: it.server.rack_01.r740xd_01
+  relationship_type: hosts
+  to_asset_id: it.application_service.rack_01.postgres_01
+  status: planned
+  notes: []
+- relationship_id: rel.0050
+  from_asset_id: it.server.rack_01.r740xd_01
+  relationship_type: hosts
+  to_asset_id: it.application_service.rack_01.digital_twin_api_01
+  status: planned
+  notes: []
+- relationship_id: rel.0051
+  from_asset_id: it.server.rack_01.r740xd_01
+  relationship_type: hosts
+  to_asset_id: it.application_service.rack_01.node_red_01
+  status: planned
+  notes: []
+- relationship_id: rel.0052
+  from_asset_id: it.server.rack_01.r740xd_01
+  relationship_type: hosts
+  to_asset_id: it.application_service.rack_01.home_assistant_01
+  status: planned
+  notes: []
+- relationship_id: rel.0053
+  from_asset_id: it.server.rack_01.r740xd_01
+  relationship_type: hosts
+  to_asset_id: it.application_service.rack_01.historian_01
+  status: planned
+  notes: []
+- relationship_id: rel.0054
+  from_asset_id: it.server.rack_01.r740xd_01
+  relationship_type: hosts
+  to_asset_id: it.application_service.rack_01.grafana_01
+  status: planned
+  notes: []
+- relationship_id: rel.0055
+  from_asset_id: it.server.rack_01.r740xd_01
+  relationship_type: hosts
+  to_asset_id: it.application_service.rack_01.prometheus_01
+  status: planned
+  notes: []
+- relationship_id: rel.0056
+  from_asset_id: safety.safety_sensor.rack_01.ap9512thblk_01
+  relationship_type: managed_by
+  to_asset_id: it.environmental_monitor.rack_01.nbrk0550_01
+  status: planned
+  notes: []
+- relationship_id: rel.0057
+  from_asset_id: safety.safety_sensor.rack_01.ap9512thblk_01
+  relationship_type: monitors
+  to_asset_id: it.rack.power_container.01
+  status: planned
+  notes: []
+- relationship_id: rel.0058
+  from_asset_id: safety.safety_sensor.rack_01.ap9512tblk_01
+  relationship_type: managed_by
+  to_asset_id: it.environmental_monitor.rack_01.nbrk0550_01
+  status: planned
+  notes: []
+- relationship_id: rel.0059
+  from_asset_id: safety.safety_sensor.rack_01.ap9512tblk_01
+  relationship_type: monitors
+  to_asset_id: it.rack.power_container.01
+  status: planned
+  notes: []
+- relationship_id: rel.0060
+  from_asset_id: safety.safety_sensor.rack_01.nbes0307_01
+  relationship_type: managed_by
+  to_asset_id: it.environmental_monitor.rack_01.nbrk0550_01
+  status: planned
+  notes: []
+- relationship_id: rel.0061
+  from_asset_id: safety.safety_sensor.rack_01.nbes0307_01
+  relationship_type: monitors
+  to_asset_id: it.rack.power_container.01
+  status: planned
+  notes: []
+- relationship_id: rel.0062
+  from_asset_id: safety.safety_sensor.power_container.nbes0308_01
+  relationship_type: managed_by
+  to_asset_id: it.environmental_monitor.power_container.netbotz_500_01
+  status: planned
+  notes: []
+- relationship_id: rel.0063
+  from_asset_id: safety.safety_sensor.power_container.nbes0308_01
+  relationship_type: monitors
+  to_asset_id: structure.structure.power_container.01
+  status: planned
+  notes: []
+- relationship_id: rel.0064
+  from_asset_id: it.environmental_monitor.rack_01.nbrk0550_01
+  relationship_type: controls
+  to_asset_id: safety.alarm_output.rack_01.beacon_01
+  status: planned
+  notes: []
+- relationship_id: rel.0065
+  from_asset_id: security.access_controller.rack_01.ap9361_01
+  relationship_type: monitors
+  to_asset_id: it.rack.power_container.01
+  status: planned
+  notes: []
+- relationship_id: rel.0066
+  from_asset_id: security.camera.rack_01.netbotz_01
+  relationship_type: monitors
+  to_asset_id: it.rack.power_container.01
+  status: planned
+  notes: []
+- relationship_id: rel.0067
+  from_asset_id: energy.panel.power_container.critical_01
+  relationship_type: feeds
+  to_asset_id: energy.load.site.control_core_01
+  status: planned
+  notes: []
+- relationship_id: rel.0068
+  from_asset_id: energy.panel.power_container.critical_01
+  relationship_type: feeds
+  to_asset_id: energy.load.site.server_rack_01
+  status: planned
+  notes: []
+- relationship_id: rel.0069
+  from_asset_id: energy.panel.power_container.critical_01
+  relationship_type: feeds
+  to_asset_id: energy.load.site.rack_cooling_01
+  status: planned
+  notes: []
+- relationship_id: rel.0070
+  from_asset_id: energy.panel.power_container.critical_01
+  relationship_type: feeds
+  to_asset_id: energy.load.site.battery_hvac_01
+  status: planned
+  notes: []
+- relationship_id: rel.0071
+  from_asset_id: energy.panel.power_container.critical_01
+  relationship_type: feeds
+  to_asset_id: energy.load.site.water_pumping_01
+  status: planned
+  notes: []
+- relationship_id: rel.0072
+  from_asset_id: energy.panel.power_container.general_01
+  relationship_type: feeds
+  to_asset_id: energy.load.site.irrigation_01
+  status: planned
+  notes: []
+- relationship_id: rel.0073
+  from_asset_id: energy.panel.power_container.critical_01
+  relationship_type: feeds
+  to_asset_id: energy.load.site.greenhouse_climate_01
+  status: planned
+  notes: []
+- relationship_id: rel.0074
+  from_asset_id: energy.panel.power_container.general_01
+  relationship_type: feeds
+  to_asset_id: energy.load.site.greenhouse_lighting_01
+  status: planned
+  notes: []
+- relationship_id: rel.0075
+  from_asset_id: energy.panel.power_container.general_01
+  relationship_type: feeds
+  to_asset_id: energy.load.site.spa_01
+  status: planned
+  notes: []
+- relationship_id: rel.0076
+  from_asset_id: energy.panel.power_container.general_01
+  relationship_type: feeds
+  to_asset_id: energy.load.site.workshop_heavy_01
+  status: planned
+  notes: []
+- relationship_id: rel.0077
+  from_asset_id: energy.panel.power_container.general_01
+  relationship_type: feeds
+  to_asset_id: energy.load.site.tool_charging_01
+  status: planned
+  notes: []
+- relationship_id: rel.0078
+  from_asset_id: energy.panel.power_container.general_01
+  relationship_type: feeds
+  to_asset_id: energy.load.site.opportunistic_compute_01
+  status: planned
+  notes: []
+- relationship_id: rel.0079
+  from_asset_id: it.server.rack_01.r740xd_01
+  relationship_type: located_in
+  to_asset_id: it.rack.power_container.01
+  status: planned
+  notes: []
+- relationship_id: rel.0080
+  from_asset_id: it.server.rack_01.t7820_01
+  relationship_type: located_in
+  to_asset_id: it.rack.power_container.01
+  status: planned
+  notes: []
+- relationship_id: rel.0081
+  from_asset_id: it.storage_array.rack_01.sc200_01
+  relationship_type: located_in
+  to_asset_id: it.rack.power_container.01
+  status: planned
+  notes: []
+- relationship_id: rel.0082
+  from_asset_id: it.storage_array.rack_01.sc200_02
+  relationship_type: located_in
+  to_asset_id: it.rack.power_container.01
+  status: planned
+  notes: []
+- relationship_id: rel.0083
+  from_asset_id: it.switch.rack_01.catalyst_2960x_01
+  relationship_type: located_in
+  to_asset_id: it.rack.power_container.01
+  status: planned
+  notes: []
+- relationship_id: rel.0084
+  from_asset_id: it.switch.rack_01.arista_7050qx_01
+  relationship_type: located_in
+  to_asset_id: it.rack.power_container.01
+  status: planned
+  notes: []
+- relationship_id: rel.0085
+  from_asset_id: it.router.rack_01.isr4321_01
+  relationship_type: located_in
+  to_asset_id: it.rack.power_container.01
+  status: planned
+  notes: []
+- relationship_id: rel.0086
+  from_asset_id: it.wireless_controller.rack_01.wlc5508_01
+  relationship_type: located_in
+  to_asset_id: it.rack.power_container.01
+  status: planned
+  notes: []
+- relationship_id: rel.0087
+  from_asset_id: it.environmental_monitor.rack_01.nbrk0550_01
+  relationship_type: located_in
+  to_asset_id: it.rack.power_container.01
+  status: planned
+  notes: []
+- relationship_id: rel.0088
+  from_asset_id: it.environmental_monitor.rack_01.ap9320_01
+  relationship_type: located_in
+  to_asset_id: it.rack.power_container.01
+  status: planned
+  notes: []
+- relationship_id: rel.0089
+  from_asset_id: it.environmental_monitor.rack_01.ap92200_01
+  relationship_type: located_in
+  to_asset_id: it.rack.power_container.01
+  status: planned
+  notes: []
+- relationship_id: rel.0090
+  from_asset_id: it.server.rack_01.r740xd_01
+  relationship_type: connected_to
+  to_asset_id: it.storage_array.rack_01.sc200_01
+  status: planned
+  notes:
+  - Dual SFF-8644 SAS paths.
+- relationship_id: rel.0091
+  from_asset_id: it.server.rack_01.r740xd_01
+  relationship_type: connected_to
+  to_asset_id: it.storage_array.rack_01.sc200_02
+  status: planned
+  notes:
+  - Expansion/backup attachment TBD.
+- relationship_id: rel.0092
+  from_asset_id: it.server.rack_01.r740xd_01
+  relationship_type: connected_to
+  to_asset_id: it.switch.rack_01.arista_7050qx_01
+  status: planned
+  notes: []
+- relationship_id: rel.0093
+  from_asset_id: it.server.rack_01.t7820_01
+  relationship_type: connected_to
+  to_asset_id: it.switch.rack_01.arista_7050qx_01
+  status: planned
+  notes: []
+- relationship_id: rel.0094
+  from_asset_id: it.switch.rack_01.catalyst_2960x_01
+  relationship_type: connected_to
+  to_asset_id: it.switch.rack_01.arista_7050qx_01
+  status: planned
+  notes: []
+- relationship_id: rel.0095
+  from_asset_id: it.router.rack_01.isr4321_01
+  relationship_type: connected_to
+  to_asset_id: it.switch.rack_01.catalyst_2960x_01
+  status: planned
+  notes: []
+- relationship_id: rel.0096
+  from_asset_id: it.wireless_controller.rack_01.wlc5508_01
+  relationship_type: connected_to
+  to_asset_id: it.switch.rack_01.catalyst_2960x_01
+  status: planned
+  notes: []
+- relationship_id: rel.0097
+  from_asset_id: it.environmental_monitor.rack_01.nbrk0550_01
+  relationship_type: monitors
+  to_asset_id: it.rack.power_container.01
+  status: planned
+  notes: []
+- relationship_id: rel.0098
+  from_asset_id: it.environmental_monitor.power_container.netbotz_500_01
+  relationship_type: monitors
+  to_asset_id: structure.structure.power_container.01
+  status: planned
+  notes: []
+- relationship_id: rel.0099
+  from_asset_id: it.server.secondary_control_node.01
+  relationship_type: backs_up
+  to_asset_id: it.application_service.rack_01.digital_twin_api_01
+  status: planned
+  notes: []
+register_notes:
+- Status planned means planned for homestead deployment, not necessarily unowned.
+- No IP address, serial number, MAC address, rack unit, Modbus register, or circuit number has been invented.
+- Known models and quantities are recorded where the planning sources support them; uncertain fields are explicit in open_fields.
+- Functional load assets are distinct from the physical devices that consume power.

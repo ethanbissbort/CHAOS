@@ -1,0 +1,24 @@
+{
+  "validation_timestamp": "2026-08-06T18:51:57Z",
+  "schema_version": "0.3.0",
+  "result": "PASS",
+  "counts": {
+    "domains": 12,
+    "asset_classes": 72,
+    "point_definitions": 214,
+    "assets": 90,
+    "relationships": 99,
+    "point_bindings": 245,
+    "json_schemas": 4
+  },
+  "checks": [
+    "All JSON Schemas are valid Draft 2020-12 schemas.",
+    "All YAML documents validate against their schemas.",
+    "All asset IDs are unique.",
+    "All parent and relationship references resolve.",
+    "All asset classes and domain assignments resolve.",
+    "All point profiles and class default points resolve.",
+    "All point bindings reference existing assets and point definitions.",
+    "All point IDs match <asset_id>/<point_name>."
+  ]
+}
