@@ -132,7 +132,15 @@ def test_historian_records_samples(platform):
 
 
 def test_ems_evaluates_against_simulated_telemetry(platform, session_factory, settings):
-    """SDD 49 item 8: the EMS state machine driven by simulated MQTT telemetry."""
+    """SDD 49 item 8: the EMS state machine driven by simulated MQTT telemetry.
+
+    The EMS is ticked at *simulated* time. The simulator runs on its own clock
+    (a June solstice day), so evaluating at wall-clock time would age every
+    reading past its staleness window and the EMS would correctly -- but
+    uselessly -- report that nothing is observable.
+    """
+    from homestead_twin.ems import RecordingCommandPort
+
     site, session, bus = platform["site"], platform["session"], platform["bus"]
 
     site.start()
@@ -140,21 +148,30 @@ def test_ems_evaluates_against_simulated_telemetry(platform, session_factory, se
         site.step(dt_s=10)
 
     # Capture dispatch instead of actuating -- nothing in this test may command.
-    from homestead_twin.ems import RecordingCommandPort
-
     port = RecordingCommandPort()
     ems = EnergyManagerService(session_factory, bus, settings, command_port=port)
-    ems.tick()
+    ems.tick(now=site.clock.now())
 
     session.expire_all()
     snapshot = session.get(EnergyStateSnapshot, 1)
     assert snapshot is not None, "EMS produced no state snapshot"
     assert snapshot.state, "EMS state is empty"
     assert snapshot.last_evaluated_at is not None
-    # The EMS must have derived something from real telemetry rather than
-    # sitting on defaults.
     assert snapshot.inputs, "EMS recorded no inputs"
     assert snapshot.derived, "EMS derived no values"
+
+    # The point of this test: the EMS must actually see the simulated site, not
+    # merely run and declare everything unobservable.
+    assert snapshot.inputs.get("observable") is True, (
+        "EMS could not observe the simulated site; "
+        f"invalid required inputs: {snapshot.inputs.get('invalid_required')}"
+    )
+    assert snapshot.data_quality != "bad", f"EMS data quality is {snapshot.data_quality}"
+
+    # And it must have derived real numbers from that telemetry.
+    values = snapshot.derived.get("values", {})
+    soc = values.get("reserve_pct") or values.get("usable_reserve_kwh")
+    assert soc and soc.get("valid") is True, f"EMS derived no valid reserve: {soc}"
 
 
 def test_no_physical_control_is_dispatched_by_default(platform, session_factory, settings):

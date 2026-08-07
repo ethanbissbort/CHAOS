@@ -130,6 +130,44 @@ or amend section 25.2 if deeper hierarchies are genuinely wanted.
 
 ---
 
+## F-007 — `battery_cell_imbalance` is enabled but can never fire
+
+**Severity: high — an alarm that looks configured and is not**
+
+SDD section 37.1 lists `battery_cell_imbalance` as a core energy alarm, and
+`data/alarm_definitions.yaml` defines it as **enabled**, against
+`energy.battery_bank.power_container.01`, triggering on `cell_voltage_delta_mv`.
+
+That point exists in the point dictionary but is **not reachable for the
+battery bank**: it is absent from the `battery_bank` class `default_points`,
+from every profile the asset references, and from all 245 point bindings. The
+alarm therefore has no possible input and will never raise, while appearing
+healthy and enabled in the alarm list.
+
+This is worse than a missing alarm. A missing alarm is visibly missing; this
+one reads as covered.
+
+Cell imbalance is a genuine failure mode for a large LiFePO4 bank — it is an
+early indicator of a failing cell or module, and the design package leaves
+chemistry and module count unresolved, so the bank's construction is not yet
+known.
+
+**Recommendation:** add `cell_voltage_delta_mv` (and probably
+`temperature_cell_min_c`, `voltage_dc_v`, `current_dc_a`) to the `battery_bank`
+class default points and give it a binding. Until then, mark the alarm disabled
+with a note, so the alarm list does not overstate coverage.
+
+**Related, same root cause — points an alarm or the EMS wants but cannot reach:**
+
+| Point | Asset | Consequence |
+|---|---|---|
+| `generator_available`, `generator_start_request` | `energy.generator.site.01` | SDD 30.5 lists generator availability as a required EMS input |
+| `energized_state` | `energy.panel.*` | black-start bus verification is not directly observable |
+| `battery_pct` | `energy.ups.rack_01.01` | UPS charge state has nowhere to publish |
+| `power_w` | `it.switch.*`, `it.router.*` | per-device rack draw is not observable |
+
+---
+
 ## F-006 — Load tiers are one-based in the register, zero-based in the SDD
 
 **Severity: medium — an off-by-one here decides what gets shed**
