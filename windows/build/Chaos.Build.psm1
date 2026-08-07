@@ -147,6 +147,11 @@ function Invoke-ChaosNative {
     if (-not $What) { $What = (Split-Path -Leaf $FilePath) }
     Write-ChaosDetail ("$ " + $FilePath + ' ' + ($Arguments -join ' '))
 
+    # Seeded, because Set-StrictMode turns "the command threw before it could set
+    # an exit code" into "the variable $code cannot be retrieved" -- which hides
+    # the real error behind a StrictMode complaint.
+    $code = -1
+
     $pushed = $false
     if ($WorkingDirectory) { Push-Location $WorkingDirectory; $pushed = $true }
     try {

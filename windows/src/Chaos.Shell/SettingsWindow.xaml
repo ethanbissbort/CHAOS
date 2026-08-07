@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="Chaos.Shell.SettingsWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        Native settings. Everything an operator needs to make this product work
+        is here, so that nothing about running it requires a config file, a
+        terminal or regedit.
+
+        Validation, normalisation and the consequences of saving all come from
+        Chaos.Shell.Core, where they are tested. This file is boxes and labels.
+    -->
+
+    <Grid Background="{StaticResource ChaosShellBackground}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Padding="28,22,28,12" Spacing="4">
+            <TextBlock Text="Settings" FontSize="24" FontWeight="SemiBold"
+                       Foreground="{StaticResource ChaosShellText}" />
+            <TextBlock x:Name="StorePathText" FontSize="12" FontFamily="Consolas"
+                       TextWrapping="Wrap"
+                       Foreground="{StaticResource ChaosShellMuted}" />
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1" Padding="28,0,28,0" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="22" MaxWidth="760" HorizontalAlignment="Left">
+
+                <!-- Where the gateway is -->
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Gateway" FontSize="16" FontWeight="SemiBold"
+                               Foreground="{StaticResource ChaosShellText}" />
+                    <TextBlock Text="Where the platform answers. Use 127.0.0.1 for this machine."
+                               FontSize="13" TextWrapping="Wrap"
+                               Foreground="{StaticResource ChaosShellMuted}" />
+
+                    <TextBox x:Name="AddressBox" Header="Address" Width="360"
+                             HorizontalAlignment="Left" />
+                    <TextBlock x:Name="AddressProblem" FontSize="12" TextWrapping="Wrap"
+                               Visibility="Collapsed"
+                               Foreground="{StaticResource ChaosShellError}" />
+
+                    <NumberBox x:Name="PortBox" Header="Port" Width="180"
+                               HorizontalAlignment="Left"
+                               Minimum="1" Maximum="65535" SpinButtonPlacementMode="Compact" />
+                    <TextBlock x:Name="PortProblem" FontSize="12" TextWrapping="Wrap"
+                               Visibility="Collapsed"
+                               Foreground="{StaticResource ChaosShellError}" />
+
+                    <ToggleSwitch x:Name="HttpsSwitch" Header="Use HTTPS"
+                                  OnContent="https" OffContent="http" />
+                </StackPanel>
+
+                <!-- Lifecycle -->
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Starting and stopping" FontSize="16" FontWeight="SemiBold"
+                               Foreground="{StaticResource ChaosShellText}" />
+
+                    <ToggleSwitch x:Name="AutoStartSwitch"
+                                  Header="Start the platform when this shell opens" />
+                    <TextBlock Text="If nothing is answering, the shell starts the platform itself instead of waiting for you."
+                               FontSize="12" TextWrapping="Wrap"
+                               Foreground="{StaticResource ChaosShellMuted}" />
+
+                    <ToggleSwitch x:Name="StartWithWindowsSwitch"
+                                  Header="Open this shell when I sign in to Windows" />
+                    <TextBlock Text="This opens the window, not the platform. A platform installed as a Windows service runs whether or not anyone signs in."
+                               FontSize="12" TextWrapping="Wrap"
+                               Foreground="{StaticResource ChaosShellMuted}" />
+
+                    <ToggleSwitch x:Name="PreferServiceSwitch"
+                                  Header="Prefer the Windows service when it is installed" />
+                    <TextBlock x:Name="PreferServiceNote" FontSize="12" TextWrapping="Wrap"
+                               Foreground="{StaticResource ChaosShellWarn}" />
+
+                    <TextBox x:Name="ServiceNameBox" Header="Windows service name" Width="360"
+                             HorizontalAlignment="Left" />
+                    <TextBlock x:Name="ServiceNameProblem" FontSize="12" TextWrapping="Wrap"
+                               Visibility="Collapsed"
+                               Foreground="{StaticResource ChaosShellError}" />
+
+                    <TextBox x:Name="ExecutableBox" Header="Chaos.Host.exe location (optional)"
+                             Width="620" HorizontalAlignment="Left"
+                             PlaceholderText="Leave empty to let the shell find it" />
+                    <TextBlock x:Name="ExecutableProblem" FontSize="12" TextWrapping="Wrap"
+                               Visibility="Collapsed"
+                               Foreground="{StaticResource ChaosShellError}" />
+                    <TextBlock x:Name="ExecutableFound" FontSize="12" TextWrapping="Wrap"
+                               Foreground="{StaticResource ChaosShellMuted}" />
+                </StackPanel>
+
+                <!-- Storage -->
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Where the data lives" FontSize="16" FontWeight="SemiBold"
+                               Foreground="{StaticResource ChaosShellText}" />
+                    <TextBlock x:Name="StorageScopeNote" FontSize="13" TextWrapping="Wrap"
+                               Foreground="{StaticResource ChaosShellMuted}" />
+
+                    <TextBox x:Name="DatabaseBox" Header="Database location" Width="620"
+                             HorizontalAlignment="Left"
+                             PlaceholderText="Leave empty to use the platform's own default" />
+                    <TextBlock x:Name="DatabaseProblem" FontSize="12" TextWrapping="Wrap"
+                               Visibility="Collapsed"
+                               Foreground="{StaticResource ChaosShellError}" />
+
+                    <TextBox x:Name="DataDirectoryBox" Header="Data directory" Width="620"
+                             HorizontalAlignment="Left"
+                             PlaceholderText="Leave empty to use the platform's own default" />
+                    <TextBlock x:Name="DataDirectoryProblem" FontSize="12" TextWrapping="Wrap"
+                               Visibility="Collapsed"
+                               Foreground="{StaticResource ChaosShellError}" />
+                </StackPanel>
+
+                <!-- Presentation -->
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Appearance and the annunciator" FontSize="16" FontWeight="SemiBold"
+                               Foreground="{StaticResource ChaosShellText}" />
+
+                    <ComboBox x:Name="ThemeBox" Header="Theme" Width="260"
+                              HorizontalAlignment="Left" />
+
+                    <ComboBox x:Name="MonitorBox" Header="Open the annunciator on" Width="440"
+                              HorizontalAlignment="Left" />
+
+                    <ToggleSwitch x:Name="FullScreenSwitch"
+                                  Header="Open the annunciator full-screen" />
+                    <TextBlock Text="For a wall panel. The display is kept awake while the panel is full-screen."
+                               FontSize="12" TextWrapping="Wrap"
+                               Foreground="{StaticResource ChaosShellMuted}" />
+                </StackPanel>
+
+                <Border Height="12" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2" Padding="28,14,28,20" Spacing="10"
+                    BorderBrush="{StaticResource ChaosShellStroke}" BorderThickness="0,1,0,0">
+            <TextBlock x:Name="StatusText" FontSize="13" TextWrapping="Wrap"
+                       Foreground="{StaticResource ChaosShellMuted}" />
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <Button x:Name="SaveButton" Content="Save" Click="OnSave" MinWidth="120" />
+                <Button Content="Cancel" Click="OnCancel" MinWidth="120" />
+                <Button Content="Reset to defaults" Click="OnReset" MinWidth="160" />
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Window>

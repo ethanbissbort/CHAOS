@@ -103,6 +103,14 @@
          the Windows App SDK (Microsoft.Web.WebView2) and is not referenced
          separately, to avoid pinning a second, conflicting version. -->
     <PackageReference Include="System.Drawing.Common" Version="10.0.10" />
+
+    <!-- The launcher starts and stops the platform's Windows service natively,
+         so an operator never has to open a terminal. ServiceController is not
+         in the shared framework even for a Windows target, so it is a package;
+         the version is kept in step with System.Drawing.Common above because
+         they ship together. Restoring this project on Linux verifies both
+         resolve, which is the only check available off Windows. -->
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.10" />
   </ItemGroup>
 
   <ItemGroup>

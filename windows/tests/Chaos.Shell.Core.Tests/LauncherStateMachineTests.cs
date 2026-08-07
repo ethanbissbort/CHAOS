@@ -741,6 +741,103 @@ public sealed class LauncherStateMachineTests
 }
 
 /// <summary>
+/// The wording an operator meets on the way out.
+/// </summary>
+/// <remarks>
+/// This is the worst failure the shell can have: an operator who has learnt
+/// from every other day that closing the window is harmless, closing it on the
+/// day this shell is the platform's parent process, and walking away from a
+/// homestead with its freeze protection switched off.
+/// </remarks>
+public sealed class ExitWordingTests
+{
+    [Fact]
+    public void Exiting_with_a_managed_child_says_in_capitals_that_it_stops()
+    {
+        var text = ShellMessages.ExitConfirmationFor(PlatformRunMode.ManagedByThisShell);
+
+        Assert.Contains("STOPS IT", text, StringComparison.Ordinal);
+        Assert.Contains("freeze protection", text, StringComparison.Ordinal);
+
+        // The reassurance used for every other mode must not appear here.
+        Assert.DoesNotContain("keeps running", text, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("window and the tray icon only", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Exiting_with_a_windows_service_says_the_platform_carries_on()
+    {
+        var text = ShellMessages.ExitConfirmationFor(PlatformRunMode.WindowsService);
+
+        Assert.Contains("keeps running", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("STOPS IT", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Exiting_with_an_unknown_state_promises_nothing_in_either_direction()
+    {
+        var text = ShellMessages.ExitConfirmationFor(PlatformRunMode.Unknown);
+
+        Assert.Contains("cannot tell you", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("keeps running", text, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("STOPS IT", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Every_run_mode_has_its_own_exit_wording()
+    {
+        var texts = Enum.GetValues<PlatformRunMode>()
+            .Select(mode => ShellMessages.ExitConfirmationFor(mode))
+            .ToList();
+
+        Assert.All(texts, t => Assert.False(string.IsNullOrWhiteSpace(t)));
+
+        // ManagedByThisShell must not read like any of the others.
+        var child = ShellMessages.ExitConfirmationFor(PlatformRunMode.ManagedByThisShell);
+        foreach (var mode in Enum.GetValues<PlatformRunMode>().Where(m => m != PlatformRunMode.ManagedByThisShell))
+        {
+            Assert.NotEqual(child, ShellMessages.ExitConfirmationFor(mode));
+        }
+    }
+
+    [Fact]
+    public void The_tray_menu_warns_before_anything_is_clicked()
+    {
+        Assert.Contains(
+            "THIS STOPS THE PLATFORM",
+            ShellMessages.ExitMenuItemFor(PlatformRunMode.ManagedByThisShell),
+            StringComparison.Ordinal);
+
+        Assert.Contains(
+            "keeps running",
+            ShellMessages.ExitMenuItemFor(PlatformRunMode.WindowsService),
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void The_original_service_wording_is_still_available_for_the_service_case()
+    {
+        // The permanent footer and the long-standing constant must keep saying
+        // what they said; only the managed-child case is new.
+        Assert.Contains("keeps running", ShellMessages.ExitConfirmationBody, StringComparison.Ordinal);
+        Assert.Contains("Windows service", ShellMessages.ServiceRunsIndependently, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Only_the_managed_child_mode_reports_that_closing_stops_the_platform()
+    {
+        foreach (var mode in Enum.GetValues<PlatformRunMode>())
+        {
+            var banner = RunModeBanner.For(mode);
+
+            Assert.Equal(mode == PlatformRunMode.ManagedByThisShell, banner.ClosingTheShellStopsThePlatform);
+            Assert.False(string.IsNullOrWhiteSpace(banner.Headline));
+            Assert.False(string.IsNullOrWhiteSpace(banner.Detail));
+        }
+    }
+}
+
+/// <summary>
 /// Whether the launcher pushes itself back in front of a working console.
 /// </summary>
 public sealed class LauncherReentryTests
