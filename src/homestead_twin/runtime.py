@@ -87,12 +87,19 @@ def build_services(
         except Exception:
             logger.exception("Ingest service unavailable")
 
-        try:
-            from homestead_twin.commands.service import CommandDispatchService
+        # Command dispatch is a primary-node duty. Two nodes both dispatching
+        # would give the site two supervisory control sources, which is exactly
+        # the split-brain the secondary node exists to avoid: it observes,
+        # alerts and bridges, but never commands.
+        if not settings.is_secondary:
+            try:
+                from homestead_twin.commands.service import CommandDispatchService
 
-            manager.register(CommandDispatchService(session_factory, bus, settings))
-        except Exception:
-            logger.exception("Command dispatch service unavailable")
+                manager.register(CommandDispatchService(session_factory, bus, settings))
+            except Exception:
+                logger.exception("Command dispatch service unavailable")
+        else:
+            logger.info("Secondary node: command dispatch not started (single control source)")
 
     if settings.alarm_engine_enabled:
         try:

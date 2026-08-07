@@ -147,9 +147,13 @@ def test_ems_evaluates_against_simulated_telemetry(platform, session_factory, se
     for _ in range(120):  # 20 simulated minutes
         site.step(dt_s=10)
 
+    # The shared fixture disables the EMS so other tests get no background
+    # evaluation; this test is specifically about it.
+    ems_settings = settings.model_copy(update={"ems_enabled": True})
+
     # Capture dispatch instead of actuating -- nothing in this test may command.
     port = RecordingCommandPort()
-    ems = EnergyManagerService(session_factory, bus, settings, command_port=port)
+    ems = EnergyManagerService(session_factory, bus, ems_settings, command_port=port)
     ems.tick(now=site.clock.now())
 
     session.expire_all()
