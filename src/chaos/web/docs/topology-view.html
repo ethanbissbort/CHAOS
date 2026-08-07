@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<meta name="generator" content="tools/build_docs.py">
+<title>Topology and blast radius — Project CHAOS help</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http%3A//www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230e1a16'/%3E%3Cpath d='M6 18 16 8l10 10v8H6z' fill='none' stroke='%234ade80' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/docs.css">
+<noscript><style>.doc-page[hidden]{display:block!important}.site-searchbtn{display:none}</style></noscript>
+</head>
+<body data-page="topology-view">
+<a class="skip-link" href="#content">Skip to the documentation</a>
+<header class="site-topbar">
+<button type="button" class="btn btn-icon site-navtoggle" id="nav-toggle" aria-controls="site-nav" aria-expanded="false" title="Documents"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span class="visually-hidden">Show the document list</span></button>
+<a class="site-identity" href="index.html"><span class="site-mark"><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M5 19 16 8l11 11v7H5z"/></svg></span><span class="site-titles"><h1>Project CHAOS help</h1><p>Central Homestead Automation and Operation System</p></span></a>
+<button type="button" class="site-searchbtn" id="search-open"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.3-4.3"/></svg><span>Search the documentation</span><span class="kbd-hint">/</span></button>
+<div class="site-tools">
+<button type="button" class="btn btn-sm" id="theme-toggle"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4"/></svg><span class="theme-label">System</span></button>
+<button type="button" class="btn btn-icon" id="print-page" onclick="window.print()" title="Print this page"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M7 9V4h10v5M7 18H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2"/><rect x="7" y="14" width="10" height="6" rx="1"/></svg><span class="visually-hidden">Print this page</span></button>
+</div>
+</header>
+<div class="site-shell">
+<nav class="site-nav" id="site-nav" aria-label="Documents"><h2>Overview</h2><ul><li><a href="index.html" data-page="index"><span class="nav-num">01</span><span>Project CHAOS documentation</span></a></li><li><a href="readme.html" data-page="readme"><span class="nav-num">02</span><span>Project CHAOS</span></a></li></ul><h2>Using CHAOS</h2><ul><li><a href="getting-started.html" data-page="getting-started"><span class="nav-num">03</span><span>Getting started</span></a></li><li><a href="visual-studio.html" data-page="visual-studio"><span class="nav-num">04</span><span>Building in Visual Studio 2026</span></a></li><li><a href="desktop-shell.html" data-page="desktop-shell"><span class="nav-num">05</span><span>The desktop shell</span></a></li><li><a href="operator-console.html" data-page="operator-console"><span class="nav-num">06</span><span>The operator console</span></a></li><li><a href="annunciator.html" data-page="annunciator"><span class="nav-num">07</span><span>The annunciator panel</span></a></li><li><a href="topology-view.html" data-page="topology-view" aria-current="page"><span class="nav-num">08</span><span>Topology and blast radius</span></a></li><li><a href="rack-view.html" data-page="rack-view"><span class="nav-num">09</span><span>Rack elevation</span></a></li></ul><h2>How the platform works</h2><ul><li><a href="architecture.html" data-page="architecture"><span class="nav-num">10</span><span>Architecture</span></a></li><li><a href="alarms.html" data-page="alarms"><span class="nav-num">11</span><span>Alarms, incidents and notification</span></a></li><li><a href="control.html" data-page="control"><span class="nav-num">12</span><span>Control, interlocks and operating modes</span></a></li><li><a href="design-package.html" data-page="design-package"><span class="nav-num">13</span><span>The design package</span></a></li><li><a href="integration-findings.html" data-page="integration-findings"><span class="nav-num">14</span><span>Integration findings</span></a></li></ul><h2>Operating the property</h2><ul><li><a href="operations.html" data-page="operations"><span class="nav-num">15</span><span>Operations runbooks</span></a></li><li><a href="troubleshooting.html" data-page="troubleshooting"><span class="nav-num">16</span><span>Troubleshooting</span></a></li><li><a href="commissioning.html" data-page="commissioning"><span class="nav-num">17</span><span>Commissioning</span></a></li><li><a href="secondary-control-node.html" data-page="secondary-control-node"><span class="nav-num">18</span><span>Secondary control node</span></a></li><li><a href="network-and-trust-boundaries.html" data-page="network-and-trust-boundaries"><span class="nav-num">19</span><span>Network and trust boundaries</span></a></li><li><a href="water-control-narrative.html" data-page="water-control-narrative"><span class="nav-num">20</span><span>Water-system control narrative</span></a></li></ul><h2>Reference</h2><ul><li><a href="api.html" data-page="api"><span class="nav-num">21</span><span>API reference</span></a></li><li><a href="design-decisions.html" data-page="design-decisions"><span class="nav-num">22</span><span>Design Decision Records</span></a></li></ul><h2>Advanced — you do not need these</h2><ul><li><a href="advanced-command-line.html" data-page="advanced-command-line"><span class="nav-num">23</span><span>Command line</span></a></li><li><a href="advanced-container-deployment.html" data-page="advanced-container-deployment"><span class="nav-num">24</span><span>Container deployment</span></a></li><li><a href="advanced-windows-packaging.html" data-page="advanced-windows-packaging"><span class="nav-num">25</span><span>Windows packaging</span></a></li></ul><h2>Design Decisions</h2><ul><li><a href="design-decisions-dd-001-energy-capacity-revision.html" data-page="design-decisions-dd-001-energy-capacity-revision"><span class="nav-num">26</span><span>DD-001: Authoritative energy design revision</span></a></li><li><a href="design-decisions-dd-002-historian-selection.html" data-page="design-decisions-dd-002-historian-selection"><span class="nav-num">27</span><span>DD-002: Time-series historian selection</span></a></li><li><a href="design-decisions-dd-003-secondary-control-node-placement.html" data-page="design-decisions-dd-003-secondary-control-node-placement"><span class="nav-num">28</span><span>DD-003: Secondary control node placement</span></a></li><li><a href="design-decisions-dd-004-controller-family.html" data-page="design-decisions-dd-004-controller-family"><span class="nav-num">29</span><span>DD-004: Standard PLC / controller family for critical local control</span></a></li></ul></nav>
+<main class="site-main" id="content" tabindex="-1">
+<article class="doc-page" id="topology-view" data-page="topology-view"><p class="doc-breadcrumb"><span>Using CHAOS</span><span>Topology and blast radius</span></p><p class="doc-source">docs/topology-view.md</p><div class="doc-body"><h1 id="topology-and-blast-radius" class="doc-h"><span class="doc-h-text">Topology and blast radius</span><a class="doc-anchor" href="#topology-and-blast-radius" aria-label="Link to this section"></a></h1>
+<p>The <strong>Topology</strong> screen draws the property as a dependency graph and answers one
+question the design document asks and never computes:</p>
+<blockquote><p>Assume total loss of the combined power, battery, utilities and server
+container. What is left?</p></blockquote>
+<p>Related: <a href="operator-console.html">The operator console</a> ·
+<a href="alarms.html#5-correlation-and-incidents">Alarms § Correlation</a> ·
+<a href="secondary-control-node.html">Secondary control node</a> ·
+<a href="integration-findings.html">Integration findings</a></p>
+<hr>
+<h2 id="1-what-the-canvas-shows" class="doc-h"><span class="doc-h-text">1. What the canvas shows</span><a class="doc-anchor" href="#1-what-the-canvas-shows" aria-label="Link to this section"></a></h2>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Element</th><th scope="col">Comes from</th><th scope="col">Notes</th></tr></thead><tbody><tr><td><strong>Nodes</strong></td><td>Assets in the register</td><td>Identity, class, criticality and lifecycle status are authoritative. <em>Health</em> is a separate derived field, recomputed on every request, and allowed to be unknown</td></tr><tr><td><strong>Edges</strong></td><td>The register's typed relationships</td><td>Carried through <strong>with their type intact</strong>. <code>feeds</code> is drawn differently from <code>monitors</code> because they mean different things</td></tr><tr><td><strong>Groups</strong></td><td>The containment hierarchy</td><td>So the canvas can draw the boundary an operator actually reasons about: <em>this is the power container, and everything inside it shares its fate</em></td></tr></tbody></table></div>
+<p>Collapsing edge types into one "connected" line would throw away the only
+information that makes the graph operable. So the console does not.</p>
+<h3 id="edge-meanings" class="doc-h"><span class="doc-h-text">Edge meanings</span><a class="doc-anchor" href="#edge-meanings" aria-label="Link to this section"></a></h3>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Type</th><th scope="col">Means</th></tr></thead><tbody><tr><td><code>feeds</code></td><td>Supplies power, water or media. Loss of the source stops the sink</td></tr><tr><td><code>contains</code></td><td>Physical containment. Loss of the container is loss of the contents</td></tr><tr><td><code>hosts</code></td><td>Runs the workload. Loss of the host stops what it hosts</td></tr><tr><td><code>controls</code></td><td>Commands the actuator. Loss of the controller leaves the actuator uncommanded</td></tr><tr><td><code>serves</code></td><td>Delivers a service. Loss of the provider ends the service</td></tr><tr><td><code>protects</code></td><td>Provides protection — breaker, valve, suppression</td></tr><tr><td><code>located_in</code></td><td>The subject sits inside the object</td></tr><tr><td><code>part_of</code></td><td>The subject is a component of the object</td></tr><tr><td><code>depends_on</code>, <code>managed_by</code>, <code>powered_by</code></td><td>Stated from the dependent end; the walk follows them in reverse</td></tr></tbody></table></div>
+<p>Groups are drawn for containment classes: <code>site</code>, <code>geographic_zone</code>,
+<code>structure</code>, <code>building</code>, <code>room</code>, <code>zone</code>, <code>enclosure</code>, <code>rack</code>,
+<code>irrigation_zone</code>.</p>
+<h3 id="a-node-is-never-healthy-because-nothing-is-wrong-with-it" class="doc-h"><span class="doc-h-text">A node is never healthy because nothing is wrong with it</span><a class="doc-anchor" href="#a-node-is-never-healthy-because-nothing-is-wrong-with-it" aria-label="Link to this section"></a></h3>
+<p>Of the assets in the package, <strong>none is installed</strong>. "No alarm" on a <code>planned</code>
+asset is not evidence of health, it is the absence of a plant.</p>
+<p>Health therefore starts from the lifecycle status and only reaches <code>ok</code> when a
+bound point has actually reported inside its stale window. On a fresh install
+every node reads <code>not deployed</code>, and that is the correct answer.</p>
+<p>The vocabulary is the platform's own — <code>ok</code>, <code>stale</code>, <code>no_data</code>, <code>no_points</code>,
+<code>design_only</code>, <code>not_deployed</code>, <code>alarm</code>, <code>degraded</code> — used unchanged, so a
+topology node and a home-screen tile can never disagree about what "stale"
+means.</p>
+<hr>
+<h2 id="2-the-137-nodes-and-why-the-registry-says-90" class="doc-h"><span class="doc-h-text">2. The 137 nodes, and why the registry says 90</span><a class="doc-anchor" href="#2-the-137-nodes-and-why-the-registry-says-90" aria-label="Link to this section"></a></h2>
+<p>The graph shows <strong>137 nodes and 191 edges</strong> on the shipped package. The
+registry database holds <strong>90 assets</strong>.</p>
+<p>The difference is the water system. <code>data/water_assets.yaml</code> is part of the
+design package — 47 assets and 92 relationships — but the registry loader does
+not merge it yet. Rather than draw a topology that silently omits the entire
+water system, this screen <strong>overlays the extension at render time</strong> and marks it
+as such:</p>
+<div class="doc-code" data-lang="json"><div class="doc-code-bar"><span class="doc-code-lang">json</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-json"><span class="t-p">"package"</span>: {
+  <span class="t-p">"registry_nodes"</span>: <span class="t-n">90</span>,
+  <span class="t-p">"extension_nodes"</span>: <span class="t-n">47</span>,
+  <span class="t-p">"extensions"</span>: [{
+    <span class="t-p">"file"</span>: <span class="t-s">"water_assets.yaml"</span>,
+    <span class="t-p">"document_status"</span>: <span class="t-s">"concept_extension_for_review"</span>,
+    <span class="t-p">"assets_applied"</span>: <span class="t-n">47</span>,
+    <span class="t-p">"relationships_applied"</span>: <span class="t-n">92</span>,
+    <span class="t-p">"note"</span>: <span class="t-s">"Present in the design package but not merged into the registry database
+             by the loader yet, so these assets carry no points and no bindings."</span>
+  }]
+}</code></pre></div>
+<p>Those 47 assets therefore have <strong>no points and no bindings</strong>. They can be
+reasoned about structurally; they cannot report anything. A missing or unreadable
+extension is reported in the payload, not raised — the topology of what <em>is</em>
+loaded stays useful when one document is broken, and the screen says which one
+and why.</p>
+<hr>
+<h2 id="3-blast-radius" class="doc-h"><span class="doc-h-text">3. Blast radius</span><a class="doc-anchor" href="#3-blast-radius" aria-label="Link to this section"></a></h2>
+<p>Select an asset and ask for its impact. The result is the set of assets that go
+with it.</p>
+<h3 id="it-walks-the-same-graph-the-alarm-correlator-walks" class="doc-h"><span class="doc-h-text">It walks the same graph the alarm correlator walks</span><a class="doc-anchor" href="#it-walks-the-same-graph-the-alarm-correlator-walks" aria-label="Link to this section"></a></h3>
+<p>Not a similar one — literally the correlator's own dependency graph and its
+direction table. The blast radius you see on the canvas is by construction the
+same set the correlator will fold into one incident when it actually happens.</p>
+<p>A second, subtly different traversal would be worse than no traversal at all: it
+would train an operator on a model the platform does not use.</p>
+<p>The walk is bounded at <strong>8 hops</strong>, matching the correlator's own default. A
+graph deeper than that is reported as <code>depth_bounded</code>, so the answer is never
+silently truncated.</p>
+<h3 id="what-comes-back" class="doc-h"><span class="doc-h-text">What comes back</span><a class="doc-anchor" href="#what-comes-back" aria-label="Link to this section"></a></h3>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Field</th><th scope="col">Meaning</th></tr></thead><tbody><tr><td><code>origin</code></td><td>The asset you asked about</td></tr><tr><td><code>affected</code></td><td>Everything downstream of its loss, with the path that reaches each one</td></tr><tr><td><code>summary</code></td><td>Totals, and breakdowns by criticality and by domain, plus survivors by domain</td></tr><tr><td><code>observability_lost</code></td><td>What you would stop being able to <em>see</em></td></tr><tr><td><code>redundancy_lost</code></td><td>Backup relationships that the loss removes</td></tr><tr><td><code>rules</code></td><td>The propagation rules used</td></tr><tr><td><code>caveats</code></td><td>What this answer does not account for — see section 5</td></tr></tbody></table></div>
+<hr>
+<h2 id="4-the-answer-the-design-document-asks-for" class="doc-h"><span class="doc-h-text">4. The answer the design document asks for</span><a class="doc-anchor" href="#4-the-answer-the-design-document-asks-for" aria-label="Link to this section"></a></h2>
+<p>Computing the loss of <code>structure.structure.power_container.01</code> on the shipped
+package gives:</p>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col"></th><th class="col-right" scope="col"></th></tr></thead><tbody><tr><td>Assets lost</td><td class="col-right"><strong>98 of 137 (71%)</strong></td></tr><tr><td>Of which <code>critical</code> criticality</td><td class="col-right"><strong>50</strong></td></tr><tr><td>Survivors</td><td class="col-right"><strong>38</strong></td></tr></tbody></table></div>
+<p>The design document's instruction to assume complete loss of that container is
+<strong>not being conservative. It is barely adequate.</strong></p>
+<h3 id="the-actionable-part-is-water" class="doc-h"><span class="doc-h-text">The actionable part is water</span><a class="doc-anchor" href="#the-actionable-part-is-water" aria-label="Link to this section"></a></h3>
+<p>21 water assets survive: the well, the freeze-protection controller, both winter
+drain valves, the field pipework. But <strong>22 do not</strong>, and the path to them is only
+four hops:</p>
+<div class="doc-code" data-lang="text"><div class="doc-code-bar"><span class="doc-code-lang">text</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-text">power container → power zone → critical loads panel
+                → water pumping load → potable pressure pump</code></pre></div>
+<p><strong>Lose the container and you lose potable water pressure</strong>, even though the
+well, the tank and the pipework are all outside it and physically unharmed. That
+is a single electrical dependency defeating an otherwise independent subsystem —
+exactly the kind of coupling the analysis exists to find.</p>
+<h3 id="two-safety-assets-die-with-the-thing-they-exist-to-watch" class="doc-h"><span class="doc-h-text">Two safety assets die with the thing they exist to watch</span><a class="doc-anchor" href="#two-safety-assets-die-with-the-thing-they-exist-to-watch" aria-label="Link to this section"></a></h3>
+<ul><li>the fluid-detection sensor monitoring for flooding <em>in that container</em>;</li><li>the local alarm beacon, which the alarm correlator deliberately exempts from
+incident folding so it can always speak for itself. It cannot speak if it is
+inside the fire.</li></ul>
+<h3 id="the-dependency-structure-is-top-heavy-and-the-top-is-spatial" class="doc-h"><span class="doc-h-text">The dependency structure is top-heavy, and the top is spatial</span><a class="doc-anchor" href="#the-dependency-structure-is-top-heavy-and-the-top-is-spatial" aria-label="Link to this section"></a></h3>
+<p>Nineteen single assets each take out 30 or more others; 73 take out nobody.</p>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Asset</th><th class="col-right" scope="col">Takes out</th></tr></thead><tbody><tr><td>Power container</td><td class="col-right">98</td></tr><tr><td>Server zone</td><td class="col-right">67</td></tr><tr><td>Primary rack</td><td class="col-right">65</td></tr><tr><td>Power zone</td><td class="col-right">45</td></tr><tr><td>Battery bank</td><td class="col-right">40</td></tr><tr><td>One hybrid inverter</td><td class="col-right">37</td></tr><tr><td>Critical loads panel</td><td class="col-right">26</td></tr></tbody></table></div>
+<p>The server zone and the rack <strong>outrank the battery bank</strong>. Containment, not
+power, is the dominant coupling on this property.</p>
+<p>Full write-up:
+<a href="integration-findings.html#f-008--losing-the-power-container-takes-71-of-the-homestead-including-potable-water-pressure">Integration findings F-008</a>.</p>
+<hr>
+<h2 id="5-what-the-analysis-will-not-tell-you" class="doc-h"><span class="doc-h-text">5. What the analysis will not tell you</span><a class="doc-anchor" href="#5-what-the-analysis-will-not-tell-you" aria-label="Link to this section"></a></h2>
+<p>The payload carries its own caveats rather than presenting a clean number:</p>
+<p><strong>It cannot express N+1 redundancy.</strong> There is no way in the asset register to
+say that a set of devices is a redundant group. The four hybrid inverters are
+modelled as four separate assets each feeding the same AC combiner, so losing
+any one reads as a full outage of everything downstream — 37 assets apiece. The
+traversal is correct; the model is missing a concept. See
+<a href="integration-findings.html#f-009--the-register-cannot-express-n1-redundancy">Integration findings F-009</a>.</p>
+<p><strong>It is structural, not temporal.</strong> It says what is downstream of a failure, not
+how long a battery reserve or a tank of water will keep those assets alive.</p>
+<p><strong>It is bounded at 8 hops</strong>, and says so when it hits that bound.</p>
+<p>Reporting the caveats is mitigation, not a fix. The platform can only reason
+about redundancy that the data model is capable of stating.</p>
+<hr>
+<h2 id="6-what-to-use-it-for" class="doc-h"><span class="doc-h-text">6. What to use it for</span><a class="doc-anchor" href="#6-what-to-use-it-for" aria-label="Link to this section"></a></h2>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Question</th><th scope="col">How</th></tr></thead><tbody><tr><td><em>What does this container failure take with it?</em></td><td>Impact on the structure. This is the design document's own question</td></tr><tr><td><em>Is this subsystem really independent?</em></td><td>Impact on its power source. The water finding above was found exactly this way</td></tr><tr><td><em>What will one alarm turn into?</em></td><td>The same set the correlator will fold into one incident</td></tr><tr><td><em>Where should the secondary node go?</em></td><td>Anything whose blast radius includes the secondary node is a placement that has not achieved separation. See <a href="secondary-control-node.html">Secondary control node</a></td></tr><tr><td><em>What would I stop being able to see?</em></td><td><code>observability_lost</code> — the monitoring that dies with the thing it monitors</td></tr></tbody></table></div>
+<hr>
+<h2 id="7-related-reading" class="doc-h"><span class="doc-h-text">7. Related reading</span><a class="doc-anchor" href="#7-related-reading" aria-label="Link to this section"></a></h2>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Document</th><th scope="col">Why</th></tr></thead><tbody><tr><td><a href="integration-findings.html">Integration findings</a></td><td>F-008 and F-009 came out of this screen</td></tr><tr><td><a href="secondary-control-node.html">Secondary control node</a></td><td>What the common-mode failure domain means for deployment</td></tr><tr><td><a href="alarms.html#5-correlation-and-incidents">Alarms § Correlation</a></td><td>The same graph, used to fold alarms into incidents</td></tr><tr><td><a href="design-package.html">The design package</a></td><td>Why the water extension is not in the registry yet</td></tr><tr><td><a href="api.html#5-registry">API reference § Registry</a></td><td><code>GET /api/v1/topology</code> and <code>/topology/impact/{asset_id}</code></td></tr></tbody></table></div></div><nav class="doc-pager" aria-label="Reading order"><a class="pager-prev" href="annunciator.html" data-page="annunciator"><span class="pager-role">Previous</span>The annunciator panel</a><a class="pager-next" href="rack-view.html" data-page="rack-view"><span class="pager-role">Next</span>Rack elevation</a></nav></article>
+</main>
+<aside class="site-toc" aria-label="On this page"><h2>On this page</h2><ul><li data-level="2"><a href="#1-what-the-canvas-shows" data-anchor="1-what-the-canvas-shows">1. What the canvas shows</a></li><li data-level="3"><a href="#edge-meanings" data-anchor="edge-meanings">Edge meanings</a></li><li data-level="3"><a href="#a-node-is-never-healthy-because-nothing-is-wrong-with-it" data-anchor="a-node-is-never-healthy-because-nothing-is-wrong-with-it">A node is never healthy because nothing is wrong with it</a></li><li data-level="2"><a href="#2-the-137-nodes-and-why-the-registry-says-90" data-anchor="2-the-137-nodes-and-why-the-registry-says-90">2. The 137 nodes, and why the registry says 90</a></li><li data-level="2"><a href="#3-blast-radius" data-anchor="3-blast-radius">3. Blast radius</a></li><li data-level="3"><a href="#it-walks-the-same-graph-the-alarm-correlator-walks" data-anchor="it-walks-the-same-graph-the-alarm-correlator-walks">It walks the same graph the alarm correlator walks</a></li><li data-level="3"><a href="#what-comes-back" data-anchor="what-comes-back">What comes back</a></li><li data-level="2"><a href="#4-the-answer-the-design-document-asks-for" data-anchor="4-the-answer-the-design-document-asks-for">4. The answer the design document asks for</a></li><li data-level="3"><a href="#the-actionable-part-is-water" data-anchor="the-actionable-part-is-water">The actionable part is water</a></li><li data-level="3"><a href="#two-safety-assets-die-with-the-thing-they-exist-to-watch" data-anchor="two-safety-assets-die-with-the-thing-they-exist-to-watch">Two safety assets die with the thing they exist to watch</a></li><li data-level="3"><a href="#the-dependency-structure-is-top-heavy-and-the-top-is-spatial" data-anchor="the-dependency-structure-is-top-heavy-and-the-top-is-spatial">The dependency structure is top-heavy, and the top is spatial</a></li><li data-level="2"><a href="#5-what-the-analysis-will-not-tell-you" data-anchor="5-what-the-analysis-will-not-tell-you">5. What the analysis will not tell you</a></li><li data-level="2"><a href="#6-what-to-use-it-for" data-anchor="6-what-to-use-it-for">6. What to use it for</a></li><li data-level="2"><a href="#7-related-reading" data-anchor="7-related-reading">7. Related reading</a></li></ul></aside>
+</div>
+<div class="site-search" id="search-overlay" hidden role="dialog" aria-modal="true" aria-label="Search the documentation">
+<div class="site-search-panel">
+<div class="site-search-head">
+<svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.3-4.3"/></svg>
+<input type="search" id="search-input" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="true" aria-controls="search-results" placeholder="Search every page — try black start, dead letter, interlock">
+<button type="button" class="btn btn-sm" id="search-close">Close</button>
+</div>
+<p class="site-search-status" id="search-status" role="status">Type to search every page of this help set.</p>
+<ul class="site-results" id="search-results" role="listbox" aria-label="Search results"></ul>
+<div class="site-search-foot"><span><span class="kbd-hint">&#8593;</span> <span class="kbd-hint">&#8595;</span> move</span><span><span class="kbd-hint">Enter</span> open</span><span><span class="kbd-hint">Esc</span> close</span><span><span class="kbd-hint">/</span> search from anywhere</span></div>
+</div>
+</div>
+<script src="assets/search-index.js"></script>
+<script src="assets/docs.js"></script>
+</body>
+</html>

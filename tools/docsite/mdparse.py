@@ -49,8 +49,8 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable
 
 # ---------------------------------------------------------------------------
 # escaping
@@ -92,11 +92,6 @@ def esc_attr(text: str) -> str:
         .replace("'", "&#39;")
     )
     return neutralize_urls(out)
-
-
-def esc_raw(text: str) -> str:
-    """Escape for HTML without touching URLs (for text that is not emitted)."""
-    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
 # ---------------------------------------------------------------------------
@@ -149,6 +144,7 @@ class Document:
     footnote_defs: dict[str, list[Block]]
     front_matter: dict[str, str]
     title: str | None
+    warnings: list[str] = field(default_factory=list)
 
 
 _ATX_RE = re.compile(r"^ {0,3}(#{1,6})(?:[ \t]+(.*?))?[ \t]*$")
@@ -210,12 +206,15 @@ def _strip_front_matter(lines: list[str]) -> tuple[list[str], dict[str, str]]:
 
 
 class _BlockParser:
-    def __init__(self, warn: Callable[[str], None]) -> None:
-        self.warn = warn
+    def __init__(self) -> None:
+        self.warnings: list[str] = []
         self.link_defs: dict[str, tuple[str, str]] = {}
         self.footnote_defs: dict[str, list[Block]] = {}
         self._slugs: dict[str, int] = {}
         self.headings: list[Heading] = []
+
+    def warn(self, message: str) -> None:
+        self.warnings.append(message)
 
     # -- entry point ------------------------------------------------------
     def parse_document(self, text: str) -> Document:
@@ -235,6 +234,7 @@ class _BlockParser:
             footnote_defs=self.footnote_defs,
             front_matter=front_matter,
             title=title,
+            warnings=self.warnings,
         )
 
     # -- slug bookkeeping -------------------------------------------------
@@ -267,7 +267,11 @@ class _BlockParser:
                 index += 1
                 continue
 
-            if _HR_RE.match(line) and not _TABLE_DELIM_RE.match(line):
+            # A lone "---" reaches here only after a blank line, so it is a
+            # thematic break. A table's delimiter row is consumed by the header
+            # line that introduces it, and a "---" that continues a paragraph
+            # is caught as a setext underline in _read_paragraph.
+            if _HR_RE.match(line):
                 blocks.append(Block("hr", {}))
                 index += 1
                 continue
@@ -276,11 +280,21 @@ class _BlockParser:
                 index = self._read_quote(lines, index, blocks)
                 continue
 
-            if top_level or True:
-                foot = _FOOTNOTE_DEF_RE.match(line)
-                if foot:
+            foot = _FOOTNOTE_DEF_RE.match(line)
+            if foot:
+                # A footnote definition is a document-level construct. One that
+                # turns up inside a list item or a blockquote is not hoisted:
+                # it falls through to a paragraph and renders as the literal
+                # text the author typed, and its `[^n]` reference stays literal
+                # too. Wrong-looking output beats a note that silently vanishes
+                # from the page it was written for.
+                if top_level:
                     index = self._read_footnote(lines, index, foot)
                     continue
+                self.warn(
+                    f"footnote definition [^{foot.group(1)}] is nested inside another block; "
+                    "footnote definitions are only recognised at the top level of a document"
+                )
 
             link_def = _LINK_DEF_RE.match(line)
             if link_def and not line.lstrip().startswith("[^"):
@@ -436,7 +450,10 @@ class _BlockParser:
         return cursor
 
     def _read_paragraph(self, lines: list[str], index: int, blocks: list[Block]) -> int:
-        body: list[str] = [lines[index].strip()]
+        # Leading indentation is dropped; TRAILING spaces are not. Two of them
+        # before a newline is a hard line break, and stripping them here is how
+        # that feature quietly disappears.
+        body: list[str] = [lines[index].lstrip(" ")]
         cursor = index + 1
         while cursor < len(lines):
             line = lines[cursor]
@@ -445,15 +462,16 @@ class _BlockParser:
             setext = _SETEXT_RE.match(line)
             if setext:
                 level = 1 if setext.group(1)[0] == "=" else 2
-                self._emit_heading(level, " ".join(body).strip(), None, blocks)
+                joined = " ".join(part.strip() for part in body).strip()
+                self._emit_heading(level, joined, None, blocks)
                 return cursor + 1
             if _starts_block(line):
                 break
             if cursor + 1 < len(lines) and "|" in line and _TABLE_DELIM_RE.match(lines[cursor + 1]):
                 break
-            body.append(line.rstrip() if line.rstrip().endswith("\\") else line)
+            body.append(line.lstrip(" "))
             cursor += 1
-        blocks.append(Block("para", {"raw": "\n".join(part.rstrip() for part in body).strip()}))
+        blocks.append(Block("para", {"raw": "\n".join(body).strip()}))
         return cursor
 
     # -- lists ------------------------------------------------------------
@@ -564,8 +582,7 @@ def _starts_block(line: str) -> bool:
 
 def split_table_row(line: str) -> list[str]:
     text = line.strip()
-    if text.startswith("|"):
-        text = text[1:]
+    text = text.removeprefix("|")
     if text.endswith("|") and not text.endswith("\\|"):
         text = text[:-1]
     cells: list[str] = []
@@ -645,6 +662,9 @@ class InlineContext:
     footnote_defs: dict[str, list[Block]] = field(default_factory=dict)
     footnote_order: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
+    #: Namespaces every generated element id. Non-empty in the single-file
+    #: build, where all documents share one HTML document.
+    id_prefix: str = ""
 
     def footnote_number(self, label: str) -> int:
         if label not in self.footnote_order:
@@ -934,11 +954,12 @@ def _render_anchor(target: LinkTarget, inner_html: str, extra_class: str = "") -
     if extra_class:
         classes.append(extra_class)
     if target.kind == "repo":
+        # A path that exists in the repository but is not a page here. It is
+        # shown as a path, not as a link that would go nowhere. The chip itself
+        # carries the monospace treatment, so a label that was already a code
+        # span does not end up nested inside a second one.
         title = target.title or "Repository path — not part of this help set"
-        return (
-            f'<span class="repo-ref" title="{esc_attr(title)}">'
-            f'<code>{inner_html}</code></span>'
-        )
+        return f'<span class="repo-ref" title="{esc_attr(title)}">{inner_html}</span>'
     attrs = f' class="{" ".join(classes)}"' if classes else ""
     title = f' title="{esc_attr(target.title)}"' if target.title else ""
     external = ' rel="noreferrer noopener"' if target.kind == "external" else ""
@@ -959,13 +980,11 @@ def _render_link(
     label = src[open_bracket + 1 : close]
 
     if not image and label.startswith("^"):
-        key = label[1:]
+        key = label.removeprefix("^")
         if key in ctx.footnote_defs:
             number = ctx.footnote_number(key)
-            out.append(
-                f'<sup class="fn-ref" id="fnref-{esc_attr(key)}">'
-                f'<a href="#fn-{esc_attr(key)}" aria-describedby="footnotes">{number}</a></sup>'
-            )
+            ident = esc_attr(ctx.id_prefix + key)
+            out.append(f'<sup class="fn-ref" id="fnref-{ident}"><a href="#fn-{ident}">{number}</a></sup>')
             return close + 1
         return None
 
@@ -1032,10 +1051,15 @@ class Renderer:
         ctx: InlineContext,
         highlighter: Callable[[str, str], str],
         heading_offset: int = 0,
+        id_prefix: str = "",
     ) -> None:
         self.ctx = ctx
         self.highlight = highlighter
         self.heading_offset = heading_offset
+        # The single-file build puts every document in one HTML document, so
+        # heading ids have to be namespaced per page or two documents with an
+        # "Overview" section collide. The directory build leaves this empty.
+        self.id_prefix = id_prefix
 
     def render(self, blocks: list[Block]) -> str:
         return "\n".join(self.render_block(block) for block in blocks if block is not None)
@@ -1049,7 +1073,7 @@ class Renderer:
             if _ONLY_IMAGE_RE.match(block.data["raw"].strip()):
                 alt = strip_inline(block.data["raw"].strip()[2:].split("]", 1)[0])
                 caption = f"<figcaption>{esc_text(alt)}</figcaption>" if alt else ""
-                return f"<figure class=\"doc-figure\">{inner}{caption}</figure>"
+                return f'<figure class="doc-figure">{inner}{caption}</figure>'
             return f"<p>{inner}</p>"
         if kind == "heading":
             return self.render_heading(block)
@@ -1067,13 +1091,16 @@ class Renderer:
 
     def render_heading(self, block: Block) -> str:
         level = min(6, block.data["level"] + self.heading_offset)
-        slug = block.data["slug"]
+        slug = self.id_prefix + block.data["slug"]
         inner = render_inline(block.data["raw"], self.ctx)
+        # The "#" is drawn by CSS, not written into the DOM: it must not end up
+        # in the heading's text when someone copies it, or in the search index,
+        # or read aloud after the heading by a screen reader.
         return (
             f'<h{level} id="{esc_attr(slug)}" class="doc-h">'
             f'<span class="doc-h-text">{inner}</span>'
             f'<a class="doc-anchor" href="#{esc_attr(slug)}" '
-            f'aria-label="Link to this section">#</a>'
+            f'aria-label="Link to this section"></a>'
             f"</h{level}>"
         )
 
@@ -1147,7 +1174,7 @@ class Renderer:
         for position, cell in enumerate(block.data["header"]):
             align = aligns[position] if position < len(aligns) else ""
             attr = f' class="col-{align}"' if align else ""
-            header_cells.append(f"<th{attr} scope=\"col\">{render_inline(cell, self.ctx)}</th>")
+            header_cells.append(f'<th{attr} scope="col">{render_inline(cell, self.ctx)}</th>')
         body_rows = []
         for row in block.data["rows"]:
             cells = []
@@ -1170,21 +1197,21 @@ class Renderer:
         for label in self.ctx.footnote_order:
             blocks = document.footnote_defs.get(label, [])
             body = self.render(blocks)
+            ident = esc_attr(self.id_prefix + label)
             items.append(
-                f'<li id="fn-{esc_attr(label)}">{body}'
-                f'<a class="fn-back" href="#fnref-{esc_attr(label)}" '
+                f'<li id="fn-{ident}">{body}'
+                f'<a class="fn-back" href="#fnref-{ident}" '
                 f'aria-label="Back to reference">&#8617;</a></li>'
             )
         return (
-            '<section class="doc-footnotes" id="footnotes">'
+            f'<section class="doc-footnotes" id="{esc_attr(self.id_prefix)}footnotes">'
             "<h2>Notes</h2><ol>" + "".join(items) + "</ol></section>"
         )
 
 
-def parse(text: str, warn: Callable[[str], None] | None = None) -> Document:
-    collected: list[str] = []
-    parser = _BlockParser(warn or collected.append)
-    return parser.parse_document(text)
+def parse(text: str) -> Document:
+    """Parse a Markdown document into blocks. Warnings ride on the result."""
+    return _BlockParser().parse_document(text)
 
 
 def render(
@@ -1192,8 +1219,9 @@ def render(
     ctx: InlineContext,
     highlighter: Callable[[str, str], str],
     heading_offset: int = 0,
+    id_prefix: str = "",
 ) -> RenderResult:
-    renderer = Renderer(ctx, highlighter, heading_offset)
+    renderer = Renderer(ctx, highlighter, heading_offset, id_prefix)
     body = renderer.render(document.blocks)
     footnotes = renderer.render_footnotes(document)
     return RenderResult(

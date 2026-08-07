@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<meta name="generator" content="tools/build_docs.py">
+<title>Building in Visual Studio 2026 — Project CHAOS help</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http%3A//www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230e1a16'/%3E%3Cpath d='M6 18 16 8l10 10v8H6z' fill='none' stroke='%234ade80' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/docs.css">
+<noscript><style>.doc-page[hidden]{display:block!important}.site-searchbtn{display:none}</style></noscript>
+</head>
+<body data-page="visual-studio">
+<a class="skip-link" href="#content">Skip to the documentation</a>
+<header class="site-topbar">
+<button type="button" class="btn btn-icon site-navtoggle" id="nav-toggle" aria-controls="site-nav" aria-expanded="false" title="Documents"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span class="visually-hidden">Show the document list</span></button>
+<a class="site-identity" href="index.html"><span class="site-mark"><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M5 19 16 8l11 11v7H5z"/></svg></span><span class="site-titles"><h1>Project CHAOS help</h1><p>Central Homestead Automation and Operation System</p></span></a>
+<button type="button" class="site-searchbtn" id="search-open"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.3-4.3"/></svg><span>Search the documentation</span><span class="kbd-hint">/</span></button>
+<div class="site-tools">
+<button type="button" class="btn btn-sm" id="theme-toggle"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4"/></svg><span class="theme-label">System</span></button>
+<button type="button" class="btn btn-icon" id="print-page" onclick="window.print()" title="Print this page"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M7 9V4h10v5M7 18H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2"/><rect x="7" y="14" width="10" height="6" rx="1"/></svg><span class="visually-hidden">Print this page</span></button>
+</div>
+</header>
+<div class="site-shell">
+<nav class="site-nav" id="site-nav" aria-label="Documents"><h2>Overview</h2><ul><li><a href="index.html" data-page="index"><span class="nav-num">01</span><span>Project CHAOS documentation</span></a></li><li><a href="readme.html" data-page="readme"><span class="nav-num">02</span><span>Project CHAOS</span></a></li></ul><h2>Using CHAOS</h2><ul><li><a href="getting-started.html" data-page="getting-started"><span class="nav-num">03</span><span>Getting started</span></a></li><li><a href="visual-studio.html" data-page="visual-studio" aria-current="page"><span class="nav-num">04</span><span>Building in Visual Studio 2026</span></a></li><li><a href="desktop-shell.html" data-page="desktop-shell"><span class="nav-num">05</span><span>The desktop shell</span></a></li><li><a href="operator-console.html" data-page="operator-console"><span class="nav-num">06</span><span>The operator console</span></a></li><li><a href="annunciator.html" data-page="annunciator"><span class="nav-num">07</span><span>The annunciator panel</span></a></li><li><a href="topology-view.html" data-page="topology-view"><span class="nav-num">08</span><span>Topology and blast radius</span></a></li><li><a href="rack-view.html" data-page="rack-view"><span class="nav-num">09</span><span>Rack elevation</span></a></li></ul><h2>How the platform works</h2><ul><li><a href="architecture.html" data-page="architecture"><span class="nav-num">10</span><span>Architecture</span></a></li><li><a href="alarms.html" data-page="alarms"><span class="nav-num">11</span><span>Alarms, incidents and notification</span></a></li><li><a href="control.html" data-page="control"><span class="nav-num">12</span><span>Control, interlocks and operating modes</span></a></li><li><a href="design-package.html" data-page="design-package"><span class="nav-num">13</span><span>The design package</span></a></li><li><a href="integration-findings.html" data-page="integration-findings"><span class="nav-num">14</span><span>Integration findings</span></a></li></ul><h2>Operating the property</h2><ul><li><a href="operations.html" data-page="operations"><span class="nav-num">15</span><span>Operations runbooks</span></a></li><li><a href="troubleshooting.html" data-page="troubleshooting"><span class="nav-num">16</span><span>Troubleshooting</span></a></li><li><a href="commissioning.html" data-page="commissioning"><span class="nav-num">17</span><span>Commissioning</span></a></li><li><a href="secondary-control-node.html" data-page="secondary-control-node"><span class="nav-num">18</span><span>Secondary control node</span></a></li><li><a href="network-and-trust-boundaries.html" data-page="network-and-trust-boundaries"><span class="nav-num">19</span><span>Network and trust boundaries</span></a></li><li><a href="water-control-narrative.html" data-page="water-control-narrative"><span class="nav-num">20</span><span>Water-system control narrative</span></a></li></ul><h2>Reference</h2><ul><li><a href="api.html" data-page="api"><span class="nav-num">21</span><span>API reference</span></a></li><li><a href="design-decisions.html" data-page="design-decisions"><span class="nav-num">22</span><span>Design Decision Records</span></a></li></ul><h2>Advanced — you do not need these</h2><ul><li><a href="advanced-command-line.html" data-page="advanced-command-line"><span class="nav-num">23</span><span>Command line</span></a></li><li><a href="advanced-container-deployment.html" data-page="advanced-container-deployment"><span class="nav-num">24</span><span>Container deployment</span></a></li><li><a href="advanced-windows-packaging.html" data-page="advanced-windows-packaging"><span class="nav-num">25</span><span>Windows packaging</span></a></li></ul><h2>Design Decisions</h2><ul><li><a href="design-decisions-dd-001-energy-capacity-revision.html" data-page="design-decisions-dd-001-energy-capacity-revision"><span class="nav-num">26</span><span>DD-001: Authoritative energy design revision</span></a></li><li><a href="design-decisions-dd-002-historian-selection.html" data-page="design-decisions-dd-002-historian-selection"><span class="nav-num">27</span><span>DD-002: Time-series historian selection</span></a></li><li><a href="design-decisions-dd-003-secondary-control-node-placement.html" data-page="design-decisions-dd-003-secondary-control-node-placement"><span class="nav-num">28</span><span>DD-003: Secondary control node placement</span></a></li><li><a href="design-decisions-dd-004-controller-family.html" data-page="design-decisions-dd-004-controller-family"><span class="nav-num">29</span><span>DD-004: Standard PLC / controller family for critical local control</span></a></li></ul></nav>
+<main class="site-main" id="content" tabindex="-1">
+<article class="doc-page" id="visual-studio" data-page="visual-studio"><p class="doc-breadcrumb"><span>Using CHAOS</span><span>Building in Visual Studio 2026</span></p><p class="doc-source">docs/visual-studio.md</p><div class="doc-body"><h1 id="building-in-visual-studio-2026" class="doc-h"><span class="doc-h-text">Building in Visual Studio 2026</span><a class="doc-anchor" href="#building-in-visual-studio-2026" aria-label="Link to this section"></a></h1>
+<p>Everything in this document is done inside Visual Studio: Solution Explorer,
+Test Explorer, the Build menu and F5. There is no step here that needs a
+terminal.</p>
+<p>Command-line build scripts do exist — they are how the MSI is produced and how
+CI runs — and they are in <a href="advanced-windows-packaging.html">Windows packaging</a>.
+You do not need them to build, run or test the solution.</p>
+<p>Related: <a href="getting-started.html">Getting started</a> ·
+<a href="desktop-shell.html">The desktop shell</a> · <a href="architecture.html">Architecture</a></p>
+<hr>
+<h2 id="1-what-visual-studio-needs" class="doc-h"><span class="doc-h-text">1. What Visual Studio needs</span><a class="doc-anchor" href="#1-what-visual-studio-needs" aria-label="Link to this section"></a></h2>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Requirement</th><th scope="col">Why</th></tr></thead><tbody><tr><td><strong>.NET SDK 10.0.100</strong> or a later 10.0.1xx feature band</td><td><code>windows/global.json</code> pins it: <code>"version": "10.0.100"</code>, <code>"rollForward": "latestFeature"</code>, <code>"allowPrerelease": false</code>. A control system ships the configuration that was tested, not the newest one</td></tr><tr><td><strong>Windows App SDK / WinUI 3 tooling</strong></td><td><code>Chaos.Shell</code> is WinUI 3 against Windows App SDK 2.3.1. Without the tooling the project loads and restores but will not build</td></tr><tr><td><strong>Microsoft Edge WebView2 Evergreen Runtime</strong></td><td>Needed to <em>run</em> the shell, not to build it</td></tr></tbody></table></div>
+<p>The solution targets <code>net10.0</code> everywhere except the shell, which targets
+<code>net10.0-windows10.0.26100.0</code> with a minimum of Windows 10 build 17763.</p>
+<p><strong>.NET 10 is deliberate.</strong> It is the current LTS. A system that controls
+off-grid power, water and freeze protection tracks LTS rather than the newest
+preview.</p>
+<hr>
+<h2 id="2-open-the-solution" class="doc-h"><span class="doc-h-text">2. Open the solution</span><a class="doc-anchor" href="#2-open-the-solution" aria-label="Link to this section"></a></h2>
+<p>Open <strong><code>windows/CHAOS.sln</code></strong>.</p>
+<p>Solution Explorer shows three solution folders:</p>
+<div class="doc-code" data-lang="text"><div class="doc-code-bar"><span class="doc-code-lang">text</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-text">CHAOS
+├── src
+│   ├── Chaos.Api                 subsystems ported from Python to .NET
+│   ├── Chaos.Host                the gateway — LAN listener, proxy, first-run setup
+│   ├── Chaos.Host.Supervisor     supervises the Python backend as a child process
+│   ├── Chaos.Runtime             builds the things that are not .NET — see section 6
+│   ├── Chaos.Shell               the WinUI 3 desktop shell (Windows only)
+│   └── Chaos.Shell.Core          the shell's testable half — no Windows dependency
+├── build                         solution items: the build props, global.json,
+│                                 the PowerShell scripts and the two .targets files
+└── tests
+    ├── Chaos.Api.ConformanceHost a minimal host that composes Chaos.Api and nothing else
+    ├── Chaos.Api.Tests
+    ├── Chaos.Host.Supervisor.Tests
+    ├── Chaos.Host.Tests
+    └── Chaos.Shell.Core.Tests</code></pre></div>
+<p>The Python platform backend is <strong>not</strong> in this solution. It lives in <code>src/chaos/</code>
+at the repository root and is a separate build. Section 7 covers it.</p>
+<h3 id="which-project-does-what" class="doc-h"><span class="doc-h-text">Which project does what</span><a class="doc-anchor" href="#which-project-does-what" aria-label="Link to this section"></a></h3>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Project</th><th scope="col">Role</th></tr></thead><tbody><tr><td><code>Chaos.Host</code></td><td>The front door. The only LAN listener, a reverse proxy to the Python backend on loopback, the host of the operator console, and where ported subsystems land</td></tr><tr><td><code>Chaos.Host.Supervisor</code></td><td>Resolves which Python runs the platform and supervises it as a child process, with a restart policy</td></tr><tr><td><code>Chaos.Api</code></td><td>Where <code>/api/v1</code> routes ported to .NET live. Built and tested; <strong>nothing in it is live yet</strong> — see section 8</td></tr><tr><td><code>Chaos.Shell</code></td><td>The WinUI 3 windows: launcher, console, settings, annunciator, tray icon</td></tr><tr><td><code>Chaos.Shell.Core</code></td><td>Every decision the shell makes — launcher state machine, settings validation, tray state, diagnostics — with no Windows dependency, so it can be tested anywhere</td></tr><tr><td><code>Chaos.Runtime</code></td><td>Compiles no code. It builds the two parts of the product that are not .NET: the embedded Python interpreter and this documentation site. Section 6</td></tr></tbody></table></div>
+<p>The split between <code>Chaos.Shell</code> and <code>Chaos.Shell.Core</code> is the reason the startup
+experience is testable at all: every awkward combination (a service running while
+the gateway is silent, a gateway answering while its backend is dead, a host too
+old to report setup) is exercised as a unit test without Windows, a service
+control manager or a network.</p>
+<hr>
+<h2 id="3-build-the-solution" class="doc-h"><span class="doc-h-text">3. Build the solution</span><a class="doc-anchor" href="#3-build-the-solution" aria-label="Link to this section"></a></h2>
+<p><strong>Build → Build Solution</strong> (<code>Ctrl+Shift+B</code>).</p>
+<h3 id="configuration-and-platform" class="doc-h"><span class="doc-h-text">Configuration and platform</span><a class="doc-anchor" href="#configuration-and-platform" aria-label="Link to this section"></a></h3>
+<p>The solution defines <code>Debug</code> and <code>Release</code> against <code>Any CPU</code>, <code>x64</code>, <code>x86</code> and
+<code>ARM64</code>.</p>
+<p><strong>WinUI 3 has no Any CPU.</strong> <code>Chaos.Shell</code> declares <code>x86;x64;ARM64</code> explicitly,
+and the solution maps its <code>Any CPU</code> rows onto <code>x86</code>. Everything else builds as
+<code>Any CPU</code> regardless of which solution platform is selected.</p>
+<h3 id="warnings-are-errors" class="doc-h"><span class="doc-h-text">Warnings are errors</span><a class="doc-anchor" href="#warnings-are-errors" aria-label="Link to this section"></a></h3>
+<p><code>windows/Directory.Build.props</code> sets <code>TreatWarningsAsErrors</code> for every project
+(with <code>NU1900</code> excluded). <code>Chaos.Host</code> additionally sets
+<code>GenerateDocumentationFile</code>, so <strong>an undocumented public member is a build
+error</strong> — that assembly's public surface is a contract other work codes against.</p>
+<h3 id="if-you-build-on-a-non-windows-machine" class="doc-h"><span class="doc-h-text">If you build on a non-Windows machine</span><a class="doc-anchor" href="#if-you-build-on-a-non-windows-machine" aria-label="Link to this section"></a></h3>
+<p>The shell degrades cleanly instead of failing. On a non-Windows host,
+<code>Chaos.Shell</code> turns itself into an empty library: the XAML compiler is off, no
+sources compile, restore still runs so the package graph is verified, and the
+build log carries:</p>
+<div class="doc-code" data-lang="text"><div class="doc-code-bar"><span class="doc-code-lang">text</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-text">Chaos.Shell (WinUI 3) was NOT COMPILED: it requires Windows. Restore ran, so
+package resolution is still verified. Build it in Visual Studio 2026.</code></pre></div>
+<p>That is deliberate. A repository-wide build stays green and says plainly that
+the project was not built, rather than emitting an artefact that could be
+mistaken for one.</p>
+<hr>
+<h2 id="4-run-it-with-f5" class="doc-h"><span class="doc-h-text">4. Run it with F5</span><a class="doc-anchor" href="#4-run-it-with-f5" aria-label="Link to this section"></a></h2>
+<h3 id="the-normal-case-run-the-whole-product" class="doc-h"><span class="doc-h-text">The normal case: run the whole product</span><a class="doc-anchor" href="#the-normal-case-run-the-whole-product" aria-label="Link to this section"></a></h3>
+<p>Set <strong><code>Chaos.Shell</code></strong> as the startup project (right-click → <em>Set as Startup
+Project</em>) and press <strong>F5</strong>.</p>
+<p>The launcher window opens. From there everything is buttons: it finds or starts
+the gateway, first-run setup runs, and <strong>Open console</strong> loads the console. See
+<a href="getting-started.html#3-first-launch">Getting started § First launch</a> for what
+each screen should say.</p>
+<p>Because the shell is unpackaged (<code>WindowsPackageType=None</code>), the Windows App SDK
+injects its bootstrapper as a module initialiser rather than requiring a call
+from <code>Main</code> — which is what makes the custom entry point in <code>ShellEntryPoint</code>
+safe. That entry point exists so a second launch can be redirected to the
+already-running instance before any XAML is created.</p>
+<h3 id="running-only-the-gateway" class="doc-h"><span class="doc-h-text">Running only the gateway</span><a class="doc-anchor" href="#running-only-the-gateway" aria-label="Link to this section"></a></h3>
+<p>Set <strong><code>Chaos.Host</code></strong> as the startup project and pick a <strong>launch profile</strong> from
+the drop-down next to the run button.</p>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Profile</th><th scope="col">Gives you</th></tr></thead><tbody><tr><td><strong>CHAOS Gateway (8080)</strong></td><td>The gateway and the operator console. The documentation site is off</td></tr><tr><td><strong>CHAOS Gateway + Documentation (8080 + 8090)</strong></td><td>The same, plus this help site on port 8090, and the browser opens on it</td></tr><tr><td><strong>CHAOS Gateway + Documentation (this PC only)</strong></td><td>Both, bound to loopback rather than every interface</td></tr><tr><td><strong>CHAOS Gateway, no first-run setup (8080)</strong></td><td>The gateway with automatic setup turned off, for working against a database you are managing by hand</td></tr></tbody></table></div>
+<p>Each profile sets the addresses as environment variables; the defaults, if you
+run with none, come from <code>windows/src/Chaos.Host/appsettings.json</code>:</p>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Setting</th><th scope="col">Default</th><th scope="col">Meaning</th></tr></thead><tbody><tr><td><code>Chaos:ListenUrl</code></td><td><code>http&#58;//0.0.0.0:8080</code></td><td>Where the gateway listens</td></tr><tr><td><code>Chaos:BackendUrl</code></td><td><code>http&#58;//127.0.0.1:8081</code></td><td>Where it expects the Python backend</td></tr><tr><td><code>Chaos:AutoSetup</code></td><td><code>true</code></td><td>Run first-run setup at startup</td></tr><tr><td><code>Chaos:Docs:Enabled</code></td><td><code>true</code></td><td>Serve the offline documentation site</td></tr><tr><td><code>Chaos:Docs:ListenUrl</code></td><td><code>http&#58;//0.0.0.0:8090</code></td><td>Where the documentation site listens</td></tr><tr><td><code>Chaos:WebRootPath</code></td><td>empty</td><td>Let the resolver find the console assets</td></tr></tbody></table></div>
+<p>Anything can be overridden per-machine with a <code>CHAOS_</code>-prefixed environment
+variable in the project's debug properties — <code>CHAOS_BackendUrl</code>,
+<code>CHAOS_AutoSetup</code>, <code>CHAOS_Docs__Enabled</code>. Note the casing: the gateway binds
+<code>CHAOS_&lt;PascalCase&gt;</code>, and the Python platform binds
+<code>CHAOS_&lt;SCREAMING_SNAKE_CASE&gt;</code>. They share a prefix and are kept apart by the
+underscores, which is why no gateway setting may ever be named with an
+underscore in it.</p>
+<p>Browse to <code>http&#58;//localhost:8080/</code> and the operator console loads. The gateway
+finds its assets by probing, in order: a configured <code>Chaos:WebRootPath</code>, then
+<code>&lt;content root&gt;/web</code>, then <code>&lt;executable directory&gt;/web</code>, then <code>src/chaos/web</code>
+found by walking up from the content root — which is the case that makes F5 from
+a checkout work without configuration. <code>/host/info</code> reports which one it used
+and every path it tried.</p>
+<h3 id="what-works-under-f5-without-the-python-backend" class="doc-h"><span class="doc-h-text">What works under F5 without the Python backend</span><a class="doc-anchor" href="#what-works-under-f5-without-the-python-backend" aria-label="Link to this section"></a></h3>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Works</th><th scope="col">Does not</th></tr></thead><tbody><tr><td>The launcher and every check it renders</td><td>Any live data — assets, alarms, energy, telemetry</td></tr><tr><td>The console shell, chrome and navigation</td><td>Any screen's content</td></tr><tr><td><code>/health</code>, <code>/health/live</code>, <code>/host/info</code>, <code>/host/routes</code></td><td><code>/api/v1/**</code> (there is nothing to proxy to)</td></tr><tr><td>Route-ownership validation at startup</td><td></td></tr><tr><td>First-run setup, if a Python is resolvable — see section 7</td><td></td></tr></tbody></table></div>
+<p><code>/health</code> answers 503 with <code>backend: "down"</code>, the launcher headline reads <em>"The
+platform is only half up"</em>, and the console loads with nothing in it. That is
+correct behaviour, not a fault: a gateway that returned 200 while the platform
+behind it was dead would tell every status-code-only monitor that an off-grid
+site with no alarm engine is fine.</p>
+<h3 id="the-gap-you-should-know-about" class="doc-h"><span class="doc-h-text">The gap you should know about</span><a class="doc-anchor" href="#the-gap-you-should-know-about" aria-label="Link to this section"></a></h3>
+<p><strong>The gateway does not start the Python backend today.</strong> <code>Chaos.Host</code> ships
+<code>Chaos.Host.Supervisor</code> and is built to supervise the backend, but its
+composition root registers the <em>no-op</em> supervisor
+(<code>NullBackendSupervisor</code>), so nothing launches the backend process. <code>/host/info</code>
+reports it honestly:</p>
+<div class="doc-code" data-lang="json"><div class="doc-code-bar"><span class="doc-code-lang">json</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-json"><span class="t-p">"supervisor"</span>: { <span class="t-p">"registered"</span>: <span class="t-k">false</span>, <span class="t-p">"state"</span>: <span class="t-s">"Unknown"</span>,
+  <span class="t-p">"detail"</span>: <span class="t-s">"No backend supervisor is registered; this host does not manage the Python backend process."</span> }</code></pre></div>
+<p>Until that is wired up, there are two ways to get live data behind an F5 gateway:</p>
+<ol><li><strong>Point the shell at an installed platform.</strong> Shell → <strong>Settings</strong> →
+<em>Gateway</em> → set the address and port of a node where the installed service is
+running. The shell then drives that platform and your F5 build is not
+involved.</li><li><strong>Start the backend yourself.</strong> This is the one development task that has no
+GUI path today; it is written up in
+<a href="advanced-command-line.html#8-running-the-backend-for-development">Command line § Running the backend for development</a>.</li></ol>
+<p>Proxying, health reporting and setup all work correctly either way — only
+process supervision is absent.</p>
+<hr>
+<h2 id="5-tests-in-test-explorer" class="doc-h"><span class="doc-h-text">5. Tests in Test Explorer</span><a class="doc-anchor" href="#5-tests-in-test-explorer" aria-label="Link to this section"></a></h2>
+<p><strong>Test → Test Explorer</strong>, then <strong>Run All</strong> (<code>Ctrl+R, A</code>).</p>
+<p>All five test projects use xUnit with <code>xunit.runner.visualstudio</code>, so discovery
+works with no configuration. They target <code>net10.0</code> and none of them needs
+Windows — including the shell's tests, because everything the shell decides
+lives in <code>Chaos.Shell.Core</code>.</p>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Test project</th><th scope="col">Covers</th></tr></thead><tbody><tr><td><code>Chaos.Host.Tests</code></td><td>Host endpoints, route-ownership table and validator, setup assessor, setup endpoints, startup validation</td></tr><tr><td><code>Chaos.Host.Supervisor.Tests</code></td><td>Python runtime resolution, restart policy</td></tr><tr><td><code>Chaos.Api.Tests</code></td><td>Annunciator panel builder, legends, serviceability, read store, timestamps, query parsing</td></tr><tr><td><code>Chaos.Shell.Core.Tests</code></td><td>Launcher state machine, platform lifecycle, probe client, settings, tray state, window placement, setup contract</td></tr><tr><td><code>Chaos.Api.ConformanceHost</code></td><td>Not a test project — a minimal host that composes <code>Chaos.Api</code> alone, so the .NET port can be exercised against a real HTTP pipeline</td></tr></tbody></table></div>
+<h3 id="debugging-a-test" class="doc-h"><span class="doc-h-text">Debugging a test</span><a class="doc-anchor" href="#debugging-a-test" aria-label="Link to this section"></a></h3>
+<p>Right-click a test in Test Explorer → <strong>Debug</strong>. Breakpoints in
+<code>Chaos.Shell.Core</code> work exactly as they do anywhere else, which is the practical
+payoff of keeping the shell's judgement out of XAML.</p>
+<h3 id="two-behaviours-worth-knowing-before-you-change-routing" class="doc-h"><span class="doc-h-text">Two behaviours worth knowing before you change routing</span><a class="doc-anchor" href="#two-behaviours-worth-knowing-before-you-change-routing" aria-label="Link to this section"></a></h3>
+<ul><li>The host <strong>refuses to start</strong> if the route-ownership manifest claims a prefix
+for .NET and no .NET endpoint is registered under it. A route marked as ported
+with nothing behind it answers 404, and a 404 from an alarm endpoint reads
+like <em>"no alarms"</em>. <code>Chaos.Host.Tests</code> pins that behaviour.</li><li>A manifest row for a prefix with no endpoint is a startup failure; an endpoint
+with no manifest row is harmless.</li></ul>
+<hr>
+<h2 id="6-chaosruntime-the-parts-that-are-not-net" class="doc-h"><span class="doc-h-text">6. Chaos.Runtime: the parts that are not .NET</span><a class="doc-anchor" href="#6-chaosruntime-the-parts-that-are-not-net" aria-label="Link to this section"></a></h2>
+<p>Two things ship with this product that no C# compiler produces: the <strong>embedded
+Python interpreter</strong> that goes inside the installer, and <strong>this documentation
+site</strong>. Both used to be producible only by typing PowerShell. Both are now
+produced by <strong>building a project</strong>.</p>
+<p>Build the solution, or right-click <strong>Chaos.Runtime</strong> in Solution Explorer and
+choose <strong>Build</strong>, and they appear. No terminal, and no separate procedure to
+remember.</p>
+<h3 id="why-it-is-a-project-and-not-a-target-bolted-onto-the-gateway" class="doc-h"><span class="doc-h-text">Why it is a project and not a target bolted onto the gateway</span><a class="doc-anchor" href="#why-it-is-a-project-and-not-a-target-bolted-onto-the-gateway" aria-label="Link to this section"></a></h3>
+<ul><li><strong>It is visible.</strong> It has a node in Solution Explorer with Build, Rebuild and
+Clean on its context menu, and it can be unchecked in <strong>Build →
+Configuration Manager</strong>. A target hidden inside a <code>.csproj</code> is discoverable
+only by reading the <code>.csproj</code>.</li><li><strong>It is separable.</strong> Building the gateway does not build a Python interpreter.
+If the runtime build fails — no internet, say — <code>Chaos.Host</code> still builds and
+still runs, because <strong>nothing references this project</strong>.</li></ul>
+<p>It compiles no code. The empty assembly in <code>bin\</code> is a side effect of using the
+standard SDK, which is worth it because the project then loads, builds and
+behaves in Visual Studio exactly like every other project here.</p>
+<h3 id="what-each-command-does" class="doc-h"><span class="doc-h-text">What each command does</span><a class="doc-anchor" href="#what-each-command-does" aria-label="Link to this section"></a></h3>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Command</th><th scope="col">Does</th></tr></thead><tbody><tr><td><strong>Build</strong></td><td>Builds the embedded Python runtime <strong>if it is missing or out of date</strong> (2–5 minutes and a ~55 MB download, once), verifies it if it has not been verified since it was built, and regenerates the documentation site if any Markdown file has changed (seconds). Otherwise it does nothing at all, and says so</td></tr><tr><td><strong>Rebuild</strong></td><td>Forces both from scratch: deletes the stamps, rebuilds the interpreter and re-runs the full verification. This is the "force a rebuild" button, and it is a normal Visual Studio command</td></tr><tr><td><strong>Clean</strong></td><td><strong>Leaves the runtime and the documentation alone.</strong> Clean Solution is a reflex; it must not cost a 55 MB download</td></tr></tbody></table></div>
+<h3 id="turning-either-half-off" class="doc-h"><span class="doc-h-text">Turning either half off</span><a class="doc-anchor" href="#turning-either-half-off" aria-label="Link to this section"></a></h3>
+<p>Both switches are commented into <code>Chaos.Runtime.csproj</code> where you will find
+them:</p>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Property</th><th scope="col">Effect</th></tr></thead><tbody><tr><td><code>ChaosBuildPythonRuntime</code></td><td><code>false</code> skips the interpreter — for working on the .NET side on a machine with no internet. Unchecking <code>Chaos.Runtime</code> in Configuration Manager does the same thing without editing anything</td></tr><tr><td><code>ChaosBuildDocs</code></td><td><code>false</code> skips the documentation site</td></tr><tr><td><code>ChaosDocsGenerationFailsBuild</code></td><td><code>true</code> makes a documentation problem a hard error. Leave it off for day-to-day work; turn it on for a release</td></tr></tbody></table></div>
+<h3 id="why-a-broken-document-does-not-break-your-build" class="doc-h"><span class="doc-h-text">Why a broken document does not break your build</span><a class="doc-anchor" href="#why-a-broken-document-does-not-break-your-build" aria-label="Link to this section"></a></h3>
+<p>The documentation generator is also a <strong>quality gate on the documentation</strong>: it
+refuses to write a site with a broken cross-reference. But prose is edited by
+people who are not editing the control plane, so a dead link in a manual would
+otherwise stop the gateway building and stop an F5 dead — a build break with no
+connection to the change being made.</p>
+<p>So by default a generation failure is <strong>reported loudly and lets the build
+finish</strong>. Its output is printed in full at high importance, so it is visible in
+the Output window at the default verbosity, and the previously generated site
+keeps being served in the meantime.</p>
+<h3 id="reading-the-manual-from-the-product" class="doc-h"><span class="doc-h-text">Reading the manual from the product</span><a class="doc-anchor" href="#reading-the-manual-from-the-product" aria-label="Link to this section"></a></h3>
+<p>When the documentation site is enabled, the gateway serves it on <strong>port 8090</strong>
+alongside the operator console on 8080. That is the copy to read when the
+platform is misbehaving — it is entirely offline, with no external reference of
+any kind.</p>
+<p>The generator produces two shapes from one parse: a directory of pages, and a
+<strong>single self-contained HTML file</strong> with every page, the stylesheet and the
+search index in it. The single file is the copy someone opens when the platform
+is down and they need the troubleshooting page.</p>
+<p>Its styling is taken from the operator console's own design tokens, so the help
+site and the console are the same product to look at.</p>
+<hr>
+<h2 id="7-the-python-half" class="doc-h"><span class="doc-h-text">7. The Python half</span><a class="doc-anchor" href="#7-the-python-half" aria-label="Link to this section"></a></h2>
+<p>The platform backend is a separate Python project at the repository root. It is
+not part of <code>CHAOS.sln</code>.</p>
+<h3 id="its-tests" class="doc-h"><span class="doc-h-text">Its tests</span><a class="doc-anchor" href="#its-tests" aria-label="Link to this section"></a></h3>
+<p><strong>2062 tests</strong>, all against SQLite and an in-memory message bus — no PostgreSQL,
+no broker, no hardware. That is deliberate: it is step 1 of the twelve-step
+commissioning sequence ("bench test"), and it means the whole platform is
+exercisable end to end from a laptop.</p>
+<p><code>pyproject.toml</code> already carries what any pytest runner needs:</p>
+<div class="doc-code" data-lang="toml"><div class="doc-code-bar"><span class="doc-code-lang">toml</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-toml"><span class="t-t">[tool.pytest.ini_options]</span>
+<span class="t-p">testpaths</span> = [<span class="t-s">"tests"</span>]
+<span class="t-p">pythonpath</span> = [<span class="t-s">"src"</span>]</code></pre></div>
+<p><strong>These tests are not in Test Explorer today.</strong> There is no Python project file
+in the repository, so nothing here configures Visual Studio to discover them.
+Visual Studio's Python workload can run pytest against a folder once a Python
+environment and test framework are selected for the workspace, but that is a
+per-machine setup step this repository does not perform for you. If you want the
+numbers without setting that up, CI runs the same suite on every push.</p>
+<h3 id="which-python-the-gateway-uses" class="doc-h"><span class="doc-h-text">Which Python the gateway uses</span><a class="doc-anchor" href="#which-python-the-gateway-uses" aria-label="Link to this section"></a></h3>
+<p>The gateway's runtime resolver decides, in this order, and reports what it chose
+in <code>/host/setup</code> and <code>/host/info</code>:</p>
+<ol><li><strong>Embedded</strong> — <code>&lt;install root&gt;\python\python.exe</code>. This is the packaged
+product.</li><li><strong>Broken embedded</strong> — the <code>python\</code> directory exists but holds no
+interpreter. <strong>Hard failure.</strong> It will not fall back to a system Python,
+because that turns "the installer is corrupt" into "it works on my machine
+and mysteriously not on the customer's".</li><li><strong>Development</strong> — no <code>python\</code> directory at all. It walks up to eight levels
+looking for a checkout containing <code>src/chaos/cli.py</code>, then uses a configured
+interpreter or <code>python3</code>/<code>python</code> from <code>PATH</code>, with <code>PYTHONPATH</code> set to the
+checkout's <code>src</code>. This is the F5-from-a-checkout case, and it is why
+first-run setup can work under the debugger.</li></ol>
+<hr>
+<h2 id="8-what-is-not-ported-yet" class="doc-h"><span class="doc-h-text">8. What is not ported yet</span><a class="doc-anchor" href="#8-what-is-not-ported-yet" aria-label="Link to this section"></a></h2>
+<p>Every <code>/api/v1</code> prefix is served by the Python backend today. <code>Chaos.Api</code> exists,
+is built, and is covered by tests, but nothing in it is wired into the gateway:
+<code>Chaos.Host</code> does not reference it, and no manifest row names it.</p>
+<p>Porting a subsystem is intended to be one row in the route-ownership manifest —
+compiled into <code>RouteOwnershipDefaults</code>, or merged over it from the node's own
+configuration:</p>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Field</th><th scope="col">Meaning</th></tr></thead><tbody><tr><td><code>PathPrefix</code></td><td>The prefix being claimed</td></tr><tr><td><code>Owner</code></td><td><code>Python</code> or <code>Dotnet</code></td></tr><tr><td><code>PortedInVersion</code></td><td>The gateway version that took it over</td></tr><tr><td><code>Notes</code></td><td>Why, in a sentence</td></tr></tbody></table></div>
+<p>Matching is longest-prefix-wins at segment boundaries, so a row for
+<code>/api/v1/alarms/definitions</code> takes that subtree while <code>/api/v1/alarms/active</code>
+keeps going to Python. <code>GET /host/routes</code> on a running host is the authoritative
+live view of who serves what — prefer it over reading any file.</p>
+<p>The <code>/api/v1</code> row itself is a deliberate catch-all: an endpoint added to the
+Python app that nobody remembered to list still proxies correctly instead of
+404-ing. Ownership never moves to .NET implicitly — only an explicit row can do
+that, and only if an endpoint backs it.</p>
+<hr>
+<h2 id="9-related-reading" class="doc-h"><span class="doc-h-text">9. Related reading</span><a class="doc-anchor" href="#9-related-reading" aria-label="Link to this section"></a></h2>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Document</th><th scope="col">Why</th></tr></thead><tbody><tr><td><a href="getting-started.html">Getting started</a></td><td>What the launcher and setup screens should show</td></tr><tr><td><a href="desktop-shell.html">The desktop shell</a></td><td>Every window the shell opens and what it decides</td></tr><tr><td><a href="architecture.html">Architecture</a></td><td>Why the gateway, backend and shell are split this way</td></tr><tr><td><a href="api.html">API reference</a></td><td>The gateway's own routes and the platform's 83 endpoints</td></tr><tr><td><a href="advanced-windows-packaging.html">Windows packaging</a></td><td>The embedded runtime, the build scripts and the MSI</td></tr></tbody></table></div></div><nav class="doc-pager" aria-label="Reading order"><a class="pager-prev" href="getting-started.html" data-page="getting-started"><span class="pager-role">Previous</span>Getting started</a><a class="pager-next" href="desktop-shell.html" data-page="desktop-shell"><span class="pager-role">Next</span>The desktop shell</a></nav></article>
+</main>
+<aside class="site-toc" aria-label="On this page"><h2>On this page</h2><ul><li data-level="2"><a href="#1-what-visual-studio-needs" data-anchor="1-what-visual-studio-needs">1. What Visual Studio needs</a></li><li data-level="2"><a href="#2-open-the-solution" data-anchor="2-open-the-solution">2. Open the solution</a></li><li data-level="3"><a href="#which-project-does-what" data-anchor="which-project-does-what">Which project does what</a></li><li data-level="2"><a href="#3-build-the-solution" data-anchor="3-build-the-solution">3. Build the solution</a></li><li data-level="3"><a href="#configuration-and-platform" data-anchor="configuration-and-platform">Configuration and platform</a></li><li data-level="3"><a href="#warnings-are-errors" data-anchor="warnings-are-errors">Warnings are errors</a></li><li data-level="3"><a href="#if-you-build-on-a-non-windows-machine" data-anchor="if-you-build-on-a-non-windows-machine">If you build on a non-Windows machine</a></li><li data-level="2"><a href="#4-run-it-with-f5" data-anchor="4-run-it-with-f5">4. Run it with F5</a></li><li data-level="3"><a href="#the-normal-case-run-the-whole-product" data-anchor="the-normal-case-run-the-whole-product">The normal case: run the whole product</a></li><li data-level="3"><a href="#running-only-the-gateway" data-anchor="running-only-the-gateway">Running only the gateway</a></li><li data-level="3"><a href="#what-works-under-f5-without-the-python-backend" data-anchor="what-works-under-f5-without-the-python-backend">What works under F5 without the Python backend</a></li><li data-level="3"><a href="#the-gap-you-should-know-about" data-anchor="the-gap-you-should-know-about">The gap you should know about</a></li><li data-level="2"><a href="#5-tests-in-test-explorer" data-anchor="5-tests-in-test-explorer">5. Tests in Test Explorer</a></li><li data-level="3"><a href="#debugging-a-test" data-anchor="debugging-a-test">Debugging a test</a></li><li data-level="3"><a href="#two-behaviours-worth-knowing-before-you-change-routing" data-anchor="two-behaviours-worth-knowing-before-you-change-routing">Two behaviours worth knowing before you change routing</a></li><li data-level="2"><a href="#6-chaosruntime-the-parts-that-are-not-net" data-anchor="6-chaosruntime-the-parts-that-are-not-net">6. Chaos.Runtime: the parts that are not .NET</a></li><li data-level="3"><a href="#why-it-is-a-project-and-not-a-target-bolted-onto-the-gateway" data-anchor="why-it-is-a-project-and-not-a-target-bolted-onto-the-gateway">Why it is a project and not a target bolted onto the gateway</a></li><li data-level="3"><a href="#what-each-command-does" data-anchor="what-each-command-does">What each command does</a></li><li data-level="3"><a href="#turning-either-half-off" data-anchor="turning-either-half-off">Turning either half off</a></li><li data-level="3"><a href="#why-a-broken-document-does-not-break-your-build" data-anchor="why-a-broken-document-does-not-break-your-build">Why a broken document does not break your build</a></li><li data-level="3"><a href="#reading-the-manual-from-the-product" data-anchor="reading-the-manual-from-the-product">Reading the manual from the product</a></li><li data-level="2"><a href="#7-the-python-half" data-anchor="7-the-python-half">7. The Python half</a></li><li data-level="3"><a href="#its-tests" data-anchor="its-tests">Its tests</a></li><li data-level="3"><a href="#which-python-the-gateway-uses" data-anchor="which-python-the-gateway-uses">Which Python the gateway uses</a></li><li data-level="2"><a href="#8-what-is-not-ported-yet" data-anchor="8-what-is-not-ported-yet">8. What is not ported yet</a></li><li data-level="2"><a href="#9-related-reading" data-anchor="9-related-reading">9. Related reading</a></li></ul></aside>
+</div>
+<div class="site-search" id="search-overlay" hidden role="dialog" aria-modal="true" aria-label="Search the documentation">
+<div class="site-search-panel">
+<div class="site-search-head">
+<svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.3-4.3"/></svg>
+<input type="search" id="search-input" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="true" aria-controls="search-results" placeholder="Search every page — try black start, dead letter, interlock">
+<button type="button" class="btn btn-sm" id="search-close">Close</button>
+</div>
+<p class="site-search-status" id="search-status" role="status">Type to search every page of this help set.</p>
+<ul class="site-results" id="search-results" role="listbox" aria-label="Search results"></ul>
+<div class="site-search-foot"><span><span class="kbd-hint">&#8593;</span> <span class="kbd-hint">&#8595;</span> move</span><span><span class="kbd-hint">Enter</span> open</span><span><span class="kbd-hint">Esc</span> close</span><span><span class="kbd-hint">/</span> search from anywhere</span></div>
+</div>
+</div>
+<script src="assets/search-index.js"></script>
+<script src="assets/docs.js"></script>
+</body>
+</html>

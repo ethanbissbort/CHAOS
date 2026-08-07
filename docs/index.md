@@ -151,6 +151,22 @@ sections above depends on them.
 
 ---
 
+## Reading this offline
+
+This documentation is also **part of the product**. Building the solution
+regenerates it into an offline help site, which the gateway serves alongside the
+operator console — and which also opens straight from disk, with no network of
+any kind involved.
+
+Two shapes come out of one pass: a directory of pages, and a **single
+self-contained HTML file** with every page, the stylesheet and the search index
+inlined. The single file is the copy to open when the platform is down and you
+need [Troubleshooting](./troubleshooting.md).
+
+See [Building in Visual Studio § Chaos.Runtime](./visual-studio.md#6-chaosruntime-the-parts-that-are-not-net).
+
+---
+
 ## Conventions used throughout
 
 **"The platform requests; local controllers decide."** Everything here sits at

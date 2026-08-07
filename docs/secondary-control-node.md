@@ -1,8 +1,17 @@
 # Secondary control node
 
-SDD section 49 work-queue item 6: *"Define the primary and physically separate
-secondary-control-node deployment architecture."*
-SDD section 16.1 mitigations 2, 4 and 6; SDD section 16.2.
+What survives losing the power container, what the second node can and cannot
+do, and why it deliberately does **not** take over.
+
+This is a design and deployment document. The secondary node is a headless
+machine in another structure, so the procedures at the end are terminal
+procedures by nature — everything else here is architecture you need to
+understand before relying on it.
+
+Related: [Topology and blast radius](./topology-view.md) ·
+[Architecture](./architecture.md) ·
+[Container deployment](./advanced-container-deployment.md) ·
+[Operations](./operations.md)
 
 Deployment file: `deploy/docker-compose.secondary.yml`.
 Register asset: `it.server.secondary_control_node.01`.
@@ -191,7 +200,7 @@ the requirement.
 
 ### Default: scheduled restore from backup
 
-```
+```text
 primary:  deploy/backup/backup.sh          (nightly)
             -> pg_dump + chaos backup + configs
 secondary: pull the backup set, pg_restore into the local replica
@@ -281,7 +290,30 @@ node is not commissioned regardless of what the records say.
 
 ---
 
-## 8. Running it
+## 8. Looking at it from the desktop shell
+
+You do not need a terminal to inspect this node. In the shell, open **Settings →
+Gateway** and point it at the secondary node's address. Everything then works as
+normal: the launcher's checks, the console, the annunciator.
+
+What you should see, and what to check:
+
+| Look at | Should say |
+|---|---|
+| The console's Home screen | The site as the secondary node last saw it, with a **freshness indicator that may be hours old**. Read the age before trusting a number |
+| The Control screen | Physical control **disabled** |
+| The Energy screen | No live energy state — there is no energy manager here |
+
+Change the address back afterwards, so you are not driving the property from a
+window pointed at a replica.
+
+---
+
+## 9. Appendix — bringing the node up
+
+> **Advanced.** The secondary node is a headless machine in another structure.
+> These are terminal procedures because there is no display attached to it.
+> See also [Container deployment](./advanced-container-deployment.md).
 
 ```sh
 # On the secondary host, from a checkout of this repository:
@@ -296,18 +328,31 @@ docker compose -f deploy/docker-compose.secondary.yml exec twin chaos status
 
 Expected in `status`:
 
-```
+```text
 node role        : secondary
 physical control : disabled
 ems              : disabled
 ...
-note: EMS is configured on but suppressed: runtime.build_services never starts
-      the energy manager on a secondary node (SDD 16.1, no split supervisory control).
+note: EMS is configured on but suppressed: the platform never starts
+      the energy manager on a secondary node (no split supervisory control).
 ```
 
-If `physical control` reads `ENABLED` on this node, stop and fix it before going
-further. That is the failure mode this whole document exists to prevent.
+**If `physical control` reads `ENABLED` on this node, stop and fix it before
+going further.** That is the failure mode this whole document exists to prevent.
 
 To enable the MQTT bridge, uncomment the `connection primary-bridge` block in
 `deploy/mosquitto/mosquitto.conf` **on the secondary node only**, with a
-dedicated `svc-bridge-secondary` identity. Add no `out` topic rules.
+dedicated bridge identity. **Add no outbound topic rules** — telemetry comes in;
+nothing goes out.
+
+---
+
+## 10. Related reading
+
+| Document | Why |
+|---|---|
+| [Topology and blast radius](./topology-view.md) | The computed answer to "what does losing the container cost" |
+| [Architecture](./architecture.md) | Why the energy manager is the only role-suppressed service |
+| [Container deployment](./advanced-container-deployment.md) | The stack this node runs |
+| [Operations](./operations.md) | Backup, replication verification, and the loss-of-primary runbook |
+| [Design decision DD-003](./design-decisions/DD-003-secondary-control-node-placement.md) | The placement analysis. Status: *proposed* |

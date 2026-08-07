@@ -1,12 +1,56 @@
-# Windows deployment
+# Windows packaging
 
-How Project CHAOS is built, packaged and installed on Windows.
+How Project CHAOS is packaged into an installable product: the embedded Python
+runtime, the build scripts and the MSI.
+
+> **Advanced. You do not need this to build, run or test CHAOS.**
+>
+> Building the solution and running the tests is done in Visual Studio 2026 —
+> see [Building in Visual Studio 2026](./visual-studio.md). Installing and
+> running the product is [Getting started](./getting-started.md).
+>
+> This document is for **producing the installer**. It is build engineering, and
+> it is PowerShell by nature: the packaging pipeline runs unattended in CI and on
+> a release machine, not from a menu. Read it when you are cutting a build,
+> changing the pinned Python, or diagnosing a runtime that shipped broken.
 
 > **Scope note.** This document currently covers the **embedded Python runtime**
 > — the `python\` tree that lets the product run on a machine with no Python
 > installed. The .NET publish, MSI authoring, service registration and
 > commissioning sections belong to the host/installer work and slot in around
 > these; add them, do not replace them.
+
+Related: [Building in Visual Studio 2026](./visual-studio.md) ·
+[Command line](./advanced-command-line.md) ·
+[Getting started](./getting-started.md)
+
+---
+
+## The build tasks
+
+`windows\build\build.ps1` drives the whole pipeline. One task per stage, and
+`-Task all` runs the four that produce a product:
+
+| Task | Does |
+|---|---|
+| `restore` | Restore `windows\CHAOS.sln` |
+| `build` | Build the whole solution, including the WinUI 3 shell |
+| `test` | Run the .NET test suite across the solution |
+| `runtime` | Build the embedded Python tree (the rest of this document) |
+| `publish` | Publish `Chaos.Host` and `Chaos.Shell`, self-contained |
+| `stage` | Assemble the complete install tree in `out\stage` |
+| `package` | Build the MSI from `out\stage` |
+| `smoke` | Run the staged tree and check it actually serves |
+| `all` | `runtime` + `publish` + `stage` + `package` |
+| `clean` | Delete `windows\build\out` |
+
+Order matters in one place only: `stage` lays down `app\` before the runtime is
+copied in, and `smoke` needs a staged tree to run against.
+
+**`restore`, `build` and `test` duplicate what Visual Studio already does.**
+They exist for CI and for a release machine with no IDE. If you are at a
+keyboard with Visual Studio open, use Solution Explorer and Test Explorer
+instead.
 
 ---
 
@@ -20,14 +64,34 @@ babysit a Python install on a machine in a container next to a battery bank, and
 acceptable failure mode. So the product carries its own interpreter, built from
 the official Windows embeddable CPython distribution.
 
-The .NET gateway (`Chaos.Host`) supervises that interpreter as a child process.
-`PythonRuntimeResolver` resolves exactly `<install root>\python\python.exe` and,
-finding a `python\` directory without an interpreter in it, treats the install as
-**damaged** and refuses to fall back to a system Python. That refusal is
-deliberate: borrowing the machine's Python would run the control plane against
-dependency versions nobody tested.
+The .NET gateway (`Chaos.Host`) is built to supervise that interpreter as a
+child process, and its first-run setup already runs the platform's own commands
+through it. `PythonRuntimeResolver` resolves exactly
+`<install root>\python\python.exe` and, finding a `python\` directory without an
+interpreter in it, treats the install as **damaged** and refuses to fall back to
+a system Python. That refusal is deliberate: borrowing the machine's Python would
+run the control plane against dependency versions nobody tested.
 
-### Run these two commands
+(The gateway's shipped entry point does not currently register the process
+supervisor, so the backend is started by something else — see
+[Architecture § The gap: process supervision](./architecture.md#the-gap-process-supervision)
+and [Visual Studio § The gap you should know about](./visual-studio.md#the-gap-you-should-know-about).
+Nothing in this document depends on that; the interpreter is resolved the same
+way either way.)
+
+### Building it from Visual Studio
+
+**You do not have to type any of the commands below.** Building the solution
+builds this runtime, because `Chaos.Runtime` owns it: Build builds it if it is
+missing or out of date, Rebuild forces it from scratch, and Clean deliberately
+leaves it alone so that a reflexive Clean Solution does not cost a 55 MB
+download. See
+[Visual Studio § Chaos.Runtime](./visual-studio.md#6-chaosruntime-the-parts-that-are-not-net).
+
+The rest of this section is what that project runs, and what to do when it
+fails.
+
+### The two commands it runs
 
 From a normal PowerShell prompt (Windows PowerShell 5.1 or PowerShell 7 — both
 are supported), in `windows\build`:
@@ -54,7 +118,7 @@ rights are not needed for either command.
 
 ### What gets produced
 
-```
+```text
 <install root>\python\
     python.exe                       <- the supervisor resolves THIS path
     pythonw.exe
@@ -114,7 +178,7 @@ what must not put it in that position.
 
 The supervisor launches the backend as:
 
-```
+```text
 python.exe -m chaos.cli --log-level <level> serve --host <addr> --port <port>
 ```
 
@@ -125,7 +189,7 @@ so `python -m chaos.cli --help` is a check in its own right, and
 
 An embeddable distribution ships `python311._pth`, which upstream contains:
 
-```
+```text
 python311.zip
 .
 
@@ -135,7 +199,7 @@ python311.zip
 
 The build rewrites it whole (not with a regex against upstream) to:
 
-```
+```text
 python311.zip
 .
 Lib\site-packages
@@ -270,7 +334,7 @@ creates, taken from `sys.executable` — i.e. the staging tree. The MSI then mov
 everything to `%ProgramFiles%\Project CHAOS\`, where that path does not exist,
 and every launcher dies with:
 
-```
+```text
 Fatal error in launcher: Unable to create process using
 '"...\out\stage\python\python.exe" "...\Scripts\chaos.exe"'
 ```
@@ -282,7 +346,7 @@ which runs from the staging directory.
 So `relocate-launchers.py` rewrites each shebang to the launcher's own
 documented relative form:
 
-```
+```text
 #!<launcher_dir>\"..\python.exe"
 ```
 

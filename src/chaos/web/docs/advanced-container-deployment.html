@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<meta name="generator" content="tools/build_docs.py">
+<title>Container deployment — Project CHAOS help</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http%3A//www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230e1a16'/%3E%3Cpath d='M6 18 16 8l10 10v8H6z' fill='none' stroke='%234ade80' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/docs.css">
+<noscript><style>.doc-page[hidden]{display:block!important}.site-searchbtn{display:none}</style></noscript>
+</head>
+<body data-page="advanced-container-deployment">
+<a class="skip-link" href="#content">Skip to the documentation</a>
+<header class="site-topbar">
+<button type="button" class="btn btn-icon site-navtoggle" id="nav-toggle" aria-controls="site-nav" aria-expanded="false" title="Documents"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span class="visually-hidden">Show the document list</span></button>
+<a class="site-identity" href="index.html"><span class="site-mark"><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M5 19 16 8l11 11v7H5z"/></svg></span><span class="site-titles"><h1>Project CHAOS help</h1><p>Central Homestead Automation and Operation System</p></span></a>
+<button type="button" class="site-searchbtn" id="search-open"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.3-4.3"/></svg><span>Search the documentation</span><span class="kbd-hint">/</span></button>
+<div class="site-tools">
+<button type="button" class="btn btn-sm" id="theme-toggle"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4"/></svg><span class="theme-label">System</span></button>
+<button type="button" class="btn btn-icon" id="print-page" onclick="window.print()" title="Print this page"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M7 9V4h10v5M7 18H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2"/><rect x="7" y="14" width="10" height="6" rx="1"/></svg><span class="visually-hidden">Print this page</span></button>
+</div>
+</header>
+<div class="site-shell">
+<nav class="site-nav" id="site-nav" aria-label="Documents"><h2>Overview</h2><ul><li><a href="index.html" data-page="index"><span class="nav-num">01</span><span>Project CHAOS documentation</span></a></li><li><a href="readme.html" data-page="readme"><span class="nav-num">02</span><span>Project CHAOS</span></a></li></ul><h2>Using CHAOS</h2><ul><li><a href="getting-started.html" data-page="getting-started"><span class="nav-num">03</span><span>Getting started</span></a></li><li><a href="visual-studio.html" data-page="visual-studio"><span class="nav-num">04</span><span>Building in Visual Studio 2026</span></a></li><li><a href="desktop-shell.html" data-page="desktop-shell"><span class="nav-num">05</span><span>The desktop shell</span></a></li><li><a href="operator-console.html" data-page="operator-console"><span class="nav-num">06</span><span>The operator console</span></a></li><li><a href="annunciator.html" data-page="annunciator"><span class="nav-num">07</span><span>The annunciator panel</span></a></li><li><a href="topology-view.html" data-page="topology-view"><span class="nav-num">08</span><span>Topology and blast radius</span></a></li><li><a href="rack-view.html" data-page="rack-view"><span class="nav-num">09</span><span>Rack elevation</span></a></li></ul><h2>How the platform works</h2><ul><li><a href="architecture.html" data-page="architecture"><span class="nav-num">10</span><span>Architecture</span></a></li><li><a href="alarms.html" data-page="alarms"><span class="nav-num">11</span><span>Alarms, incidents and notification</span></a></li><li><a href="control.html" data-page="control"><span class="nav-num">12</span><span>Control, interlocks and operating modes</span></a></li><li><a href="design-package.html" data-page="design-package"><span class="nav-num">13</span><span>The design package</span></a></li><li><a href="integration-findings.html" data-page="integration-findings"><span class="nav-num">14</span><span>Integration findings</span></a></li></ul><h2>Operating the property</h2><ul><li><a href="operations.html" data-page="operations"><span class="nav-num">15</span><span>Operations runbooks</span></a></li><li><a href="troubleshooting.html" data-page="troubleshooting"><span class="nav-num">16</span><span>Troubleshooting</span></a></li><li><a href="commissioning.html" data-page="commissioning"><span class="nav-num">17</span><span>Commissioning</span></a></li><li><a href="secondary-control-node.html" data-page="secondary-control-node"><span class="nav-num">18</span><span>Secondary control node</span></a></li><li><a href="network-and-trust-boundaries.html" data-page="network-and-trust-boundaries"><span class="nav-num">19</span><span>Network and trust boundaries</span></a></li><li><a href="water-control-narrative.html" data-page="water-control-narrative"><span class="nav-num">20</span><span>Water-system control narrative</span></a></li></ul><h2>Reference</h2><ul><li><a href="api.html" data-page="api"><span class="nav-num">21</span><span>API reference</span></a></li><li><a href="design-decisions.html" data-page="design-decisions"><span class="nav-num">22</span><span>Design Decision Records</span></a></li></ul><h2>Advanced — you do not need these</h2><ul><li><a href="advanced-command-line.html" data-page="advanced-command-line"><span class="nav-num">23</span><span>Command line</span></a></li><li><a href="advanced-container-deployment.html" data-page="advanced-container-deployment" aria-current="page"><span class="nav-num">24</span><span>Container deployment</span></a></li><li><a href="advanced-windows-packaging.html" data-page="advanced-windows-packaging"><span class="nav-num">25</span><span>Windows packaging</span></a></li></ul><h2>Design Decisions</h2><ul><li><a href="design-decisions-dd-001-energy-capacity-revision.html" data-page="design-decisions-dd-001-energy-capacity-revision"><span class="nav-num">26</span><span>DD-001: Authoritative energy design revision</span></a></li><li><a href="design-decisions-dd-002-historian-selection.html" data-page="design-decisions-dd-002-historian-selection"><span class="nav-num">27</span><span>DD-002: Time-series historian selection</span></a></li><li><a href="design-decisions-dd-003-secondary-control-node-placement.html" data-page="design-decisions-dd-003-secondary-control-node-placement"><span class="nav-num">28</span><span>DD-003: Secondary control node placement</span></a></li><li><a href="design-decisions-dd-004-controller-family.html" data-page="design-decisions-dd-004-controller-family"><span class="nav-num">29</span><span>DD-004: Standard PLC / controller family for critical local control</span></a></li></ul></nav>
+<main class="site-main" id="content" tabindex="-1">
+<article class="doc-page" id="advanced-container-deployment" data-page="advanced-container-deployment"><p class="doc-breadcrumb"><span>Advanced — you do not need these</span><span>Container deployment</span></p><p class="doc-source">docs/advanced-container-deployment.md</p><div class="doc-body"><h1 id="container-deployment" class="doc-h"><span class="doc-h-text">Container deployment</span><a class="doc-anchor" href="#container-deployment" aria-label="Link to this section"></a></h1>
+<blockquote><p><strong>Advanced. You do not need this to run Project CHAOS.</strong></p>
+<p>The supported way to run CHAOS on a Windows node is the installed product and
+the desktop shell — see <a href="getting-started.html">Getting started</a>.</p>
+<p>This document covers the <strong>container deployment</strong>: a Docker Compose stack for
+the primary node and a second one for a headless secondary control node. It is
+the right shape for a Linux host in another structure with no display, and it
+is what CI exercises. Everything here is a terminal task by nature.</p></blockquote>
+<p>Related: <a href="advanced-command-line.html">Command line</a> ·
+<a href="secondary-control-node.html">Secondary control node</a> ·
+<a href="network-and-trust-boundaries.html">Network and trust boundaries</a> ·
+<a href="operations.html">Operations</a></p>
+<hr>
+<h2 id="1-topology" class="doc-h"><span class="doc-h-text">1. Topology</span><a class="doc-anchor" href="#1-topology" aria-label="Link to this section"></a></h2>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Node</th><th scope="col">Where</th><th scope="col">File</th><th scope="col">Services</th></tr></thead><tbody><tr><td><strong>Primary</strong></td><td>The 20-foot power/utilities/battery/server container</td><td><code>deploy/docker-compose.yml</code></td><td>PostgreSQL+PostGIS, Mosquitto, the platform API, Prometheus, Grafana</td></tr><tr><td><strong>Secondary</strong></td><td>A physically separate structure (placement undecided)</td><td><code>deploy/docker-compose.secondary.yml</code></td><td>PostgreSQL replica, Mosquitto with an inbound-only bridge, the platform API in secondary role, Grafana</td></tr></tbody></table></div>
+<p>Both run the same image. The role is chosen at runtime by <code>CHAOS_NODE_ROLE</code>.</p>
+<p>Building a separate image for the secondary node would produce a secondary node
+nobody has tested — and the version drift shows up exactly when you need it.</p>
+<p><strong>Everything in the primary stack shares one physical failure domain.</strong> The
+design requires you to assume it is gone. Read
+<a href="secondary-control-node.html">Secondary control node</a> before treating the
+primary as the whole system.</p>
+<hr>
+<h2 id="2-local-development-without-containers" class="doc-h"><span class="doc-h-text">2. Local development without containers</span><a class="doc-anchor" href="#2-local-development-without-containers" aria-label="Link to this section"></a></h2>
+<p>The platform runs on SQLite and an in-memory bus: no PostgreSQL, no broker, no
+containers, no hardware. That is also the "bench test" commissioning step.</p>
+<div class="doc-code" data-lang="sh"><div class="doc-code-bar"><span class="doc-code-lang">sh</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-sh">python3 <span class="t-o">-m</span> venv .venv &amp;&amp; . .venv/bin/activate
+make install                      <span class="t-c"># pip install -e ".[dev]"</span>
+
+make validate                     <span class="t-c"># design package vs. its JSON Schemas</span>
+make init-db
+make load
+make status
+make serve                        <span class="t-c"># http&#58;//127.0.0.1:8000</span></code></pre></div>
+<p>Give it something to look at, in a second terminal:</p>
+<div class="doc-code" data-lang="sh"><div class="doc-code-bar"><span class="doc-code-lang">sh</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-sh">make simulate ARGS=<span class="t-s">"--list-scenarios"</span>
+make simulate ARGS=<span class="t-s">"--scenario &lt;name&gt; --offline"</span></code></pre></div>
+<h3 id="settings" class="doc-h"><span class="doc-h-text">Settings</span><a class="doc-anchor" href="#settings" aria-label="Link to this section"></a></h3>
+<p>Every setting in <code>src/chaos/config.py</code> is overridable as <code>CHAOS_&lt;FIELD&gt;</code>, and a
+<code>.env</code> in the working directory is read automatically.</p>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Variable</th><th scope="col">Default</th><th scope="col">Notes</th></tr></thead><tbody><tr><td><code>CHAOS_NODE_ROLE</code></td><td><code>primary</code></td><td><code>primary</code> or <code>secondary</code></td></tr><tr><td><code>CHAOS_DATABASE_URL</code></td><td><code>sqlite&#58;///var/homestead.db</code></td><td>PostgreSQL needs the <code>postgres</code> extra</td></tr><tr><td><code>CHAOS_MQTT_ENABLED</code></td><td><code>true</code></td><td><code>false</code> runs the API with no bus and no background services</td></tr><tr><td><code>CHAOS_ALLOW_PHYSICAL_CONTROL</code></td><td><code>false</code></td><td>The safety gate. See section 6</td></tr><tr><td><code>CHAOS_EMS_ENABLED</code></td><td><code>true</code></td><td>Ignored on a secondary node</td></tr><tr><td><code>CHAOS_HISTORIAN_RAW_RETENTION_DAYS</code></td><td><code>90</code></td><td></td></tr><tr><td><code>CHAOS_NOTIFICATION_BACKENDS</code></td><td><code>log</code></td><td>Comma separated: <code>log,email,push,voice</code> — only <code>log</code> is implemented</td></tr></tbody></table></div>
+<p><strong>The API port here is 8000</strong>, because this is the platform backend running on
+its own. In the packaged Windows product the backend is on 8081 behind the
+gateway on 8080. See <a href="architecture.html">Architecture</a>.</p>
+<hr>
+<h2 id="3-primary-node" class="doc-h"><span class="doc-h-text">3. Primary node</span><a class="doc-anchor" href="#3-primary-node" aria-label="Link to this section"></a></h2>
+<h3 id="prerequisites" class="doc-h"><span class="doc-h-text">Prerequisites</span><a class="doc-anchor" href="#prerequisites" aria-label="Link to this section"></a></h3>
+<ul><li>Docker Engine with the Compose plugin.</li><li>A host in the servers network zone.</li><li><strong>A firewall in front of it.</strong> The compose file binds every port to
+<code>${BIND_ADDRESS:-127.0.0.1}</code> precisely so that Docker's port publishing is not
+what decides who can reach a control API.</li></ul>
+<h3 id="configure" class="doc-h"><span class="doc-h-text">Configure</span><a class="doc-anchor" href="#configure" aria-label="Link to this section"></a></h3>
+<div class="doc-code" data-lang="sh"><div class="doc-code-bar"><span class="doc-code-lang">sh</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-sh">cp deploy/.env.example deploy/.env
+<span class="t-v">$EDITOR</span> deploy/.env</code></pre></div>
+<p>Replace every <code>CHANGE_ME</code>. <strong>Generate values; do not invent them:</strong></p>
+<div class="doc-code" data-lang="sh"><div class="doc-code-bar"><span class="doc-code-lang">sh</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-sh">python3 <span class="t-o">-c</span> <span class="t-s">"import secrets; print(secrets.token_urlsafe(32))"</span></code></pre></div>
+<p>Per-device and per-service credentials are required. One reused secret turns a
+single compromised greenhouse sensor into broker-wide command authority.
+<code>deploy/.env</code> is gitignored — keep it that way.</p>
+<h3 id="start" class="doc-h"><span class="doc-h-text">Start</span><a class="doc-anchor" href="#start" aria-label="Link to this section"></a></h3>
+<div class="doc-code" data-lang="sh"><div class="doc-code-bar"><span class="doc-code-lang">sh</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-sh">make up
+make ps          <span class="t-c"># watch until every service is healthy</span>
+make logs</code></pre></div>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Service</th><th scope="col">Port, bound to <code>BIND_ADDRESS</code></th></tr></thead><tbody><tr><td>Platform API and console</td><td>8000</td></tr><tr><td>Grafana</td><td>3000</td></tr><tr><td>Prometheus</td><td>9090</td></tr><tr><td>Mosquitto</td><td>1883, 8883</td></tr><tr><td>PostgreSQL</td><td>5432</td></tr></tbody></table></div>
+<h3 id="initialise" class="doc-h"><span class="doc-h-text">Initialise</span><a class="doc-anchor" href="#initialise" aria-label="Link to this section"></a></h3>
+<div class="doc-code" data-lang="sh"><div class="doc-code-bar"><span class="doc-code-lang">sh</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-sh">COMPOSE=<span class="t-s">"docker compose -f deploy/docker-compose.yml"</span>
+
+<span class="t-v">$COMPOSE</span> <span class="t-k">exec</span> twin chaos validate
+<span class="t-v">$COMPOSE</span> <span class="t-k">exec</span> twin chaos init-db
+<span class="t-v">$COMPOSE</span> <span class="t-k">exec</span> twin chaos load-all
+<span class="t-v">$COMPOSE</span> <span class="t-k">exec</span> twin chaos status</code></pre></div>
+<p>Table creation also runs at API startup, so this is belt and braces — but doing
+it explicitly gives you an error message instead of a log line if the database
+rejects it.</p>
+<p><strong>On a Windows node the gateway does all of this for you</strong>; see
+<a href="getting-started.html#4-what-first-run-setup-does">Getting started § What first-run setup does</a>.</p>
+<h3 id="broker-credentials" class="doc-h"><span class="doc-h-text">Broker credentials</span><a class="doc-anchor" href="#broker-credentials" aria-label="Link to this section"></a></h3>
+<p>The broker will not accept a connection until identities exist: anonymous access
+is off, and both the password and permission files live in a volume rather than
+in the repository. Follow <code>deploy/mosquitto/README.md</code> before expecting
+telemetry.</p>
+<p>Sanity check: look for denials in the broker log, and confirm <code>chaos status</code>
+reports broker authentication as configured.</p>
+<hr>
+<h2 id="4-secondary-node" class="doc-h"><span class="doc-h-text">4. Secondary node</span><a class="doc-anchor" href="#4-secondary-node" aria-label="Link to this section"></a></h2>
+<p>Full treatment in <a href="secondary-control-node.html">Secondary control node</a>. Short
+version:</p>
+<div class="doc-code" data-lang="sh"><div class="doc-code-bar"><span class="doc-code-lang">sh</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-sh">cp deploy/.env.example deploy/.env
+<span class="t-c"># Set every SECONDARY_* value to something DIFFERENT from the primary's.</span>
+make secondary-up
+docker compose <span class="t-o">-f</span> deploy/docker-compose.secondary.yml <span class="t-k">exec</span> twin chaos status</code></pre></div>
+<p>Confirm the output reports <code>node role: secondary</code>, <code>physical control : disabled</code>, <code>ems : disabled</code>.</p>
+<p><strong>If physical control reads <code>ENABLED</code>, stop and fix it.</strong> That is the failure
+mode the whole secondary-node design exists to prevent.</p>
+<hr>
+<h2 id="5-the-image" class="doc-h"><span class="doc-h-text">5. The image</span><a class="doc-anchor" href="#5-the-image" aria-label="Link to this section"></a></h2>
+<div class="doc-code" data-lang="sh"><div class="doc-code-bar"><span class="doc-code-lang">sh</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-sh">make build       <span class="t-c"># docker build -f deploy/Dockerfile -t chaos:local .</span></code></pre></div>
+<p>Multi-stage: stage 1 builds a virtual environment with the <code>postgres</code> extra;
+stage 2 is a slim Python base plus <code>curl</code> and <code>tini</code>.</p>
+<ul><li><strong>Runs as a non-root uid, never root.</strong> The platform can command physical
+plant; it has no business running as uid 0.</li><li>The health check polls <code>/health</code>, which reports liveness, version and node
+role and nothing else — no telemetry, no credentials, no control state.</li><li><code>data/</code>, <code>schemas/</code> and <code>tools/</code> are copied in, so validation and loading work
+offline with no repository checkout.</li><li><code>/app/var</code> is a volume: the SQLite fallback database and local backups.</li></ul>
+<p>CI builds the image, runs the CLI inside it, and asserts the container is
+non-root and reaches healthy.</p>
+<hr>
+<h2 id="6-the-safety-gate" class="doc-h"><span class="doc-h-text">6. The safety gate</span><a class="doc-anchor" href="#6-the-safety-gate" aria-label="Link to this section"></a></h2>
+<p><code>CHAOS_ALLOW_PHYSICAL_CONTROL</code> defaults to <code>false</code> and should stay there until
+the subsystem you intend to control has passed all twelve commissioning steps
+and has the records to show for it.</p>
+<p>Two independent gates exist, and turning on the global one <strong>does not</strong> enable
+control of anything that has not been commissioned. See
+<a href="control.html#6-the-two-safety-gates">Control § The two safety gates</a> and
+<a href="commissioning.html">Commissioning</a>.</p>
+<hr>
+<h2 id="7-backups" class="doc-h"><span class="doc-h-text">7. Backups</span><a class="doc-anchor" href="#7-backups" aria-label="Link to this section"></a></h2>
+<div class="doc-code" data-lang="sh"><div class="doc-code-bar"><span class="doc-code-lang">sh</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-sh"><span class="t-c"># Portable registry + configuration archive:</span>
+docker compose <span class="t-o">-f</span> deploy/docker-compose.yml <span class="t-k">exec</span> twin chaos backup
+
+<span class="t-c"># Full backup set: database dump + registry + broker + dashboards + configs:</span>
+deploy/backup/backup.sh</code></pre></div>
+<p>Schedule the second one:</p>
+<div class="doc-code" data-lang="cron"><div class="doc-code-bar"><span class="doc-code-lang">cron</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-cron">15 2 * * * /srv/chaos/deploy/backup/backup.sh &gt;&gt; /var/log/homestead-backup.log 2&gt;&amp;1</code></pre></div>
+<p>The default destination is <code>/var/backups/homestead</code>, overridable with
+<code>BACKUP_DIR</code>. A set contains the database dump, the registry archive, the broker
+configuration (<strong>sensitive</strong>), the dashboards, the deployment configuration, a
+manifest and a checksum file. <strong><code>deploy/.env</code> is excluded deliberately</strong> — a
+backup that quietly contains every credential on the property is a liability.</p>
+<p><strong>A backup written to a disk inside the power container is not a backup.</strong> It is
+a second copy in the same failure domain. Keep three: local, on the secondary
+node in another structure, and offline/off-property.</p>
+<h3 id="verifying" class="doc-h"><span class="doc-h-text">Verifying</span><a class="doc-anchor" href="#verifying" aria-label="Link to this section"></a></h3>
+<div class="doc-code" data-lang="sh"><div class="doc-code-bar"><span class="doc-code-lang">sh</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-sh"><span class="t-k">cd</span> /var/backups/homestead/&lt;timestamp&gt;
+sha256sum <span class="t-o">-c</span> SHA256SUMS
+cat MANIFEST                      <span class="t-c"># failures : 0</span>
+tar tzf twin-registry.tar.gz | head</code></pre></div>
+<h3 id="restoring-the-database" class="doc-h"><span class="doc-h-text">Restoring the database</span><a class="doc-anchor" href="#restoring-the-database" aria-label="Link to this section"></a></h3>
+<div class="doc-code" data-lang="sh"><div class="doc-code-bar"><span class="doc-code-lang">sh</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-sh">COMPOSE=<span class="t-s">"docker compose -f deploy/docker-compose.yml"</span>
+
+<span class="t-v">$COMPOSE</span> stop twin                                   <span class="t-c"># stop writers first</span>
+<span class="t-v">$COMPOSE</span> <span class="t-k">exec</span> <span class="t-o">-T</span> postgres dropdb   <span class="t-o">-U</span> <span class="t-s">"$POSTGRES_USER"</span> homestead
+<span class="t-v">$COMPOSE</span> <span class="t-k">exec</span> <span class="t-o">-T</span> postgres createdb <span class="t-o">-U</span> <span class="t-s">"$POSTGRES_USER"</span> homestead
+<span class="t-v">$COMPOSE</span> <span class="t-k">exec</span> <span class="t-o">-T</span> postgres psql <span class="t-o">-U</span> <span class="t-s">"$POSTGRES_USER"</span> <span class="t-o">-d</span> homestead \
+  <span class="t-o">-f</span> /docker-entrypoint-initdb.d/<span class="t-n">10</span>-homestead.sql
+<span class="t-v">$COMPOSE</span> <span class="t-k">exec</span> <span class="t-o">-T</span> postgres pg_restore <span class="t-o">-U</span> <span class="t-s">"$POSTGRES_USER"</span> <span class="t-o">-d</span> homestead \
+  <span class="t-o">--no-owner</span> <span class="t-o">--no-privileges</span> &lt; postgres.dump
+<span class="t-v">$COMPOSE</span> start twin
+<span class="t-v">$COMPOSE</span> <span class="t-k">exec</span> twin chaos status                      <span class="t-c"># counts vs. MANIFEST</span></code></pre></div>
+<h3 id="rebuilding-from-the-design-package-instead" class="doc-h"><span class="doc-h-text">Rebuilding from the design package instead</span><a class="doc-anchor" href="#rebuilding-from-the-design-package-instead" aria-label="Link to this section"></a></h3>
+<p>Often faster, and often better: <code>data/</code> in version control is the source of
+truth for registry content. <strong>History is not recoverable this way.</strong></p>
+<div class="doc-code" data-lang="sh"><div class="doc-code-bar"><span class="doc-code-lang">sh</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-sh">chaos init-db
+chaos load-all
+chaos status</code></pre></div>
+<h3 id="restoring-onto-a-machine-with-nothing" class="doc-h"><span class="doc-h-text">Restoring onto a machine with nothing</span><a class="doc-anchor" href="#restoring-onto-a-machine-with-nothing" aria-label="Link to this section"></a></h3>
+<p>The portable archive is JSON plus YAML. Untar it and read it — a manifest with
+counts and provenance, a restore procedure, one JSON file per table, and the
+design package the registry was built from. That is the case where the container
+is gone and you have a laptop.</p>
+<h3 id="credentials-are-re-issued-not-restored" class="doc-h"><span class="doc-h-text">Credentials are re-issued, not restored</span><a class="doc-anchor" href="#credentials-are-re-issued-not-restored" aria-label="Link to this section"></a></h3>
+<p>If the container was destroyed or compromised, the secrets inside it should be
+assumed readable. Re-issue broker identities, dashboard admin and database
+passwords, and record the new identities in the registry.</p>
+<hr>
+<h2 id="8-retention" class="doc-h"><span class="doc-h-text">8. Retention</span><a class="doc-anchor" href="#8-retention" aria-label="Link to this section"></a></h2>
+<div class="doc-code" data-lang="sh"><div class="doc-code-bar"><span class="doc-code-lang">sh</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-sh">chaos retention <span class="t-o">--dry-run</span>       <span class="t-c"># default; rolls back</span>
+chaos retention <span class="t-o">--apply</span></code></pre></div>
+<p>Schedule daily, off-peak, after the backup:</p>
+<div class="doc-code" data-lang="cron"><div class="doc-code-bar"><span class="doc-code-lang">cron</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-cron">30 3 * * * docker compose -f /srv/chaos/deploy/docker-compose.yml \
+             exec -T twin chaos retention --apply</code></pre></div>
+<p>Policy and warnings: <a href="operations.html#5-data-retention">Operations § Data retention</a>.</p>
+<hr>
+<h2 id="9-upgrading" class="doc-h"><span class="doc-h-text">9. Upgrading</span><a class="doc-anchor" href="#9-upgrading" aria-label="Link to this section"></a></h2>
+<div class="doc-code" data-lang="sh"><div class="doc-code-bar"><span class="doc-code-lang">sh</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-sh">git pull
+make build
+make up                                          <span class="t-c"># recreates changed services</span>
+docker compose <span class="t-o">-f</span> deploy/docker-compose.yml <span class="t-k">exec</span> twin chaos init-db
+docker compose <span class="t-o">-f</span> deploy/docker-compose.yml <span class="t-k">exec</span> twin chaos status</code></pre></div>
+<p><strong>There are no schema migrations yet.</strong> Table creation adds new tables but never
+alters existing ones. A change to an existing column is currently a
+dump-and-restore. Alembic is declared in the <code>postgres</code> extra for when this
+stops being acceptable — which is the moment real telemetry is in the historian.</p>
+<p><strong>Take a backup before every upgrade.</strong></p>
+<hr>
+<h2 id="10-troubleshooting-the-container-stack" class="doc-h"><span class="doc-h-text">10. Troubleshooting the container stack</span><a class="doc-anchor" href="#10-troubleshooting-the-container-stack" aria-label="Link to this section"></a></h2>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Symptom</th><th scope="col">Check</th></tr></thead><tbody><tr><td>The platform container restarts repeatedly</td><td><code>make logs</code>. Usually the database URL or a missing broker username</td></tr><tr><td>The health check never goes healthy</td><td>Inspect the container's health state. <code>/health</code> binds to <code>CHAOS_API_PORT</code></td></tr><tr><td>No telemetry arriving</td><td><code>chaos status</code> → dead-letter count, then the broker log for denied publishes</td></tr><tr><td><code>status</code> shows zero assets</td><td><code>load-all</code> has not run, or ran against a different database</td></tr><tr><td>Grafana panels empty</td><td>Correct — the platform writes nothing until ingest runs. Check the datasource first: Connections → Data sources → homestead-pg → Save &amp; test</td></tr><tr><td>Prometheus shows one target</td><td>Correct. Every other job is commented out because its exporter is not deployed</td></tr><tr><td><code>psycopg</code> import error</td><td>Install the <code>postgres</code> extra, or use the image, which includes it</td></tr><tr><td>Compose refuses to start</td><td><code>docker compose -f deploy/docker-compose.yml config -q</code> names the missing variable</td></tr></tbody></table></div>
+<p>For symptoms on a Windows node, use <a href="troubleshooting.html">Troubleshooting</a>
+instead — it is written for the shell and the console.</p>
+<hr>
+<h2 id="11-related-reading" class="doc-h"><span class="doc-h-text">11. Related reading</span><a class="doc-anchor" href="#11-related-reading" aria-label="Link to this section"></a></h2>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Document</th><th scope="col">Why</th></tr></thead><tbody><tr><td><a href="advanced-command-line.html">Command line</a></td><td>Every subcommand used above</td></tr><tr><td><a href="secondary-control-node.html">Secondary control node</a></td><td>The node the second stack is for</td></tr><tr><td><a href="network-and-trust-boundaries.html">Network and trust boundaries</a></td><td>Zones, flows and service identities</td></tr><tr><td><a href="operations.html">Operations</a></td><td>What to do with a running stack</td></tr><tr><td><a href="architecture.html">Architecture</a></td><td>How this shape relates to the Windows product</td></tr></tbody></table></div></div><nav class="doc-pager" aria-label="Reading order"><a class="pager-prev" href="advanced-command-line.html" data-page="advanced-command-line"><span class="pager-role">Previous</span>Command line</a><a class="pager-next" href="advanced-windows-packaging.html" data-page="advanced-windows-packaging"><span class="pager-role">Next</span>Windows packaging</a></nav></article>
+</main>
+<aside class="site-toc" aria-label="On this page"><h2>On this page</h2><ul><li data-level="2"><a href="#1-topology" data-anchor="1-topology">1. Topology</a></li><li data-level="2"><a href="#2-local-development-without-containers" data-anchor="2-local-development-without-containers">2. Local development without containers</a></li><li data-level="3"><a href="#settings" data-anchor="settings">Settings</a></li><li data-level="2"><a href="#3-primary-node" data-anchor="3-primary-node">3. Primary node</a></li><li data-level="3"><a href="#prerequisites" data-anchor="prerequisites">Prerequisites</a></li><li data-level="3"><a href="#configure" data-anchor="configure">Configure</a></li><li data-level="3"><a href="#start" data-anchor="start">Start</a></li><li data-level="3"><a href="#initialise" data-anchor="initialise">Initialise</a></li><li data-level="3"><a href="#broker-credentials" data-anchor="broker-credentials">Broker credentials</a></li><li data-level="2"><a href="#4-secondary-node" data-anchor="4-secondary-node">4. Secondary node</a></li><li data-level="2"><a href="#5-the-image" data-anchor="5-the-image">5. The image</a></li><li data-level="2"><a href="#6-the-safety-gate" data-anchor="6-the-safety-gate">6. The safety gate</a></li><li data-level="2"><a href="#7-backups" data-anchor="7-backups">7. Backups</a></li><li data-level="3"><a href="#verifying" data-anchor="verifying">Verifying</a></li><li data-level="3"><a href="#restoring-the-database" data-anchor="restoring-the-database">Restoring the database</a></li><li data-level="3"><a href="#rebuilding-from-the-design-package-instead" data-anchor="rebuilding-from-the-design-package-instead">Rebuilding from the design package instead</a></li><li data-level="3"><a href="#restoring-onto-a-machine-with-nothing" data-anchor="restoring-onto-a-machine-with-nothing">Restoring onto a machine with nothing</a></li><li data-level="3"><a href="#credentials-are-re-issued-not-restored" data-anchor="credentials-are-re-issued-not-restored">Credentials are re-issued, not restored</a></li><li data-level="2"><a href="#8-retention" data-anchor="8-retention">8. Retention</a></li><li data-level="2"><a href="#9-upgrading" data-anchor="9-upgrading">9. Upgrading</a></li><li data-level="2"><a href="#10-troubleshooting-the-container-stack" data-anchor="10-troubleshooting-the-container-stack">10. Troubleshooting the container stack</a></li><li data-level="2"><a href="#11-related-reading" data-anchor="11-related-reading">11. Related reading</a></li></ul></aside>
+</div>
+<div class="site-search" id="search-overlay" hidden role="dialog" aria-modal="true" aria-label="Search the documentation">
+<div class="site-search-panel">
+<div class="site-search-head">
+<svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.3-4.3"/></svg>
+<input type="search" id="search-input" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="true" aria-controls="search-results" placeholder="Search every page — try black start, dead letter, interlock">
+<button type="button" class="btn btn-sm" id="search-close">Close</button>
+</div>
+<p class="site-search-status" id="search-status" role="status">Type to search every page of this help set.</p>
+<ul class="site-results" id="search-results" role="listbox" aria-label="Search results"></ul>
+<div class="site-search-foot"><span><span class="kbd-hint">&#8593;</span> <span class="kbd-hint">&#8595;</span> move</span><span><span class="kbd-hint">Enter</span> open</span><span><span class="kbd-hint">Esc</span> close</span><span><span class="kbd-hint">/</span> search from anywhere</span></div>
+</div>
+</div>
+<script src="assets/search-index.js"></script>
+<script src="assets/docs.js"></script>
+</body>
+</html>
