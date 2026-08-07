@@ -389,9 +389,7 @@ def test_point_source_records_where_the_point_came_from(db_session, loaded_regis
     assert service.get_point(db_session, f"{INVERTER}/runtime_total_h").source == "profile"
     # A class default point that no binding covers stays "class".
     class_sourced = [
-        p.point_name
-        for p in service.get_asset_points(db_session, GENERATOR)
-        if p.source == "class"
+        p.point_name for p in service.get_asset_points(db_session, GENERATOR) if p.source == "class"
     ]
     assert class_sourced, "expected at least one class-sourced point on the generator"
     generator = db_session.get(Asset, GENERATOR)
@@ -439,9 +437,7 @@ def test_automatic_control_allowed_defaults_to_false(db_session, loaded_registry
 
     allowed = {
         p.point_id
-        for p in db_session.scalars(
-            sa.select(Point).where(Point.automatic_control_allowed.is_(True))
-        ).all()
+        for p in db_session.scalars(sa.select(Point).where(Point.automatic_control_allowed.is_(True))).all()
     }
     assert allowed <= bound, "unbound points must never allow automatic control"
     assert allowed == granted, "the binding is the only thing that can grant automatic control"
@@ -457,9 +453,7 @@ def test_automatic_control_allowed_defaults_to_false(db_session, loaded_registry
 
 def test_control_capability_alone_does_not_grant_automatic_control(db_session, loaded_registry):
     """SDD 47: 'control-capable' is a dictionary fact, not a commissioning decision."""
-    control_capable = db_session.scalars(
-        sa.select(Point).where(Point.control_capable.is_(True))
-    ).all()
+    control_capable = db_session.scalars(sa.select(Point).where(Point.control_capable.is_(True))).all()
     assert control_capable, "the package defines control-capable points"
 
     denied = [p for p in control_capable if not p.automatic_control_allowed]
@@ -494,15 +488,11 @@ def test_binding_keeps_tbd_addresses_and_adds_the_topic_projection(db_session, l
 
 
 def test_control_capable_bindings_get_a_command_topic(db_session, loaded_registry):
-    binding = service.get_binding(
-        db_session, "energy.load.site.server_rack_01/power_budget_kw"
-    )
+    binding = service.get_binding(db_session, "energy.load.site.server_rack_01/power_budget_kw")
     assert binding is not None
     point = service.get_point(db_session, binding.point_id)
     assert point.control_capable is True
-    assert binding.command_topic == topics.command_topic(
-        "energy.load.site.server_rack_01", "power_budget_kw"
-    )
+    assert binding.command_topic == topics.command_topic("energy.load.site.server_rack_01", "power_budget_kw")
     assert "/cmd/" in binding.command_topic
 
 
@@ -575,10 +565,7 @@ def test_external_identifiers_skip_tbd_placeholders(tmp_path, session_factory):
     load_package(session, data_dir)
     session.commit()
 
-    stored = {
-        (row.id_type, row.value)
-        for row in session.scalars(sa.select(ExternalIdentifier)).all()
-    }
+    stored = {(row.id_type, row.value) for row in session.scalars(sa.select(ExternalIdentifier)).all()}
     assert stored == {
         ("mac_address", "00:11:22:33:44:55"),
         ("ha_entity_id", "sensor.inverter_01"),
@@ -628,9 +615,7 @@ def test_topological_order_detects_cycles():
     assert excinfo.value.warnings
 
 
-def test_children_are_inserted_after_parents_under_real_fk_enforcement(
-    tmp_path, fk_session_factory
-):
+def test_children_are_inserted_after_parents_under_real_fk_enforcement(tmp_path, fk_session_factory):
     """Deliberately list the deepest asset first; the loader must reorder."""
     data_dir = write_package(
         tmp_path,
@@ -815,10 +800,7 @@ def test_list_assets_filters_and_paginates(db_session, loaded_registry):
 
     search = service.list_assets(db_session, q="inverter", limit=500)
     assert search.total >= 4
-    assert all(
-        "inverter" in asset.asset_id.lower() or "inverter" in asset.name.lower()
-        for asset in search
-    )
+    assert all("inverter" in asset.asset_id.lower() or "inverter" in asset.name.lower() for asset in search)
 
     assert service.list_assets(db_session, criticality="life_safety", limit=500).total >= 0
     assert service.list_assets(db_session, tag="nonexistent", limit=500).total == 0

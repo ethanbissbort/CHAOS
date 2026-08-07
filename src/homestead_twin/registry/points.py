@@ -184,8 +184,7 @@ def materialize_points(
         definition = _definition(session, definitions, point_name)
         if definition is None:
             warn(
-                f"Asset {asset.asset_id} references point {point_name!r} "
-                "which is not in the point dictionary"
+                f"Asset {asset.asset_id} references point {point_name!r} which is not in the point dictionary"
             )
             continue
         record = binding_records.get(point_name)

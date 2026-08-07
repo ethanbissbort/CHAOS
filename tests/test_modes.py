@@ -24,7 +24,7 @@ from homestead_twin.models.registry import Asset, AssetClass
 
 SITE_ID = "site.site.primary.01"
 ASSET_ID = "water.pump.orchard.01"
-NOW = dt.datetime(2026, 8, 7, 12, 0, tzinfo=dt.timezone.utc)
+NOW = dt.datetime(2026, 8, 7, 12, 0, tzinfo=dt.UTC)
 
 
 @dataclass(frozen=True)
@@ -104,9 +104,7 @@ def test_unknown_mode_and_scope_are_refused(modes):
 
 
 def test_set_mode_writes_row_transition_and_audit(modes, db_session):
-    row = modes.set_mode(
-        "asset", ASSET_ID, "maintenance", MAINTAINER, "annual impeller service", now=NOW
-    )
+    row = modes.set_mode("asset", ASSET_ID, "maintenance", MAINTAINER, "annual impeller service", now=NOW)
 
     assert row.mode == "maintenance"
     assert row.previous_mode == DEFAULT_MODE
@@ -206,9 +204,7 @@ def test_a_viewer_may_never_clear_an_emergency(modes, db_session):
     modes.set_mode("site", SITE_ID, "emergency", OPERATOR, "battery over-temperature", now=NOW)
 
     with pytest.raises(ModeAuthorizationError):
-        modes.set_mode(
-            "site", SITE_ID, "automatic", VIEWER, "looks fine", condition_clear=True, now=NOW
-        )
+        modes.set_mode("site", SITE_ID, "automatic", VIEWER, "looks fine", condition_clear=True, now=NOW)
 
     assert modes.resolve("site", SITE_ID) == "emergency"
 

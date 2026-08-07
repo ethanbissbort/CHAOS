@@ -495,7 +495,7 @@ def _parse_timestamp(value: str | None, label: str) -> dt.datetime | None:
             hint="Use an ISO-8601 timestamp, for example 2026-08-07 or 2026-08-07T12:00:00Z.",
         ) from exc
     if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=dt.timezone.utc)
+        parsed = parsed.replace(tzinfo=dt.UTC)
     return parsed
 
 
@@ -752,7 +752,7 @@ def cmd_retention(args: argparse.Namespace) -> int:
         hint="Retention lives in src/homestead_twin/ingest/retention.py.",
     )
 
-    now = _parse_timestamp(args.now, "now") or dt.datetime.now(dt.timezone.utc)
+    now = _parse_timestamp(args.now, "now") or dt.datetime.now(dt.UTC)
     apply_changes = bool(args.apply)
 
     with open_session(settings) as session:
@@ -770,7 +770,9 @@ def cmd_retention(args: argparse.Namespace) -> int:
     counts, warnings = _result_payload(result)
     header = "Retention applied." if apply_changes else "Retention dry run (nothing committed)."
     _print_counts(header, counts, warnings)
-    print(f"  raw retention: {settings.historian_raw_retention_days} days (HOMESTEAD_HISTORIAN_RAW_RETENTION_DAYS)")
+    print(
+        f"  raw retention: {settings.historian_raw_retention_days} days (HOMESTEAD_HISTORIAN_RAW_RETENTION_DAYS)"
+    )
     if not apply_changes:
         print(
             "  note: the dry run rolls the transaction back. A retention implementation that "
@@ -789,15 +791,11 @@ def cmd_backup(args: argparse.Namespace) -> int:
     """
     settings = build_settings(args)
     metadata = _metadata()
-    now = dt.datetime.now(dt.timezone.utc)
+    now = dt.datetime.now(dt.UTC)
     stamp = now.strftime("%Y%m%dT%H%M%SZ")
 
     default_name = f"homestead-{settings.node_role}-{stamp}.tar.gz"
-    output = (
-        Path(args.output)
-        if args.output
-        else workspace_root(settings) / "var" / "backups" / default_name
-    )
+    output = Path(args.output) if args.output else workspace_root(settings) / "var" / "backups" / default_name
     if output.is_dir():
         output = output / default_name
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -1056,10 +1054,7 @@ def cmd_status(args: argparse.Namespace) -> int:
             print(f"    {severity.ljust(10)} {count}")
 
     if payload["missing_tables"]:
-        print(
-            f"\n{len(payload['missing_tables'])} declared table(s) missing -- "
-            "run 'homestead-twin init-db'"
-        )
+        print(f"\n{len(payload['missing_tables'])} declared table(s) missing -- run 'homestead-twin init-db'")
     for note in payload["notes"]:
         print(f"\nnote: {note}")
     return EXIT_OK
@@ -1099,7 +1094,7 @@ def cmd_export(args: argparse.Namespace) -> int:
     payload: dict[str, Any] = {
         "kind": "homestead-twin-export",
         "format_version": 1,
-        "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "generated_at": dt.datetime.now(dt.UTC).isoformat(),
         "platform_version": __version__,
         "site_id": settings.site_id,
         "node_role": settings.node_role,
@@ -1120,9 +1115,7 @@ def cmd_export(args: argparse.Namespace) -> int:
             if table is None or name not in present:
                 payload["tables_absent"].append(name)
                 continue
-            payload["tables"][name] = _dump_table(
-                session, table, since=since, until=until, limit=args.limit
-            )
+            payload["tables"][name] = _dump_table(session, table, since=since, until=until, limit=args.limit)
 
     payload["row_counts"] = {name: len(rows) for name, rows in payload["tables"].items()}
     text = _dumps(payload, args.format)
@@ -1329,17 +1322,13 @@ def build_parser() -> argparse.ArgumentParser:
         "export",
         help="Export registry and historical data in an open format (FR-010).",
         description=(
-            "Export selected table groups as JSON or YAML. Groups: "
-            + ", ".join(EXPORT_CHOICES)
-            + "."
+            "Export selected table groups as JSON or YAML. Groups: " + ", ".join(EXPORT_CHOICES) + "."
         ),
     )
     export.add_argument(
         "--format", choices=["json", "yaml"], default="json", help="Output format (default: json)."
     )
-    export.add_argument(
-        "-o", "--output", help="Output file, or '-' for stdout (default: stdout)."
-    )
+    export.add_argument("-o", "--output", help="Output file, or '-' for stdout (default: stdout).")
     export.add_argument(
         "--include",
         action="append",

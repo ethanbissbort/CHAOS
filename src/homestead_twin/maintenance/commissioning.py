@@ -85,11 +85,15 @@ def record_step(
         raise ValueError(f"Unknown commissioning result: {result}")
 
     ensure_records(session, asset_id)
-    record = session.execute(
-        select(CommissioningRecord).where(
-            CommissioningRecord.asset_id == asset_id, CommissioningRecord.step == step
+    record = (
+        session.execute(
+            select(CommissioningRecord).where(
+                CommissioningRecord.asset_id == asset_id, CommissioningRecord.step == step
+            )
         )
-    ).scalars().one()
+        .scalars()
+        .one()
+    )
 
     record.result = result
     record.performed_by = performed_by
@@ -115,7 +119,11 @@ def commissioning_status(session: Session, asset_id: str) -> dict:
     passed = {step for step, record in records.items() if record.result == "pass"}
     failed = {step for step, record in records.items() if record.result == "fail"}
     outstanding = [
-        {"step": number, "step_name": name, "result": records.get(number).result if number in records else "not_run"}
+        {
+            "step": number,
+            "step_name": name,
+            "result": records.get(number).result if number in records else "not_run",
+        }
         for number, name in COMMISSIONING_STEPS
         if number not in passed
     ]

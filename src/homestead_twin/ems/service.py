@@ -130,9 +130,7 @@ class EnergyManagerService:
         self.state_machine = EnergyStateMachine(self.config, settings)
         self.leases = LeaseManager(self.config)
         self.shedding = ShedController(self.config, self.command_port, settings=settings, bus=bus)
-        self.generator = GeneratorCoordinator(
-            self.config, self.command_port, settings=settings, bus=bus
-        )
+        self.generator = GeneratorCoordinator(self.config, self.command_port, settings=settings, bus=bus)
         self.blackstart = BlackStartCoordinator(self.config)
 
         self._thread: threading.Thread | None = None
@@ -223,14 +221,10 @@ class EnergyManagerService:
         )
 
         # 3. leases -----------------------------------------------------
-        lease_result = self.leases.sweep(
-            session, now=now, energy_state=snapshot.state, derived=derived
-        )
+        lease_result = self.leases.sweep(session, now=now, energy_state=snapshot.state, derived=derived)
 
         # 4. generator --------------------------------------------------
-        generator_decision = self.generator.evaluate(
-            inputs, derived, energy_state=snapshot.state, now=now
-        )
+        generator_decision = self.generator.evaluate(inputs, derived, energy_state=snapshot.state, now=now)
 
         # 5. state ------------------------------------------------------
         states: dict[str, LoadState] = current_load_states(session, inputs, now=now, config=self.config)
@@ -247,9 +241,7 @@ class EnergyManagerService:
         energy_state = decision.current_state
 
         # 6. shed / restore ---------------------------------------------
-        confirmations = self.shedding.confirm_pending(
-            session, states, energy_state=energy_state, now=now
-        )
+        confirmations = self.shedding.confirm_pending(session, states, energy_state=energy_state, now=now)
         forced = self.shedding.forced_restores(session, states, energy_state=energy_state, now=now)
 
         shed_result: ShedStepResult | None = None
@@ -315,9 +307,7 @@ class EnergyManagerService:
         self.last_tick = result
         return result
 
-    def _publish_budgets(
-        self, session: Session, states: dict[str, LoadState], *, now: dt.datetime
-    ) -> None:
+    def _publish_budgets(self, session: Session, states: dict[str, LoadState], *, now: dt.datetime) -> None:
         """Publish each load's power budget (SDD 13: state plus load budget)."""
         leased = self.leases.budgets(session, now)
         for asset_id, state in states.items():

@@ -20,8 +20,9 @@ Two rules are enforced here and nowhere else:
 from __future__ import annotations
 
 import datetime as dt
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Any, Iterable
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -81,14 +82,33 @@ ELECTRICAL_INPUTS: tuple[InputSpec, ...] = (
     _spec("battery_soc_pct", BATTERY_BANK, "soc_pct", required=True, description="Battery state of charge"),
     _spec("battery_soh_pct", BATTERY_BANK, "soh_pct", description="Battery state of health"),
     _spec("battery_power_kw", BATTERY_BANK, "power_kw", description="Battery power, discharge positive"),
-    _spec("battery_energy_available_kwh", BATTERY_BANK, "energy_available_kwh",
-          description="Usable energy reported by the BMS"),
-    _spec("battery_temperature_max_c", BATTERY_BANK, "temperature_cell_max_c", required=True,
-          description="Hottest reported cell"),
-    _spec("battery_charge_limit_kw", BATTERY_BANK, "charge_limit_kw", required=True,
-          description="BMS charge power limit"),
-    _spec("battery_discharge_limit_kw", BATTERY_BANK, "discharge_limit_kw", required=True,
-          description="BMS discharge power limit"),
+    _spec(
+        "battery_energy_available_kwh",
+        BATTERY_BANK,
+        "energy_available_kwh",
+        description="Usable energy reported by the BMS",
+    ),
+    _spec(
+        "battery_temperature_max_c",
+        BATTERY_BANK,
+        "temperature_cell_max_c",
+        required=True,
+        description="Hottest reported cell",
+    ),
+    _spec(
+        "battery_charge_limit_kw",
+        BATTERY_BANK,
+        "charge_limit_kw",
+        required=True,
+        description="BMS charge power limit",
+    ),
+    _spec(
+        "battery_discharge_limit_kw",
+        BATTERY_BANK,
+        "discharge_limit_kw",
+        required=True,
+        description="BMS discharge power limit",
+    ),
     _spec("bms_state", BMS, "state_operating", description="BMS operating state"),
     _spec("bms_charge_permissive", BMS, "charge_permissive", required=True),
     _spec("bms_discharge_permissive", BMS, "discharge_permissive", required=True),
@@ -97,10 +117,20 @@ ELECTRICAL_INPUTS: tuple[InputSpec, ...] = (
     _spec("pv_energy_today_kwh", PV_ARRAY, "energy_today_kwh"),
     _spec("pv_irradiance_w_m2", PV_ARRAY, "solar_irradiance_w_m2", category="forecast"),
     _spec("pv_availability", PV_ARRAY, "availability_state"),
-    _spec("critical_load_kw", CRITICAL_PANEL, "power_total_kw", required=True,
-          description="Critical distribution panel load"),
-    _spec("general_load_kw", GENERAL_PANEL, "power_total_kw", required=True,
-          description="General and deferrable panel load"),
+    _spec(
+        "critical_load_kw",
+        CRITICAL_PANEL,
+        "power_total_kw",
+        required=True,
+        description="Critical distribution panel load",
+    ),
+    _spec(
+        "general_load_kw",
+        GENERAL_PANEL,
+        "power_total_kw",
+        required=True,
+        description="General and deferrable panel load",
+    ),
     _spec("critical_panel_breaker_trip", CRITICAL_PANEL, "breaker_trip_active"),
     _spec("general_panel_breaker_trip", GENERAL_PANEL, "breaker_trip_active"),
     _spec("generator_state", GENERATOR, "state_operating", category="generator"),
@@ -134,8 +164,14 @@ INVERTER_INPUTS: tuple[InputSpec, ...] = tuple(
 
 #: SDD 30.5 "Context and constraints".
 CONTEXT_INPUTS: tuple[InputSpec, ...] = (
-    _spec("container_temperature_c", CONTAINER_MONITOR, "temperature_air_c", required=True,
-          category="thermal", description="Power/battery container air temperature"),
+    _spec(
+        "container_temperature_c",
+        CONTAINER_MONITOR,
+        "temperature_air_c",
+        required=True,
+        category="thermal",
+        description="Power/battery container air temperature",
+    ),
     _spec("container_humidity_pct", CONTAINER_MONITOR, "humidity_relative_pct", category="thermal"),
     _spec("container_alarm_summary", CONTAINER_MONITOR, "alarm_summary", category="thermal"),
     _spec("rack_temperature_c", RACK_MONITOR, "temperature_air_c", category="thermal"),
@@ -304,7 +340,7 @@ def _age_seconds(ts: dt.datetime | None, now: dt.datetime) -> float | None:
     if ts is None:
         return None
     if ts.tzinfo is None:
-        ts = ts.replace(tzinfo=dt.timezone.utc)
+        ts = ts.replace(tzinfo=dt.UTC)
     return (now - ts).total_seconds()
 
 

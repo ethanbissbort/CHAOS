@@ -20,8 +20,9 @@ from __future__ import annotations
 
 import datetime as dt
 from collections import deque
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Protocol
+from typing import Any, Protocol
 
 from homestead_twin.ems.config import EmsConfig
 from homestead_twin.ems.inputs import INVERTERS, EmsInputs, load_input_key
@@ -189,7 +190,9 @@ class PvForecast(Protocol):
     over a horizon, plus an honest validity flag.
     """
 
-    def forecast(self, horizon_h: float, *, now: dt.datetime, inputs: EmsInputs, config: EmsConfig) -> ForecastResult: ...
+    def forecast(
+        self, horizon_h: float, *, now: dt.datetime, inputs: EmsInputs, config: EmsConfig
+    ) -> ForecastResult: ...
 
 
 class NaivePersistenceForecast:
@@ -405,13 +408,18 @@ def compute_derived(
                 valid=True,
                 basis="PV + generator - site load",
                 inputs=("pv_power_kw", "generator_power_kw", "critical_load_kw", "general_load_kw"),
-                assumptions=() if generator_kw is not None else ("generator output not observed; treated as 0 kW",),
+                assumptions=()
+                if generator_kw is not None
+                else ("generator output not observed; treated as 0 kW",),
             )
         )
     else:
         derived.add(
             DerivedValue.invalid(
-                "energy_balance_kw", "kW", "requires PV power and site load", ("pv_power_kw", "critical_load_kw")
+                "energy_balance_kw",
+                "kW",
+                "requires PV power and site load",
+                ("pv_power_kw", "critical_load_kw"),
             )
         )
 
@@ -653,9 +661,7 @@ def compute_derived(
         if battery_temp is not None:
             derate_inputs += ("battery_temperature_max_c",)
             spans.append(
-                _linear_derate(
-                    battery_temp, config.battery_temp_warning_c, config.battery_temp_emergency_c
-                )
+                _linear_derate(battery_temp, config.battery_temp_warning_c, config.battery_temp_emergency_c)
             )
         if container_temp is not None:
             derate_inputs += ("container_temperature_c",)
@@ -705,9 +711,7 @@ def compute_derived(
                 unit="kWh",
                 valid=False,
                 basis="no deferred-work queue is integrated yet",
-                assumptions=(
-                    "open item: deferrable work backlog requires the task scheduler from SDD 30.5",
-                ),
+                assumptions=("open item: deferrable work backlog requires the task scheduler from SDD 30.5",),
             )
         )
     else:

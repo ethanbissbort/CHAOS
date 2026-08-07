@@ -19,16 +19,17 @@ from __future__ import annotations
 import datetime as dt
 import logging
 import threading
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from sqlalchemy.orm import Session, sessionmaker
 
 from homestead_twin.alarms.correlation import CorrelationEngine, CorrelationResult
 from homestead_twin.alarms.definitions import DefinitionError, ensure_definitions
 from homestead_twin.alarms.evaluator import AlarmEvaluator, EvaluationResult
-from homestead_twin.alarms.notify import Notifier, NotificationResult
+from homestead_twin.alarms.notify import NotificationResult, Notifier
 from homestead_twin.config import Settings, get_settings
 from homestead_twin.models.base import utcnow
 from homestead_twin.mqtt import MessageBus
@@ -124,9 +125,7 @@ class AlarmEngineService:
         owned = session is None
         session = session or self.session_factory()
         try:
-            ensure_definitions(
-                session, path=self.definitions_path, settings=self.settings, strict=False
-            )
+            ensure_definitions(session, path=self.definitions_path, settings=self.settings, strict=False)
             if owned:
                 session.commit()
         except DefinitionError:

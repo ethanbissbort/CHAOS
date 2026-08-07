@@ -60,9 +60,7 @@ class AssetIdParts:
 def split_asset_id(asset_id: str) -> AssetIdParts:
     """Split a canonical asset ID into its four parts."""
     if not ASSET_ID_RE.match(asset_id):
-        raise TopicError(
-            f"Asset ID {asset_id!r} does not match <domain>.<asset_class>.<location>.<instance>"
-        )
+        raise TopicError(f"Asset ID {asset_id!r} does not match <domain>.<asset_class>.<location>.<instance>")
     domain, asset_class, location, instance = asset_id.split(".")
     return AssetIdParts(domain, asset_class, location, instance)
 
@@ -90,10 +88,7 @@ def command_topic(asset_id: str, command_name: str, base: str = DEFAULT_BASE) ->
 
 
 def command_ack_topic(asset_id: str, command_name: str, base: str = DEFAULT_BASE) -> str:
-    return (
-        f"{asset_prefix(asset_id, base)}/{KIND_COMMAND}/"
-        f"{_validate_point_name(command_name)}/{KIND_ACK}"
-    )
+    return f"{asset_prefix(asset_id, base)}/{KIND_COMMAND}/{_validate_point_name(command_name)}/{KIND_ACK}"
 
 
 def setpoint_topic(asset_id: str, setpoint_name: str, base: str = DEFAULT_BASE) -> str:

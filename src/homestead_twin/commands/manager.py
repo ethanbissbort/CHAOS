@@ -329,9 +329,13 @@ class CommandManager:
 
         # Idempotency: replaying a key returns the original decision unchanged.
         if request.idempotency_key:
-            existing = self.session.execute(
-                select(Command).where(Command.idempotency_key == request.idempotency_key)
-            ).scalars().first()
+            existing = (
+                self.session.execute(
+                    select(Command).where(Command.idempotency_key == request.idempotency_key)
+                )
+                .scalars()
+                .first()
+            )
             if existing is not None:
                 self._audit(
                     actor=actor,
@@ -348,9 +352,7 @@ class CommandManager:
                 )
                 if commit:
                     self.session.commit()
-                logger.info(
-                    "Idempotent replay of %s (key=%s)", existing.command_id, request.idempotency_key
-                )
+                logger.info("Idempotent replay of %s (key=%s)", existing.command_id, request.idempotency_key)
                 return existing
 
         asset = self.session.get(Asset, asset_id)
@@ -507,9 +509,7 @@ class CommandManager:
         return command
 
     # -- dispatch --------------------------------------------------------
-    def dispatch(
-        self, command: Command, *, now: dt.datetime | None = None, commit: bool = True
-    ) -> Command:
+    def dispatch(self, command: Command, *, now: dt.datetime | None = None, commit: bool = True) -> Command:
         """Publish the SDD section 10.3 envelope and record the request.
 
         The dispatch topic comes from the commissioned binding when it declares
@@ -569,7 +569,7 @@ class CommandManager:
 
         try:
             self.bus.publish(topic, envelope.to_payload(), qos=1)
-        except Exception as exc:  # noqa: BLE001 - a broken bus must not crash the API
+        except Exception as exc:
             logger.exception("Failed to publish command %s to %s", command.command_id, topic)
             command.state = "failed"
             command.state_reason = f"Publish failed: {exc!r}"
@@ -638,9 +638,7 @@ class CommandManager:
             if binding is not None and binding.command_topic:
                 return binding.command_topic
         try:
-            return topics.command_topic(
-                command.asset_id, command.command, base=self.settings.mqtt_base_topic
-            )
+            return topics.command_topic(command.asset_id, command.command, base=self.settings.mqtt_base_topic)
         except topics.TopicError as exc:
             logger.warning("Cannot derive a command topic for %s: %s", command.asset_id, exc)
             return None
@@ -831,9 +829,7 @@ class CommandManager:
         return command
 
     # -- expiry ----------------------------------------------------------
-    def expire_due(
-        self, now: dt.datetime | None = None, *, commit: bool = True
-    ) -> list[Command]:
+    def expire_due(self, now: dt.datetime | None = None, *, commit: bool = True) -> list[Command]:
         """Expire every non-terminal command whose TTL has elapsed.
 
         SDD section 5.7 counts "timed out" as an outcome that must be recorded,

@@ -240,9 +240,7 @@ def check_emergency(inputs: EmsInputs, derived: DerivedEnergyState, config: EmsC
     )
 
 
-def _critical_reserve_reasons(
-    inputs: EmsInputs, derived: DerivedEnergyState, config: EmsConfig
-) -> list[str]:
+def _critical_reserve_reasons(inputs: EmsInputs, derived: DerivedEnergyState, config: EmsConfig) -> list[str]:
     """SDD 30.8 ``Enter CRITICAL_RESERVE``."""
     reasons: list[str] = []
 
@@ -271,7 +269,11 @@ def _critical_reserve_reasons(
 
     discharge = derived.value("available_discharge_kw")
     site_load = derived.value("site_load_kw")
-    if discharge is not None and site_load is not None and discharge < site_load * config.discharge_limit_margin:
+    if (
+        discharge is not None
+        and site_load is not None
+        and discharge < site_load * config.discharge_limit_margin
+    ):
         reasons.append(
             f"battery discharge limit {discharge:.1f} kW cannot safely support the present load "
             f"{site_load:.1f} kW"
@@ -409,9 +411,7 @@ def economic_candidate(
 
     if current_state == "CRITICAL_RESERVE":
         if critical_reasons:
-            return Candidate(
-                "CRITICAL_RESERVE", "critical_reserve_hold", "; ".join(critical_reasons)
-            )
+            return Candidate("CRITICAL_RESERVE", "critical_reserve_hold", "; ".join(critical_reasons))
         recovered, why = _critical_recovered(derived, config)
         if not recovered:
             return Candidate("CRITICAL_RESERVE", "critical_reserve_deadband", why)
@@ -771,9 +771,7 @@ class EnergyStateMachine:
         if snapshot.state not in LATCHING_ENERGY_STATES:
             raise LatchError(f"{snapshot.state} is not a latching state")
         if not condition_clear:
-            raise LatchError(
-                "The originating condition must be confirmed clear before a latch is released"
-            )
+            raise LatchError("The originating condition must be confirmed clear before a latch is released")
         if not reason:
             raise LatchError("Clearing a latch requires a reason")
         if to_state not in ENERGY_STATES:
@@ -781,9 +779,7 @@ class EnergyStateMachine:
         if to_state in LATCHING_ENERGY_STATES and to_state != "COMMISSIONING":
             raise LatchError(f"Cannot clear a latch into the latching state {to_state}")
         if STATE_SEVERITY.get(to_state, 0) < STATE_SEVERITY["CONSERVE"]:
-            raise LatchError(
-                f"A latch may only be cleared into a conservative state; {to_state} is not one"
-            )
+            raise LatchError(f"A latch may only be cleared into a conservative state; {to_state} is not one")
 
         session.add(
             EnergyStateTransition(
@@ -832,9 +828,7 @@ def state_envelope(
             "state": snapshot.state,
             "entered_at": snapshot.entered_at.isoformat() if snapshot.entered_at else None,
             "candidate_state": snapshot.candidate_state,
-            "candidate_since": (
-                snapshot.candidate_since.isoformat() if snapshot.candidate_since else None
-            ),
+            "candidate_since": (snapshot.candidate_since.isoformat() if snapshot.candidate_since else None),
             "frozen_until": snapshot.frozen_until.isoformat() if snapshot.frozen_until else None,
             "data_quality": snapshot.data_quality,
             "shed_groups_active": list(snapshot.shed_groups_active or []),
@@ -877,7 +871,7 @@ def _aware(value: dt.datetime | None) -> dt.datetime | None:
     if value is None:
         return None
     if value.tzinfo is None:
-        return value.replace(tzinfo=dt.timezone.utc)
+        return value.replace(tzinfo=dt.UTC)
     return value
 
 

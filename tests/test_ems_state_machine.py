@@ -16,8 +16,8 @@ from homestead_twin.ems.config import EmsConfig
 from homestead_twin.ems.derived import compute_derived
 from homestead_twin.ems.inputs import ALL_SPECS, SPEC_BY_KEY, EmsInputs, InputReading, gather_inputs
 from homestead_twin.ems.state_machine import (
-    LatchError,
     EnergyStateMachine,
+    LatchError,
     ensure_snapshot,
     publish_state,
     select_candidate,
@@ -25,7 +25,7 @@ from homestead_twin.ems.state_machine import (
 from homestead_twin.models.energy import LATCHING_ENERGY_STATES, EnergyStateTransition
 from homestead_twin.models.telemetry import CurrentState
 
-T0 = dt.datetime(2026, 8, 7, 12, 0, 0, tzinfo=dt.timezone.utc)
+T0 = dt.datetime(2026, 8, 7, 12, 0, 0, tzinfo=dt.UTC)
 
 
 def at(seconds: float) -> dt.datetime:
@@ -246,9 +246,7 @@ def test_reserve_collapse_enters_critical_reserve(machine, db_session, config):
 
 def test_critical_reserve_also_triggers_on_autonomy_alone(config):
     # Plenty of energy above the floor, but a huge critical load eats it fast.
-    inputs = make_inputs(
-        battery_energy_available_kwh=150.0, critical_load_kw=8.0, general_load_kw=0.5
-    )
+    inputs = make_inputs(battery_energy_available_kwh=150.0, critical_load_kw=8.0, general_load_kw=0.5)
     derived = make_derived(inputs, config)
     candidate = select_candidate("NORMAL", inputs, derived, config)
     assert candidate.state == "CRITICAL_RESERVE"
@@ -553,9 +551,7 @@ def test_clear_latch_requires_reason_and_condition_clear(machine, db_session, co
         now=at(60),
     )
     assert snapshot.state == "CONSERVE"
-    transition = (
-        db_session.query(EnergyStateTransition).filter_by(trigger="operator_clear_latch").one()
-    )
+    transition = db_session.query(EnergyStateTransition).filter_by(trigger="operator_clear_latch").one()
     assert transition.actor == "op"
     assert transition.from_state == "EMERGENCY"
 
@@ -671,9 +667,7 @@ def test_black_start_requires_operator_attestation(blackstart):
 def test_black_start_is_refused_when_a_checkable_prerequisite_fails(blackstart):
     frozen = make_inputs(battery_soc_pct=5.0, battery_temperature_max_c=-30.0)
     with pytest.raises(PermissionError):
-        blackstart.begin(
-            frozen, actor="op", reason="blackout", now=T0, prerequisites_attested=True
-        )
+        blackstart.begin(frozen, actor="op", reason="blackout", now=T0, prerequisites_attested=True)
 
 
 def test_black_start_prerequisites_are_reported_honestly(blackstart):
@@ -709,9 +703,7 @@ def test_black_start_sequence_runs_in_order_and_completes(blackstart):
 
 
 def test_black_start_step_timeout_is_visible(blackstart, config):
-    blackstart.begin(
-        make_inputs(), actor="op", reason="blackout", now=T0, prerequisites_attested=True
-    )
+    blackstart.begin(make_inputs(), actor="op", reason="blackout", now=T0, prerequisites_attested=True)
     assert not blackstart.step_timed_out(now=at(10))
     assert blackstart.step_timed_out(now=at(config.blackstart_step_timeout_s + 1))
 
@@ -723,8 +715,8 @@ def test_black_start_reconciliation_does_not_assume_retained_state(
     from homestead_twin.ems import RecordingCommandPort
     from homestead_twin.ems.loader import load_schedule
     from homestead_twin.ems.shedding import ShedController, current_load_states
-    from homestead_twin.models.registry import Asset
     from homestead_twin.models.energy import PowerBudgetLease
+    from homestead_twin.models.registry import Asset
 
     for asset_id in ("energy.load.site.opportunistic_compute_01", "energy.load.site.tool_charging_01"):
         db_session.add(
@@ -792,8 +784,9 @@ def test_manager_command_port_never_raises_and_never_claims_success(settings, bu
 
     port = ManagerCommandPort(settings=settings, bus=bus)
     outcome = port.issue(
-        CommandRequest(asset_id="energy.load.site.spa_01", command="enabled_requested", value=False,
-                       reason="test")
+        CommandRequest(
+            asset_id="energy.load.site.spa_01", command="enabled_requested", value=False, reason="test"
+        )
     )
     assert isinstance(outcome, CommandOutcome)
     if not outcome.accepted:

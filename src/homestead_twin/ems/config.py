@@ -47,7 +47,9 @@ def energy_state_topic(settings: Settings) -> str:
     subsystem can translate it into its own bounded operating profile
     (SDD 13) instead of the EMS switching each load itself.
     """
-    return telemetry_topic(settings.site_id, ENERGY_STATE_POINT, base=settings.mqtt_base_topic or DEFAULT_BASE)
+    return telemetry_topic(
+        settings.site_id, ENERGY_STATE_POINT, base=settings.mqtt_base_topic or DEFAULT_BASE
+    )
 
 
 def load_budget_topic(settings: Settings, asset_id: str) -> str:

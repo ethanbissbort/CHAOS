@@ -65,7 +65,9 @@ _QUALITY_RANK = {
     "bad": 6,
 }
 
-_INTERVAL_RE = re.compile(r"^\s*(\d+)\s*(s|sec|second|seconds|m|min|minute|minutes|h|hour|hours|d|day|days)\s*$")
+_INTERVAL_RE = re.compile(
+    r"^\s*(\d+)\s*(s|sec|second|seconds|m|min|minute|minutes|h|hour|hours|d|day|days)\s*$"
+)
 _INTERVAL_UNITS = {
     "s": 1,
     "sec": 1,
@@ -99,7 +101,7 @@ def downsample_source(interval: str) -> str:
 def bucket_start(ts: dt.datetime, seconds: int) -> dt.datetime:
     """Floor ``ts`` to the start of its bucket, in UTC."""
     aware = as_utc(ts)
-    epoch = dt.datetime(1970, 1, 1, tzinfo=dt.timezone.utc)
+    epoch = dt.datetime(1970, 1, 1, tzinfo=dt.UTC)
     offset = int((aware - epoch).total_seconds())
     return epoch + dt.timedelta(seconds=offset - (offset % seconds))
 
@@ -149,9 +151,7 @@ def downsample(
                 TelemetrySample.ts < until_utc,
             )
         ).all()
-        superseded = [
-            row_id for row_id, point_id, ts in existing if (point_id, as_utc(ts)) in buckets
-        ]
+        superseded = [row_id for row_id, point_id, ts in existing if (point_id, as_utc(ts)) in buckets]
         if superseded:
             session.execute(delete(TelemetrySample).where(TelemetrySample.id.in_(superseded)))
 
@@ -170,9 +170,7 @@ def downsample(
         "aggregates_written": written,
         "points": len({point_id for point_id, _ in buckets}),
     }
-    logger.info(
-        "Downsampled %d raw sample(s) into %d %s row(s)", len(rows), written, interval
-    )
+    logger.info("Downsampled %d raw sample(s) into %d %s row(s)", len(rows), written, interval)
     return summary
 
 

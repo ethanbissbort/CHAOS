@@ -40,8 +40,8 @@ from __future__ import annotations
 import datetime as dt
 import logging
 from collections import defaultdict, deque
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Iterable
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -103,7 +103,7 @@ class DependencyGraph:
         edge_types: dict[str, str] | None = None,
         max_depth: int = DEFAULT_MAX_DEPTH,
         include_hierarchy: bool = True,
-    ) -> "DependencyGraph":
+    ) -> DependencyGraph:
         edge_types = edge_types or DOWNSTREAM_EDGE_TYPES
         graph = cls(defaultdict(set), defaultdict(set), defaultdict(set), max_depth)
 
@@ -218,9 +218,7 @@ class CorrelationEngine:
     @property
     def definitions(self) -> dict[str, AlarmDefinition]:
         if self._definitions is None:
-            self._definitions = {
-                d.alarm_key: d for d in self.session.scalars(select(AlarmDefinition)).all()
-            }
+            self._definitions = {d.alarm_key: d for d in self.session.scalars(select(AlarmDefinition)).all()}
         return self._definitions
 
     def invalidate(self) -> None:
@@ -276,10 +274,9 @@ class CorrelationEngine:
 
         if scope == "same_asset":
             matches = [c for c in matches if c.asset_id == alarm.asset_id]
-        elif scope == "related":
-            if alarm.asset_id:
-                reachable = set(self.graph.related(alarm.asset_id)) | {alarm.asset_id}
-                matches = [c for c in matches if not c.asset_id or c.asset_id in reachable]
+        elif scope == "related" and alarm.asset_id:
+            reachable = set(self.graph.related(alarm.asset_id)) | {alarm.asset_id}
+            matches = [c for c in matches if not c.asset_id or c.asset_id in reachable]
         # scope == "any": every open instance qualifies.
 
         if not matches:
@@ -487,9 +484,7 @@ class CorrelationEngine:
         alarms cannot become fifty messages.
         """
         flooded: set[str] = set()
-        root_by_alarm = {
-            alarm.id: root_id for root_id, group in groups.items() for alarm in group
-        }
+        root_by_alarm = {alarm.id: root_id for root_id, group in groups.items() for alarm in group}
 
         # (a) many alarms of the same definition
         by_key: dict[str, list[Alarm]] = defaultdict(list)
@@ -534,9 +529,7 @@ class CorrelationEngine:
         if incident is None:
             # Reuse an open incident already anchored on this alarm.
             incident = self.session.scalars(
-                select(Incident).where(
-                    Incident.root_cause_alarm_id == root.id, Incident.state == "open"
-                )
+                select(Incident).where(Incident.root_cause_alarm_id == root.id, Incident.state == "open")
             ).first()
 
         severity = max((m.severity for m in members), key=severity_rank)
@@ -584,8 +577,7 @@ class CorrelationEngine:
         )
         if flooded:
             summary += (
-                " Flood guard engaged: member alarms are recorded but not notified "
-                "individually (SDD 14.2)."
+                " Flood guard engaged: member alarms are recorded but not notified individually (SDD 14.2)."
             )
         return summary
 
@@ -619,9 +611,7 @@ class CorrelationEngine:
             if found is None:
                 return None
             incident = found
-        members = list(
-            self.session.scalars(select(Alarm).where(Alarm.incident_id == incident.id)).all()
-        )
+        members = list(self.session.scalars(select(Alarm).where(Alarm.incident_id == incident.id)).all())
         if any(m.state not in CLOSED_STATES for m in members):
             return None
         incident.state = "closed"
@@ -636,9 +626,7 @@ class CorrelationEngine:
     ) -> list[Incident]:
         now = now or utcnow()
         closed: list[Incident] = []
-        for incident in self.session.scalars(
-            select(Incident).where(Incident.state == "open")
-        ).all():
+        for incident in self.session.scalars(select(Incident).where(Incident.state == "open")).all():
             if self.close_incident(incident, now) is not None:
                 closed.append(incident)
         if result is not None:
@@ -650,16 +638,12 @@ class CorrelationEngine:
     def incident_members(self, incident_id: str) -> list[Alarm]:
         return list(
             self.session.scalars(
-                select(Alarm)
-                .where(Alarm.incident_id == incident_id)
-                .order_by(Alarm.detected_at.asc())
+                select(Alarm).where(Alarm.incident_id == incident_id).order_by(Alarm.detected_at.asc())
             ).all()
         )
 
     def notifiable_alarms(self) -> list[Alarm]:
         """Open, unsuppressed alarms that still deserve their own notification."""
         return [
-            alarm
-            for alarm in self.open_alarms()
-            if alarm.state in ACTIVE_STATES and not alarm.suppressed
+            alarm for alarm in self.open_alarms() if alarm.state in ACTIVE_STATES and not alarm.suppressed
         ]

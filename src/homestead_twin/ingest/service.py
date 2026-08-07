@@ -43,18 +43,16 @@ from homestead_twin.envelope import (
     parse_availability,
     parse_telemetry,
 )
+from homestead_twin.ingest.resolver import TopicResolver
+from homestead_twin.ingest.writer import TelemetryWriter
 from homestead_twin.models.base import utcnow
 from homestead_twin.models.telemetry import IngestDeadLetter
 from homestead_twin.mqtt import Message, MessageBus, topic_matches
-from homestead_twin.ingest.resolver import TopicResolver
-from homestead_twin.ingest.writer import TelemetryWriter
 
 logger = logging.getLogger(__name__)
 
 #: Topic kinds owned by the command subsystem.
-_CONTROL_KINDS = frozenset(
-    {topic_utils.KIND_COMMAND, topic_utils.KIND_SETPOINT, topic_utils.KIND_ACK}
-)
+_CONTROL_KINDS = frozenset({topic_utils.KIND_COMMAND, topic_utils.KIND_SETPOINT, topic_utils.KIND_ACK})
 
 #: How much of a rejected payload to keep. Enough to diagnose, bounded so a
 #: chatty broken device cannot fill the disk.
@@ -92,9 +90,7 @@ class IngestService:
         # Half the default point timeout: fast enough that a dead sensor is
         # flagged within roughly one timeout, cheap enough to be irrelevant.
         self.sweep_interval_s = (
-            sweep_interval_s
-            if sweep_interval_s is not None
-            else _clamp(settings.default_stale_after_s / 2)
+            sweep_interval_s if sweep_interval_s is not None else _clamp(settings.default_stale_after_s / 2)
         )
         self._auto_sweep = auto_sweep
         self._running = False
@@ -138,9 +134,7 @@ class IngestService:
                 target=self._sweep_loop, name="ingest-staleness-sweep", daemon=True
             )
             self._thread.start()
-        logger.info(
-            "Ingest listening on %s/# with %d resolvable topic(s)", self.base, len(self.resolver)
-        )
+        logger.info("Ingest listening on %s/# with %d resolvable topic(s)", self.base, len(self.resolver))
 
     def stop(self) -> None:
         self._running = False
@@ -254,8 +248,7 @@ class IngestService:
             # wins, but the disagreement is a commissioning fault worth seeing.
             self._dead_letter(
                 message,
-                f"envelope_topic_mismatch: topic resolves to {point_id}, "
-                f"envelope claims {envelope.point_id}",
+                f"envelope_topic_mismatch: topic resolves to {point_id}, envelope claims {envelope.point_id}",
             )
             asset_id, point_name = topic_utils.split_point_id(point_id)
             envelope = envelope.model_copy(update={"asset_id": asset_id, "point": point_name})
@@ -277,8 +270,7 @@ class IngestService:
         if envelope.asset_id != asset_id:
             self._dead_letter(
                 message,
-                f"envelope_topic_mismatch: topic resolves to {asset_id}, "
-                f"envelope claims {envelope.asset_id}",
+                f"envelope_topic_mismatch: topic resolves to {asset_id}, envelope claims {envelope.asset_id}",
             )
             envelope = envelope.model_copy(update={"asset_id": asset_id})
         with self.session_factory() as session:
@@ -437,7 +429,7 @@ def _event_value(kind: str, envelope: EventEnvelope) -> Any:
 def _is_json_error(exc: Exception) -> bool:
     import json as _json
 
-    return isinstance(exc, _json.JSONDecodeError) or isinstance(exc, UnicodeDecodeError)
+    return isinstance(exc, (_json.JSONDecodeError, UnicodeDecodeError))
 
 
 def _short(exc: Exception, limit: int = 140) -> str:

@@ -74,9 +74,7 @@ def create_app(
     async def lifespan(app: FastAPI):
         if init_db:
             create_all(app.state.engine)
-        manager: ServiceManager = build_services(
-            settings, app.state.session_factory, app.state.bus
-        )
+        manager: ServiceManager = build_services(settings, app.state.session_factory, app.state.bus)
         app.state.services = manager
         if should_start:
             app.state.bus.start()

@@ -42,7 +42,7 @@ import os
 import re
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -50,7 +50,7 @@ import yaml
 from jsonschema import Draft202012Validator
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from validate_registry_refs import (  # noqa: E402
+from validate_registry_refs import (
     ASSET_ID_RE,
     ASSET_ID_SCHEMA_RE,
     check_document,
@@ -195,7 +195,7 @@ def discover_and_validate(report: Report) -> dict[str, Any]:
             if schema is not None:
                 try:
                     Draft202012Validator.check_schema(schema)
-                except Exception as exc:  # noqa: BLE001 - jsonschema raises several types
+                except Exception as exc:
                     report.error(stem, f"{schema_path.name}: not a valid Draft 2020-12 schema: {exc}")
                 else:
                     errors = sorted(
@@ -205,7 +205,9 @@ def discover_and_validate(report: Report) -> dict[str, Any]:
                         location = "/".join(map(str, error.path)) or "<root>"
                         report.error(stem, f"{data_path.name}: {location}: {error.message}")
                     if len(errors) > 25:
-                        report.error(stem, f"{data_path.name}: {len(errors) - 25} further schema errors suppressed")
+                        report.error(
+                            stem, f"{data_path.name}: {len(errors) - 25} further schema errors suppressed"
+                        )
         elif stem in CORE_DOCUMENTS:
             report.error(stem, f"{data_path.name}: required schema {schema_path.name} is missing")
         else:
@@ -227,7 +229,9 @@ def discover_and_validate(report: Report) -> dict[str, Any]:
                 report.error(stem, f"{json_path.name}: JSON parse failure: {exc}")
             else:
                 if mirror != data:
-                    report.error(stem, f"{json_path.name}: JSON mirror is not content-equal to {data_path.name}")
+                    report.error(
+                        stem, f"{json_path.name}: JSON mirror is not content-equal to {data_path.name}"
+                    )
 
         # --- counts -------------------------------------------------------
         if isinstance(data, dict):
@@ -280,7 +284,9 @@ def check_core(report: Report, documents: dict[str, Any]) -> dict[str, Any]:
     asset_set = set(asset_ids)
 
     if register["site_id"] not in asset_set:
-        report.error("homestead_asset_register", f"site_id {register['site_id']!r} does not reference an asset")
+        report.error(
+            "homestead_asset_register", f"site_id {register['site_id']!r} does not reference an asset"
+        )
 
     class_set = set(asset_dict["asset_classes"])
     profile_set = set(asset_dict["point_profiles"])
@@ -296,7 +302,9 @@ def check_core(report: Report, documents: dict[str, Any]) -> dict[str, Any]:
         asset_id = asset["asset_id"]
         check_asset_id_format(report, "homestead_asset_register", asset_id, "register")
         if asset["asset_class"] not in class_set:
-            report.error("homestead_asset_register", f"unknown asset class: {asset_id} -> {asset['asset_class']}")
+            report.error(
+                "homestead_asset_register", f"unknown asset class: {asset_id} -> {asset['asset_class']}"
+            )
             continue
         if asset["domain"] not in domain_set:
             report.error("homestead_asset_register", f"unknown domain: {asset_id} -> {asset['domain']}")
@@ -331,7 +339,9 @@ def check_core(report: Report, documents: dict[str, Any]) -> dict[str, Any]:
             )
     duplicate_relations = {value for value in relationship_ids if relationship_ids.count(value) > 1}
     if duplicate_relations:
-        report.error("homestead_asset_register", f"duplicate relationship_id values: {sorted(duplicate_relations)}")
+        report.error(
+            "homestead_asset_register", f"duplicate relationship_id values: {sorted(duplicate_relations)}"
+        )
 
     binding_ids: list[str] = []
     for binding in bindings["bindings"]:
@@ -356,7 +366,8 @@ def check_core(report: Report, documents: dict[str, Any]) -> dict[str, Any]:
         for point_name in profile:
             if point_name not in point_set:
                 report.error(
-                    "asset_class_dictionary", f"profile {profile_name} references undefined point {point_name}"
+                    "asset_class_dictionary",
+                    f"profile {profile_name} references undefined point {point_name}",
                 )
 
     report.check("All asset IDs are unique and match the section 25.2 identification format.")
@@ -426,13 +437,19 @@ def check_water_assets(report: Report, documents: dict[str, Any], core: dict[str
         if parts[1] != asset["asset_class"]:
             report.error(name, f"{asset_id}: second ID component does not match the asset_class field")
         if asset["asset_class"] not in core["class_set"]:
-            report.error(name, f"{asset_id}: asset class {asset['asset_class']} is not in the class dictionary")
+            report.error(
+                name, f"{asset_id}: asset class {asset['asset_class']} is not in the class dictionary"
+            )
             continue
         allowed = class_dict["asset_classes"][asset["asset_class"]]["allowed_domains"]
         if asset["domain"] not in allowed:
-            report.error(name, f"{asset_id}: class {asset['asset_class']} is not allowed in domain {asset['domain']}")
+            report.error(
+                name, f"{asset_id}: class {asset['asset_class']} is not allowed in domain {asset['domain']}"
+            )
         if asset["parent_id"] is not None and asset["parent_id"] not in universe:
-            report.error(name, f"{asset_id}: parent {asset['parent_id']} does not exist in register or extension")
+            report.error(
+                name, f"{asset_id}: parent {asset['parent_id']} does not exist in register or extension"
+            )
         for profile in asset["point_profile_refs"]:
             if profile not in core["profile_set"]:
                 report.error(name, f"{asset_id}: unknown point profile {profile}")
@@ -442,20 +459,28 @@ def check_water_assets(report: Report, documents: dict[str, Any], core: dict[str
     for relation in water["relationships"]:
         relationship_id = relation["relationship_id"]
         if relationship_id in base_relationship_ids:
-            report.error(name, f"relationship {relationship_id} collides with a base-register relationship ID")
+            report.error(
+                name, f"relationship {relationship_id} collides with a base-register relationship ID"
+            )
         if relationship_id in seen:
             report.error(name, f"duplicate relationship_id within the extension: {relationship_id}")
         seen.add(relationship_id)
         for endpoint in ("from_asset_id", "to_asset_id"):
             if relation[endpoint] not in universe:
-                report.error(name, f"relationship {relationship_id}: {endpoint} {relation[endpoint]} does not exist")
+                report.error(
+                    name, f"relationship {relationship_id}: {endpoint} {relation[endpoint]} does not exist"
+                )
         if relation["relationship_type"] not in class_dict["relationship_types"]:
-            report.error(name, f"relationship {relationship_id}: unknown type {relation['relationship_type']}")
+            report.error(
+                name, f"relationship {relationship_id}: unknown type {relation['relationship_type']}"
+            )
 
     if water.get("site_id") not in universe:
         report.error(name, f"site_id {water.get('site_id')!r} does not resolve")
 
-    report.check("Water extension asset IDs are unique, well formed and do not collide with the base register.")
+    report.check(
+        "Water extension asset IDs are unique, well formed and do not collide with the base register."
+    )
     report.check("Water extension classes, domains, parents, profiles and relationships resolve.")
     report.counts["water_assets"] = len(ids)
     report.counts["water_relationships"] = len(water["relationships"])
@@ -499,18 +524,24 @@ def check_water_points(report: Report, documents: dict[str, Any], core: dict[str
             report.error(name, f"{point_name}: unit {unit!r} is not a canonical unit")
         for asset_class in definition["applicable_asset_classes"]:
             if asset_class not in core["class_set"]:
-                report.error(name, f"{point_name}: applicable asset class {asset_class} is not in the dictionary")
+                report.error(
+                    name, f"{point_name}: applicable asset class {asset_class} is not in the dictionary"
+                )
 
     for point_name in extension.get("reused_existing_points", {}).get("points", []):
         if point_name not in base_points:
-            report.error(name, f"reused_existing_points lists {point_name!r}, which is not in the base dictionary")
+            report.error(
+                name, f"reused_existing_points lists {point_name!r}, which is not in the base dictionary"
+            )
 
     report.check("Water point names are unique against the base dictionary and match point_name_pattern.")
     report.check("Water point classes, units and applicable asset classes resolve.")
     report.counts["water_points"] = len(extension["points"])
 
 
-def check_rack_layout(report: Report, documents: dict[str, Any], core: dict[str, Any], extra: set[str]) -> None:
+def check_rack_layout(
+    report: Report, documents: dict[str, Any], core: dict[str, Any], extra: set[str]
+) -> None:
     """Rack layout: references, rack-unit bounds, overlap, outlet and port uniqueness."""
     name = "rack_layout"
     if name not in documents:
@@ -556,7 +587,9 @@ def check_rack_layout(report: Report, documents: dict[str, Any], core: dict[str,
         start = item["rack_unit_start"]
         height = item["rack_unit_height"]
         if start is None or height < 1:
-            report.error(name, f"{asset_id}: rack-unit placement needs a start position and a height of at least 1")
+            report.error(
+                name, f"{asset_id}: rack-unit placement needs a start position and a height of at least 1"
+            )
             continue
         end = start + height - 1
         if start < 1 or end > declared_units:
@@ -574,9 +607,7 @@ def check_rack_layout(report: Report, documents: dict[str, Any], core: dict[str,
     if expected_free != allocation.get("free_rack_units", []):
         report.error(name, "rack_unit_allocation.free_rack_units disagrees with the placements")
 
-    pdu_outlet_counts = {
-        pdu["pdu_asset_id"]: pdu["outlet_count"] for pdu in layout.get("pdus", [])
-    }
+    pdu_outlet_counts = {pdu["pdu_asset_id"]: pdu["outlet_count"] for pdu in layout.get("pdus", [])}
     for pdu in layout.get("pdus", []):
         pdu_id = pdu["pdu_asset_id"]
         register_pdu = register_by_id.get(pdu_id)
@@ -584,7 +615,8 @@ def check_rack_layout(report: Report, documents: dict[str, Any], core: dict[str,
             register_outlets = register_pdu["properties"].get("outlet_count")
             if register_outlets is not None and pdu["outlet_count"] != register_outlets:
                 report.error(
-                    name, f"{pdu_id}: outlet_count {pdu['outlet_count']} disagrees with the register value {register_outlets}"
+                    name,
+                    f"{pdu_id}: outlet_count {pdu['outlet_count']} disagrees with the register value {register_outlets}",
                 )
         seen_outlets: set[int] = set()
         for outlet in pdu["outlets"]:
@@ -606,7 +638,9 @@ def check_rack_layout(report: Report, documents: dict[str, Any], core: dict[str,
                 report.error(name, f"{asset_id}: PDU outlet {outlet} is outside 1-{limit} on {pdu_id}")
             key = (pdu_id, outlet)
             if key in outlet_claims:
-                report.error(name, f"{pdu_id} outlet {outlet} is claimed by both {outlet_claims[key]} and {asset_id}")
+                report.error(
+                    name, f"{pdu_id} outlet {outlet} is claimed by both {outlet_claims[key]} and {asset_id}"
+                )
             outlet_claims[key] = asset_id
 
         connections = [(item["switch_asset_id"], item["switch_port"])] + [
@@ -617,7 +651,9 @@ def check_rack_layout(report: Report, documents: dict[str, Any], core: dict[str,
                 continue
             key = (switch_id, port)
             if key in port_claims:
-                report.error(name, f"{switch_id} port {port} is claimed by both {port_claims[key]} and {asset_id}")
+                report.error(
+                    name, f"{switch_id} port {port} is claimed by both {port_claims[key]} and {asset_id}"
+                )
             port_claims[key] = asset_id
 
         for vlan_id, vlan_asset in zip(item["vlan_ids"], item["vlan_asset_ids"], strict=False):
@@ -630,7 +666,9 @@ def check_rack_layout(report: Report, documents: dict[str, Any], core: dict[str,
             report.error(name, f"{asset_id}: vlan_ids and vlan_asset_ids have different lengths")
 
         if item["estimated_power_w"] is not None:
-            report.error(name, f"{asset_id}: estimated_power_w must stay null until real power data is measured")
+            report.error(
+                name, f"{asset_id}: estimated_power_w must stay null until real power data is measured"
+            )
 
     if layout.get("document_status") != "proposal_for_review":
         report.error(name, "rack layout must declare document_status proposal_for_review")
@@ -645,7 +683,9 @@ def check_rack_layout(report: Report, documents: dict[str, Any], core: dict[str,
     report.counts["rack_units_free"] = len(expected_free)
 
 
-def check_asset_lifecycle(report: Report, documents: dict[str, Any], core: dict[str, Any], extra: set[str]) -> None:
+def check_asset_lifecycle(
+    report: Report, documents: dict[str, Any], core: dict[str, Any], extra: set[str]
+) -> None:
     """Lifecycle extension: key resolution, derivation consistency, no invented CAPEX."""
     name = "asset_lifecycle"
     if name not in documents:
@@ -675,7 +715,9 @@ def check_asset_lifecycle(report: Report, documents: dict[str, Any], core: dict[
     for asset_id, record in lifecycle["records"].items():
         check_asset_id_format(report, name, asset_id, "lifecycle")
         if asset_id not in universe:
-            report.error(name, f"lifecycle record {asset_id} does not resolve to a register or extension asset")
+            report.error(
+                name, f"lifecycle record {asset_id} does not resolve to a register or extension asset"
+            )
             continue
         observed[record["ownership_state"]] = observed.get(record["ownership_state"], 0) + 1
 
@@ -700,7 +742,9 @@ def check_asset_lifecycle(report: Report, documents: dict[str, Any], core: dict[
             if record["spares_policy_required"] != (
                 register_asset["criticality"] in {"life_safety", "critical"}
             ):
-                report.error(name, f"{asset_id}: spares_policy_required does not follow the register criticality")
+                report.error(
+                    name, f"{asset_id}: spares_policy_required does not follow the register criticality"
+                )
 
         if record["data_status"] == "not_yet_imported":
             for key in money_and_dates:
@@ -711,7 +755,9 @@ def check_asset_lifecycle(report: Report, documents: dict[str, Any], core: dict[
                         "The package does not invent prices, dates or terms.",
                     )
             if record["spare_parts"]:
-                report.error(name, f"{asset_id}: spare_parts is populated while data_status is not_yet_imported")
+                report.error(
+                    name, f"{asset_id}: spare_parts is populated while data_status is not_yet_imported"
+                )
 
     declared = lifecycle["ownership_derivation"].get("counts")
     if declared is not None and {k: v for k, v in observed.items() if v or k in declared} != declared:
@@ -751,7 +797,7 @@ def resolve_timestamp(argument: str | None) -> str:
     from_environment = os.environ.get("HOMESTEAD_VALIDATION_TIMESTAMP")
     if from_environment:
         return from_environment
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def build_report_payload(report: Report, documents: dict[str, Any], timestamp: str, strict: bool) -> dict:

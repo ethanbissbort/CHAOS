@@ -75,17 +75,67 @@ class BlackStartStep:
 
 #: SDD 35.3 preliminary sequence, verbatim in intent.
 BLACK_START_STEPS: tuple[BlackStartStep, ...] = (
-    BlackStartStep("verify_safety", 1, "Verify emergency isolation and physical safety conditions", True, "operator"),
-    BlackStartStep("energize_controls", 2, "Energize BMS, inverter controls and critical control power", True, "operator"),
-    BlackStartStep("close_contactor", 3, "Close the battery contactor through the native precharge sequence", True, "bms"),
-    BlackStartStep("start_master_inverter", 4, "Start one inverter or the manufacturer-defined master group", True, "inverter"),
-    BlackStartStep("energize_critical_bus", 5, "Energize the critical control/communications bus only", True, "operator"),
-    BlackStartStep("start_core_services", 6, "Start the secondary control node, core switch/router and minimum MQTT/time services", False, "platform"),
-    BlackStartStep("validate_measurements", 7, "Validate battery, inverter, frequency and critical-bus measurements", False, "platform"),
-    BlackStartStep("energize_survival_loads", 8, "Energize minimum refrigeration, water protection, greenhouse survival and security loads in staggered order", False, "platform"),
-    BlackStartStep("generator_if_required", 9, "Start the generator if reserve or battery limits require it", False, "platform"),
-    BlackStartStep("start_rack_services", 10, "Start primary rack services once the critical bus and container environment are stable", False, "platform"),
-    BlackStartStep("reconcile", 11, "Reconcile actual asset states with the digital twin before normal restoration", False, "platform"),
+    BlackStartStep(
+        "verify_safety", 1, "Verify emergency isolation and physical safety conditions", True, "operator"
+    ),
+    BlackStartStep(
+        "energize_controls", 2, "Energize BMS, inverter controls and critical control power", True, "operator"
+    ),
+    BlackStartStep(
+        "close_contactor", 3, "Close the battery contactor through the native precharge sequence", True, "bms"
+    ),
+    BlackStartStep(
+        "start_master_inverter",
+        4,
+        "Start one inverter or the manufacturer-defined master group",
+        True,
+        "inverter",
+    ),
+    BlackStartStep(
+        "energize_critical_bus", 5, "Energize the critical control/communications bus only", True, "operator"
+    ),
+    BlackStartStep(
+        "start_core_services",
+        6,
+        "Start the secondary control node, core switch/router and minimum MQTT/time services",
+        False,
+        "platform",
+    ),
+    BlackStartStep(
+        "validate_measurements",
+        7,
+        "Validate battery, inverter, frequency and critical-bus measurements",
+        False,
+        "platform",
+    ),
+    BlackStartStep(
+        "energize_survival_loads",
+        8,
+        "Energize minimum refrigeration, water protection, greenhouse survival and security loads in staggered order",
+        False,
+        "platform",
+    ),
+    BlackStartStep(
+        "generator_if_required",
+        9,
+        "Start the generator if reserve or battery limits require it",
+        False,
+        "platform",
+    ),
+    BlackStartStep(
+        "start_rack_services",
+        10,
+        "Start primary rack services once the critical bus and container environment are stable",
+        False,
+        "platform",
+    ),
+    BlackStartStep(
+        "reconcile",
+        11,
+        "Reconcile actual asset states with the digital twin before normal restoration",
+        False,
+        "platform",
+    ),
 )
 
 STEP_BY_KEY = {step.key: step for step in BLACK_START_STEPS}
@@ -174,15 +224,15 @@ class BlackStartCoordinator:
         if temp is None:
             temp_ok = None
         else:
-            temp_ok = self.config.blackstart_battery_temp_min_c <= temp <= self.config.blackstart_battery_temp_max_c
+            temp_ok = (
+                self.config.blackstart_battery_temp_min_c <= temp <= self.config.blackstart_battery_temp_max_c
+            )
 
         alarms_clear: bool | None
         if container_alarm is None and rack_alarm is None:
             alarms_clear = None
         else:
-            alarms_clear = all(
-                value in {None, "none", "advisory"} for value in (container_alarm, rack_alarm)
-            )
+            alarms_clear = all(value in {None, "none", "advisory"} for value in (container_alarm, rack_alarm))
 
         return [
             Prerequisite(
@@ -194,7 +244,9 @@ class BlackStartCoordinator:
             ),
             Prerequisite(
                 "battery_within_limits",
-                None if soc is None or temp_ok is None else (soc >= self.config.blackstart_min_soc_pct and temp_ok),
+                None
+                if soc is None or temp_ok is None
+                else (soc >= self.config.blackstart_min_soc_pct and temp_ok),
                 f"SOC {soc if soc is not None else 'unknown'}% (minimum "
                 f"{self.config.blackstart_min_soc_pct:g}%), cell temperature "
                 f"{temp if temp is not None else 'unknown'} C",
@@ -268,7 +320,9 @@ class BlackStartCoordinator:
         logger.warning("Black start initiated by %s: %s", actor, reason)
         return self.state
 
-    def advance(self, *, step: str | None = None, actor: str, now: dt.datetime, detail: str = "") -> BlackStartState:
+    def advance(
+        self, *, step: str | None = None, actor: str, now: dt.datetime, detail: str = ""
+    ) -> BlackStartState:
         """Mark the current (or a named) step complete and move to the next."""
         if not self.state.active:
             raise RuntimeError("No black start is in progress")
@@ -322,7 +376,9 @@ class BlackStartCoordinator:
         }
 
     # -- reconciliation (SDD 35.4) ----------------------------------------
-    def reconcile(self, session: Session, *, now: dt.datetime, config: EmsConfig | None = None) -> ReconciliationReport:
+    def reconcile(
+        self, session: Session, *, now: dt.datetime, config: EmsConfig | None = None
+    ) -> ReconciliationReport:
         """Report what must be re-established, and drop the EMS's own stale beliefs."""
         config = config or self.config
         report = ReconciliationReport(at=now)
@@ -334,7 +390,7 @@ class BlackStartCoordinator:
                 report.stale_points.append(row.point_id)
                 continue
             if ts.tzinfo is None:
-                ts = ts.replace(tzinfo=dt.timezone.utc)
+                ts = ts.replace(tzinfo=dt.UTC)
             if ts < cutoff:
                 report.stale_points.append(row.point_id)
 
@@ -345,7 +401,7 @@ class BlackStartCoordinator:
             if expires_at is None:
                 continue
             if expires_at.tzinfo is None:
-                expires_at = expires_at.replace(tzinfo=dt.timezone.utc)
+                expires_at = expires_at.replace(tzinfo=dt.UTC)
             if expires_at <= now:
                 report.expired_commands.append(command.command_id)
 
@@ -355,7 +411,11 @@ class BlackStartCoordinator:
         for action in session.scalars(select(LoadShedAction).order_by(LoadShedAction.occurred_at)):
             latest[action.asset_id] = action
         for asset_id, action in latest.items():
-            if action.action in {"shed", "reduce"} and action.outcome in {"requested", "confirmed", "applied"}:
+            if action.action in {"shed", "reduce"} and action.outcome in {
+                "requested",
+                "confirmed",
+                "applied",
+            }:
                 action.outcome = "unconfirmed"
                 action.reason = f"{action.reason} | black-start reconciliation: physical state unknown"
                 report.unknown_loads.append(asset_id)
@@ -380,5 +440,5 @@ class BlackStartCoordinator:
 def _parse(value: str) -> dt.datetime:
     parsed = dt.datetime.fromisoformat(value)
     if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=dt.timezone.utc)
+        parsed = parsed.replace(tzinfo=dt.UTC)
     return parsed

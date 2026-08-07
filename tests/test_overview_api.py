@@ -55,7 +55,11 @@ def _asset(session: Session, asset_id: str, **kwargs) -> Asset:
     defaults.update(kwargs)
     klass = session.get(AssetClass, defaults["asset_class"])
     if klass is None:
-        session.add(AssetClass(name=defaults["asset_class"], allowed_domains=[], required_properties=[], default_points=[]))
+        session.add(
+            AssetClass(
+                name=defaults["asset_class"], allowed_domains=[], required_properties=[], default_points=[]
+            )
+        )
         session.flush()
     asset = Asset(asset_id=asset_id, **defaults)
     session.add(asset)
@@ -136,15 +140,40 @@ def seeded(db_session: Session) -> Session:
     """A small but realistic slice of the homestead: energy live, water absent."""
     session = db_session
 
-    _asset(session, "site.site.primary.01", domain="site", asset_class="site", name="Primary Site",
-           criticality="critical", control_authority="supervisory",
-           open_fields=["property_coordinates", "survey_boundary"])
-    _asset(session, "energy.pv_array.field.01", asset_class="pv_array", name="PV Array 01",
-           status="commissioned", criticality="important")
-    _asset(session, "energy.battery_bank.container.01", asset_class="battery_bank", name="Battery Bank",
-           status="commissioned", criticality="critical")
-    _asset(session, "energy.panel.container.critical", asset_class="panel", name="Critical Panel",
-           status="commissioned", criticality="critical")
+    _asset(
+        session,
+        "site.site.primary.01",
+        domain="site",
+        asset_class="site",
+        name="Primary Site",
+        criticality="critical",
+        control_authority="supervisory",
+        open_fields=["property_coordinates", "survey_boundary"],
+    )
+    _asset(
+        session,
+        "energy.pv_array.field.01",
+        asset_class="pv_array",
+        name="PV Array 01",
+        status="commissioned",
+        criticality="important",
+    )
+    _asset(
+        session,
+        "energy.battery_bank.container.01",
+        asset_class="battery_bank",
+        name="Battery Bank",
+        status="commissioned",
+        criticality="critical",
+    )
+    _asset(
+        session,
+        "energy.panel.container.critical",
+        asset_class="panel",
+        name="Critical Panel",
+        status="commissioned",
+        criticality="critical",
+    )
     _asset(
         session,
         "energy.load.workshop.dust_collector",
@@ -156,27 +185,66 @@ def seeded(db_session: Session) -> Session:
         manual_override={"method": "local disconnect", "active": False, "documented": True},
         open_fields=["branch_circuit"],
     )
-    _asset(session, "it.router.core.01", domain="it", asset_class="router", name="Core Router",
-           status="active", criticality="critical")
-    _asset(session, "security.camera.gate.01", domain="security", asset_class="camera", name="Gate Camera",
-           status="installed")
+    _asset(
+        session,
+        "it.router.core.01",
+        domain="it",
+        asset_class="router",
+        name="Core Router",
+        status="active",
+        criticality="critical",
+    )
+    _asset(
+        session,
+        "security.camera.gate.01",
+        domain="security",
+        asset_class="camera",
+        name="Gate Camera",
+        status="installed",
+    )
     session.flush()
 
     pv = _point(session, "energy.pv_array.field.01", "power_dc_kw")
     soc = _point(session, "energy.battery_bank.container.01", "soc_pct", unit="%")
     panel = _point(session, "energy.panel.container.critical", "power_ac_kw")
     load_kw = _point(session, "energy.load.workshop.dust_collector", "power_kw")
-    enabled_actual = _point(session, "energy.load.workshop.dust_collector", "enabled_actual",
-                            data_type="bool", unit=None, point_class="DI")
-    enabled_req = _point(session, "energy.load.workshop.dust_collector", "enabled_requested",
-                         data_type="bool", unit=None, point_class="DO", control_capable=True)
-    override = _point(session, "energy.load.workshop.dust_collector", "manual_override_active",
-                      data_type="bool", unit=None, point_class="DI")
-    router_avail = _point(session, "it.router.core.01", "availability_state", data_type="enum",
-                          unit=None, point_class="DI")
+    enabled_actual = _point(
+        session,
+        "energy.load.workshop.dust_collector",
+        "enabled_actual",
+        data_type="bool",
+        unit=None,
+        point_class="DI",
+    )
+    enabled_req = _point(
+        session,
+        "energy.load.workshop.dust_collector",
+        "enabled_requested",
+        data_type="bool",
+        unit=None,
+        point_class="DO",
+        control_capable=True,
+    )
+    override = _point(
+        session,
+        "energy.load.workshop.dust_collector",
+        "manual_override_active",
+        data_type="bool",
+        unit=None,
+        point_class="DI",
+    )
+    router_avail = _point(
+        session, "it.router.core.01", "availability_state", data_type="enum", unit=None, point_class="DI"
+    )
     # A registered but never-reporting point: this is "no_data", not zero.
-    _point(session, "security.camera.gate.01", "availability_state", data_type="enum", unit=None,
-           point_class="DI")
+    _point(
+        session,
+        "security.camera.gate.01",
+        "availability_state",
+        data_type="enum",
+        unit=None,
+        point_class="DI",
+    )
     session.flush()
 
     _state(session, pv, numeric=7.4)
@@ -206,8 +274,11 @@ def seeded(db_session: Session) -> Session:
             entered_at=utcnow() - dt.timedelta(minutes=30),
             data_quality="good",
             inputs={"soc_pct": 61.5},
-            derived={"autonomy_current_h": 9.5, "autonomy_critical_h": 26.0,
-                     "energy_above_emergency_reserve_kwh": 180.0},
+            derived={
+                "autonomy_current_h": 9.5,
+                "autonomy_critical_h": 26.0,
+                "energy_above_emergency_reserve_kwh": 180.0,
+            },
             shed_groups_active=["SG-3"],
             generator_request="not_requested",
             last_evaluated_at=utcnow(),
@@ -277,20 +348,22 @@ def seeded(db_session: Session) -> Session:
             state="rejected",
             state_reason="Interlock blocked",
             interlocks_evaluated=[
-                {"name": "energy_state_permits_tier3", "passed": False,
-                 "detail": "Energy state CONSERVE does not permit tier 3 loads"},
+                {
+                    "name": "energy_state_permits_tier3",
+                    "passed": False,
+                    "detail": "Energy state CONSERVE does not permit tier 3 loads",
+                },
                 {"name": "minimum_off_time", "passed": True, "detail": "Elapsed 900 s"},
             ],
         )
     )
 
     session.add(
-        AlarmDefinition(alarm_key="ems.reserve.low", name="Battery reserve low", severity="major",
-                        domain="energy")
+        AlarmDefinition(
+            alarm_key="ems.reserve.low", name="Battery reserve low", severity="major", domain="energy"
+        )
     )
-    session.add(
-        AlarmDefinition(alarm_key="it.wan.down", name="WAN down", severity="critical", domain="it")
-    )
+    session.add(AlarmDefinition(alarm_key="it.wan.down", name="WAN down", severity="critical", domain="it"))
     session.flush()
     incident = Incident(
         id="inc-0001",
@@ -544,9 +617,10 @@ def test_map_supports_non_point_geometry(client, seeded, db_session):
     db_session.add(
         Location(
             asset_id="site.site.primary.01",
-            geometry={"type": "Polygon", "coordinates": [[[-79.3, 44.4], [-79.1, 44.4],
-                                                          [-79.1, 44.6], [-79.3, 44.6],
-                                                          [-79.3, 44.4]]]},
+            geometry={
+                "type": "Polygon",
+                "coordinates": [[[-79.3, 44.4], [-79.1, 44.4], [-79.1, 44.6], [-79.3, 44.6], [-79.3, 44.4]]],
+            },
         )
     )
     db_session.commit()

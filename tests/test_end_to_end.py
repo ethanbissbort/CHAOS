@@ -193,9 +193,11 @@ def test_no_physical_control_is_dispatched_by_default(platform, session_factory,
     ems.tick()
 
     session.expire_all()
-    dispatched = session.execute(
-        select(Command).where(Command.state.in_(("dispatched", "acknowledged", "succeeded")))
-    ).scalars().all()
+    dispatched = (
+        session.execute(select(Command).where(Command.state.in_(("dispatched", "acknowledged", "succeeded"))))
+        .scalars()
+        .all()
+    )
     assert dispatched == [], f"commands reached equipment with control disabled: {dispatched}"
 
     # And the simulator confirms it received nothing.
@@ -217,7 +219,7 @@ def test_comms_loss_marks_points_stale(platform):
     site.lose_comms("power")
     for _ in range(30):
         site.step(dt_s=10)
-    later = dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=1)
+    later = dt.datetime.now(dt.UTC) + dt.timedelta(hours=1)
     ingest.sweep_stale(now=later)
 
     session.expire_all()

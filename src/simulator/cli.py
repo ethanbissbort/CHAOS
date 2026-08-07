@@ -19,7 +19,8 @@ import json
 import logging
 import sys
 from collections import Counter
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 from homestead_twin.config import Settings
 from homestead_twin.mqtt import InMemoryBus, Message, PahoBus
@@ -62,9 +63,7 @@ def build_parser() -> argparse.ArgumentParser:
         description="Simulated homestead MQTT site for the Homestead Digital Twin.",
     )
     parser.add_argument("--scenario", default="clear_summer_day", help="scenario name to run")
-    parser.add_argument(
-        "--list-scenarios", action="store_true", help="list the available scenarios and exit"
-    )
+    parser.add_argument("--list-scenarios", action="store_true", help="list the available scenarios and exit")
     parser.add_argument(
         "--duration",
         default=None,
@@ -90,9 +89,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--json", action="store_true", help="emit the summary as JSON")
     parser.add_argument("--quiet", action="store_true", help="suppress progress logging")
-    parser.add_argument(
-        "--verbose", action="store_true", help="log a state line every simulated 30 minutes"
-    )
+    parser.add_argument("--verbose", action="store_true", help="log a state line every simulated 30 minutes")
     return parser
 
 
@@ -109,9 +106,7 @@ def _list_scenarios() -> str:
     return "\n".join(lines)
 
 
-def build_site(
-    args: argparse.Namespace, scenario
-) -> tuple[SimulatedSite, Any, TopicCollector | None]:
+def build_site(args: argparse.Namespace, scenario) -> tuple[SimulatedSite, Any, TopicCollector | None]:
     """Construct the bus and the site for ``scenario`` (plus an offline collector)."""
     settings_kwargs: dict[str, Any] = {}
     if args.broker:

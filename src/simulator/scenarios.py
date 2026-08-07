@@ -28,8 +28,9 @@ simulated elapsed time, so they replay exactly regardless of step size.
 from __future__ import annotations
 
 import datetime as dt
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 from homestead_twin import topics
 from homestead_twin.envelope import CommandEnvelope
@@ -45,8 +46,8 @@ from simulator.site import SimulatedSite, SiteConfig
 EventFn = Callable[[SimulatedSite], None]
 
 #: Summer solstice and midwinter starts, 04:00 local (09:00 UTC at -5).
-SUMMER_START = dt.datetime(2026, 6, 21, 9, 0, tzinfo=dt.timezone.utc)
-WINTER_START = dt.datetime(2026, 1, 15, 9, 0, tzinfo=dt.timezone.utc)
+SUMMER_START = dt.datetime(2026, 6, 21, 9, 0, tzinfo=dt.UTC)
+WINTER_START = dt.datetime(2026, 1, 15, 9, 0, tzinfo=dt.UTC)
 
 
 @dataclass(frozen=True)
@@ -114,9 +115,7 @@ class ScenarioRunner:
         def on_step(site: SimulatedSite, _balance) -> None:
             self.pump()
 
-        return self.site.run(
-            duration_s=duration, dt_s=step, speed=speed, pacer=pacer, on_step=on_step
-        )
+        return self.site.run(duration_s=duration, dt_s=step, speed=speed, pacer=pacer, on_step=on_step)
 
 
 # --------------------------------------------------------------------------
@@ -304,9 +303,7 @@ def _passing_clouds() -> Scenario:
             "(SDD 30.9); shed/restore counts should stay near zero."
         ),
         config=config,
-        events=(
-            ScenarioEvent(parse_duration("3h"), "sustained clearing", _do_cloud("clear")),
-        ),
+        events=(ScenarioEvent(parse_duration("3h"), "sustained clearing", _do_cloud("clear")),),
         duration_s=parse_duration("6h"),
         step_s=5.0,
         verifies=("EMS-T006", "EMS-T007"),
@@ -334,37 +331,36 @@ def _reserve_decline() -> Scenario:
                 parse_duration("3h"),
                 "S1: stop opportunistic compute",
                 _do_command(
-                    "energy.load.site.opportunistic_compute_01", "shed",
+                    "energy.load.site.opportunistic_compute_01",
+                    "shed",
                     reason="reserve_declining",
                 ),
             ),
             ScenarioEvent(
                 parse_duration("4h"),
                 "S2: defer tool charging and spa",
-                _do_command(
-                    "energy.load.site.tool_charging_01", "shed", reason="reserve_declining"
-                ),
+                _do_command("energy.load.site.tool_charging_01", "shed", reason="reserve_declining"),
             ),
             ScenarioEvent(
                 parse_duration("5h"),
                 "S3: shed greenhouse lighting",
                 _do_command(
-                    "energy.load.site.greenhouse_lighting_01", "shed",
+                    "energy.load.site.greenhouse_lighting_01",
+                    "shed",
                     reason="critical_reserve_approaching",
                 ),
             ),
             ScenarioEvent(
                 parse_duration("6h"),
                 "S5: attempt to shed the control core (must be refused)",
-                _do_command(
-                    "energy.load.site.control_core_01", "shed", reason="critical_reserve"
-                ),
+                _do_command("energy.load.site.control_core_01", "shed", reason="critical_reserve"),
             ),
             ScenarioEvent(
                 parse_duration("8h"),
                 "restore lighting too early (must be refused)",
                 _do_command(
-                    "energy.load.site.greenhouse_lighting_01", "restore",
+                    "energy.load.site.greenhouse_lighting_01",
+                    "restore",
                     reason="premature_restore",
                 ),
             ),
@@ -395,16 +391,16 @@ def _generator_support() -> Scenario:
                 parse_duration("10m"),
                 "EMS requests generator start",
                 _do_command(
-                    GENERATOR_ASSET, "generator_start_request", True,
+                    GENERATOR_ASSET,
+                    "generator_start_request",
+                    True,
                     reason="battery_reserve_protection",
                 ),
             ),
             ScenarioEvent(
                 parse_duration("2h"),
                 "EMS releases the start request",
-                _do_command(
-                    GENERATOR_ASSET, "generator_start_request", False, reason="reserve_recovered"
-                ),
+                _do_command(GENERATOR_ASSET, "generator_start_request", False, reason="reserve_recovered"),
             ),
         ),
         duration_s=parse_duration("4h"),
@@ -433,12 +429,11 @@ def _generator_fails_to_start() -> Scenario:
             ScenarioEvent(
                 parse_duration("5m"),
                 "EMS requests generator start",
-                _do_command(
-                    GENERATOR_ASSET, "generator_start_request", True, reason="critical_reserve"
-                ),
+                _do_command(GENERATOR_ASSET, "generator_start_request", True, reason="critical_reserve"),
             ),
             ScenarioEvent(
-                parse_duration("30m"), "operator finds the fuel valve closed",
+                parse_duration("30m"),
+                "operator finds the fuel valve closed",
                 lambda site: site.generator.set_fuel_pct(4.0),
             ),
         ),
@@ -467,12 +462,15 @@ def _generator_fails_during_run() -> Scenario:
                 parse_duration("5m"),
                 "EMS requests generator start",
                 _do_command(
-                    GENERATOR_ASSET, "generator_start_request", True,
+                    GENERATOR_ASSET,
+                    "generator_start_request",
+                    True,
                     reason="battery_reserve_protection",
                 ),
             ),
             ScenarioEvent(
-                parse_duration("45m"), "engine trips on low oil pressure",
+                parse_duration("45m"),
+                "engine trips on low oil pressure",
                 _do_generator_fault("low_oil_pressure"),
             ),
         ),
@@ -498,15 +496,18 @@ def _scenario_inverter_fault() -> Scenario:
         config=config,
         events=(
             ScenarioEvent(
-                parse_duration("1h"), "inverter 2 shutdown fault",
+                parse_duration("1h"),
+                "inverter 2 shutdown fault",
                 _do_inverter_fault(1, "dc_overvoltage"),
             ),
             ScenarioEvent(
-                parse_duration("90m"), "inverter 4 hardware lockout",
+                parse_duration("90m"),
+                "inverter 4 hardware lockout",
                 _do_inverter_fault(3, "hardware_lockout"),
             ),
             ScenarioEvent(
-                parse_duration("3h"), "inverter 2 reset by operator",
+                parse_duration("3h"),
+                "inverter 2 reset by operator",
                 lambda site: site.inverters.clear_fault(1),
             ),
         ),
@@ -556,9 +557,7 @@ def _scenario_black_start() -> Scenario:
             "before general ones. Attended loads stay out."
         ),
         config=config,
-        events=(
-            ScenarioEvent(parse_duration("2m"), "operator authorises black start", _do_black_start()),
-        ),
+        events=(ScenarioEvent(parse_duration("2m"), "operator authorises black start", _do_black_start()),),
         duration_s=parse_duration("1h"),
         step_s=2.0,
         verifies=("EMS-T012",),
@@ -638,19 +637,20 @@ def _sensor_failure() -> Scenario:
         config=config,
         events=(
             ScenarioEvent(
-                parse_duration("20m"), "SOC input freezes",
-                _do_sensor_fault(
-                    "energy.battery_bank.power_container.01/soc_pct", "frozen", "uncertain"
-                ),
+                parse_duration("20m"),
+                "SOC input freezes",
+                _do_sensor_fault("energy.battery_bank.power_container.01/soc_pct", "frozen", "uncertain"),
             ),
             ScenarioEvent(
-                parse_duration("60m"), "cell temperature reads out of range",
+                parse_duration("60m"),
+                "cell temperature reads out of range",
                 _do_sensor_fault(
                     "energy.battery_bank.power_container.01/temperature_cell_max_c", "bad", "bad"
                 ),
             ),
             ScenarioEvent(
-                parse_duration("90m"), "PV irradiance stops updating",
+                parse_duration("90m"),
+                "PV irradiance stops updating",
                 _do_sensor_fault(
                     "energy.pv_array.agrivoltaic_field.01/solar_irradiance_w_m2", "stale", "stale"
                 ),
@@ -681,9 +681,7 @@ def _rack_cooling_loss() -> Scenario:
         config=config,
         events=(
             ScenarioEvent(parse_duration("15m"), "cooling plant fails", _do_cooling_failure(True)),
-            ScenarioEvent(
-                parse_duration("3h"), "cooling restored after repair", _do_cooling_failure(False)
-            ),
+            ScenarioEvent(parse_duration("3h"), "cooling restored after repair", _do_cooling_failure(False)),
         ),
         duration_s=parse_duration("5h"),
         step_s=10.0,
@@ -709,43 +707,35 @@ def _tier0_shed_refused() -> Scenario:
         ),
         config=config,
         events=(
-            ScenarioEvent(
-                parse_duration("10m"), "cells forced out of band", _do_cell_temperature(2.0)
-            ),
+            ScenarioEvent(parse_duration("10m"), "cells forced out of band", _do_cell_temperature(2.0)),
             ScenarioEvent(
                 parse_duration("12m"),
                 "shed opportunistic compute (accepted)",
-                _do_command(
-                    "energy.load.site.opportunistic_compute_01", "shed", reason="critical_reserve"
-                ),
+                _do_command("energy.load.site.opportunistic_compute_01", "shed", reason="critical_reserve"),
             ),
             ScenarioEvent(
                 parse_duration("15m"),
                 "shed the Tier 0 control core (refused)",
-                _do_command(
-                    "energy.load.site.control_core_01", "shed", reason="critical_reserve"
-                ),
+                _do_command("energy.load.site.control_core_01", "shed", reason="critical_reserve"),
             ),
             ScenarioEvent(
                 parse_duration("20m"),
                 "shed battery HVAC while cells are cold (refused)",
-                _do_command(
-                    "energy.load.site.battery_hvac_01", "shed", reason="critical_reserve"
-                ),
+                _do_command("energy.load.site.battery_hvac_01", "shed", reason="critical_reserve"),
             ),
             ScenarioEvent(
                 parse_duration("25m"),
                 "shed rack cooling while the rack is warm (refused)",
-                _do_command(
-                    "energy.load.site.rack_cooling_01", "shed", reason="critical_reserve"
-                ),
+                _do_command("energy.load.site.rack_cooling_01", "shed", reason="critical_reserve"),
             ),
             ScenarioEvent(
                 parse_duration("30m"),
                 "emergency plan sheds rack cooling (permitted)",
                 _do_command(
-                    "energy.load.site.rack_cooling_01", "shed",
-                    reason="emergency_load_shed", operating_mode="emergency",
+                    "energy.load.site.rack_cooling_01",
+                    "shed",
+                    reason="emergency_load_shed",
+                    operating_mode="emergency",
                 ),
             ),
         ),
@@ -772,11 +762,13 @@ def _pv_underperformance() -> Scenario:
         config=config,
         events=(
             ScenarioEvent(
-                parse_duration("1h"), "row 3 string opens",
+                parse_duration("1h"),
+                "row 3 string opens",
                 lambda site: site.solar.set_row_available(2, False, "string_open"),
             ),
             ScenarioEvent(
-                parse_duration("2h"), "row 4 combiner fault",
+                parse_duration("2h"),
+                "row 4 combiner fault",
                 lambda site: site.solar.set_row_available(3, False, "combiner_fault"),
             ),
         ),

@@ -33,8 +33,8 @@ from homestead_twin.ems.leases import LeaseManager, summarise_leases
 from homestead_twin.ems.loader import effective_tier, load_profiles
 from homestead_twin.ems.shedding import current_load_states, recent_actions, summarise_loads
 from homestead_twin.ems.state_machine import (
-    LatchError,
     EnergyStateMachine,
+    LatchError,
     ensure_snapshot,
     publish_state,
     recent_transitions,
@@ -53,9 +53,7 @@ def _evaluate(session: Session, now: dt.datetime) -> tuple[EmsInputs, DerivedEne
     """Read-only evaluation used by the dashboard and the lease endpoints."""
     config = _config()
     profiles = load_profiles(session)
-    inputs = gather_inputs(
-        session, now, config, load_asset_ids=[profile.asset_id for profile in profiles]
-    )
+    inputs = gather_inputs(session, now, config, load_asset_ids=[profile.asset_id for profile in profiles])
     derived = compute_derived(
         inputs,
         config,
@@ -305,9 +303,7 @@ def create_reservation(
     return body
 
 
-@router.delete(
-    "/load-budgets/reservations/{lease_id}", summary="Revoke a power-budget lease (operator)"
-)
+@router.delete("/load-budgets/reservations/{lease_id}", summary="Revoke a power-budget lease (operator)")
 def revoke_reservation(
     lease_id: str,
     session: DbSession,
@@ -318,9 +314,7 @@ def revoke_reservation(
     now = utcnow()
     manager = LeaseManager(_config())
     try:
-        lease = manager.revoke(
-            session, lease_id, reason=reason, actor=principal.name, now=now, force=force
-        )
+        lease = manager.revoke(session, lease_id, reason=reason, actor=principal.name, now=now, force=force)
     except KeyError as exc:
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"Unknown lease {lease_id}") from exc
     except PermissionError as exc:
@@ -488,14 +482,16 @@ def get_dashboard(session: DbSession, settings: AppSettings, principal: CurrentP
                 "inrush_class": state.profile.inrush_class,
                 "automatic_restart_permitted": state.automatic_restart_permitted,
             }
-            for state in sorted(states.values(), key=lambda s: (s.profile.restoration_order or 0))
+            for state in sorted(states.values(), key=lambda s: s.profile.restoration_order or 0)
             if state.is_shed
         ],
         "restoration_headroom_kw": derived.value("restoration_headroom_kw"),
         # --- leases and backlog ---------------------------------------
         "leases": summarise_leases(manager.active_leases(session, now)),
         "grantable_surplus_kw": manager.grantable_kw(derived),
-        "deferrable_backlog": (derived.get("deferrable_backlog_kwh").as_dict() if derived.get("deferrable_backlog_kwh") else None),
+        "deferrable_backlog": (
+            derived.get("deferrable_backlog_kwh").as_dict() if derived.get("deferrable_backlog_kwh") else None
+        ),
         # --- container environment ------------------------------------
         "power_container": {
             "temperature_c": inputs.numeric("container_temperature_c"),

@@ -144,8 +144,8 @@ def utc(value: dt.datetime | None) -> dt.datetime | None:
     if value is None:
         return None
     if value.tzinfo is None:
-        return value.replace(tzinfo=dt.timezone.utc)
-    return value.astimezone(dt.timezone.utc)
+        return value.replace(tzinfo=dt.UTC)
+    return value.astimezone(dt.UTC)
 
 
 # ---------------------------------------------------------------------------
@@ -186,9 +186,7 @@ class InterlockResult:
         )
 
     @classmethod
-    def deny(
-        cls, code: str, reason: str, *, detail: dict[str, Any] | None = None
-    ) -> InterlockResult:
+    def deny(cls, code: str, reason: str, *, detail: dict[str, Any] | None = None) -> InterlockResult:
         return cls(code=code, allowed=False, reason=reason, detail=detail or {})
 
     def as_record(self) -> dict[str, Any]:
@@ -392,7 +390,7 @@ class InterlockRegistry:
         for entry in sorted(self._entries, key=lambda e: e.sort_key):
             try:
                 result = entry.func(session, request, context)
-            except Exception as exc:  # noqa: BLE001 - a broken interlock must deny
+            except Exception as exc:
                 logger.exception("Interlock %s raised; denying command", entry.name)
                 result = InterlockResult.deny(
                     INTERLOCK_ERROR,
@@ -426,8 +424,7 @@ def physical_control_disabled(
     if not enabled and not request.dry_run:
         return InterlockResult.deny(
             PHYSICAL_CONTROL_DISABLED,
-            "Physical control is disabled platform-wide "
-            "(HOMESTEAD_ALLOW_PHYSICAL_CONTROL is false)",
+            "Physical control is disabled platform-wide (HOMESTEAD_ALLOW_PHYSICAL_CONTROL is false)",
             detail={"allow_physical_control": False, "dry_run": False},
         )
     if request.dry_run:
@@ -470,8 +467,7 @@ def binding_not_commissioned(
     if binding.binding_status != COMMISSIONED_BINDING_STATUS:
         return InterlockResult.deny(
             BINDING_NOT_COMMISSIONED,
-            f"Binding status is {binding.binding_status!r}, not "
-            f"{COMMISSIONED_BINDING_STATUS!r}",
+            f"Binding status is {binding.binding_status!r}, not {COMMISSIONED_BINDING_STATUS!r}",
             detail=detail,
         )
     if not binding.automatic_control_allowed:
@@ -543,8 +539,7 @@ def asset_in_maintenance(
     if not request.maintenance_override:
         return InterlockResult.deny(
             ASSET_IN_MAINTENANCE,
-            "Maintenance lockout is active; a maintainer must set "
-            "maintenance_override to proceed",
+            "Maintenance lockout is active; a maintainer must set maintenance_override to proceed",
             detail=detail,
         )
     if not role_at_least(context.principal_role, MAINTENANCE_OVERRIDE_ROLE):
@@ -726,9 +721,7 @@ class StaleInputInterlock:
                 f"Command depends on measurements that are not usable: {names}",
                 detail=detail,
             )
-        return InterlockResult.allow(
-            self.code, "All declared input measurements are usable", detail=detail
-        )
+        return InterlockResult.allow(self.code, "All declared input measurements are usable", detail=detail)
 
 
 #: Module-level default instance used by :func:`default_registry`.

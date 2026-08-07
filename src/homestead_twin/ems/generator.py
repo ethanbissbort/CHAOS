@@ -221,8 +221,9 @@ class GeneratorCoordinator:
             Permissive(
                 "automatic_mode",
                 available,
-                "generator reports available / remote-enabled" if available else
-                "generator_available is not true",
+                "generator reports available / remote-enabled"
+                if available
+                else "generator_available is not true",
             ),
             Permissive(
                 "no_maintenance_lockout",
@@ -400,7 +401,9 @@ class GeneratorCoordinator:
         if not outcome.accepted:
             detail = outcome.detail or "start request not accepted"
             self.runtime.last_failure = detail
-            self.runtime.sequence = "failed" if self.runtime.attempts < self.config.generator_start_attempt_limit else "lockout"
+            self.runtime.sequence = (
+                "failed" if self.runtime.attempts < self.config.generator_start_attempt_limit else "lockout"
+            )
             self._alarm(
                 "generator_start_failed",
                 "critical",
@@ -435,9 +438,7 @@ class GeneratorCoordinator:
             supporting=True,
         )
 
-    def _await_start(
-        self, inputs: EmsInputs, *, now: dt.datetime, running: bool | None
-    ) -> GeneratorDecision:
+    def _await_start(self, inputs: EmsInputs, *, now: dt.datetime, running: bool | None) -> GeneratorDecision:
         """SDD 34.3 steps 3-5: wait for a valid running state."""
         if running is True:
             self.runtime.sequence = "running"
@@ -470,7 +471,9 @@ class GeneratorCoordinator:
                 supporting=True,
             )
         self.runtime.sequence = "starting"
-        return GeneratorDecision(sequence="starting", reason="waiting for the native start sequence", supporting=True)
+        return GeneratorDecision(
+            sequence="starting", reason="waiting for the native start sequence", supporting=True
+        )
 
     def _start_failed(self, detail: str, *, now: dt.datetime) -> GeneratorDecision:
         """SDD 34.7: stay in deep conservation, alarm, and do not re-crank."""
@@ -672,5 +675,5 @@ def _parse(value: str | None) -> dt.datetime | None:
         return None
     parsed = dt.datetime.fromisoformat(value)
     if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=dt.timezone.utc)
+        parsed = parsed.replace(tzinfo=dt.UTC)
     return parsed

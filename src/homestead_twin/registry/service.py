@@ -134,9 +134,7 @@ def list_assets(
         )
 
     total = session.scalar(select(func.count()).select_from(statement.subquery())) or 0
-    items = session.scalars(
-        statement.order_by(Asset.asset_id).limit(limit).offset(offset)
-    ).all()
+    items = session.scalars(statement.order_by(Asset.asset_id).limit(limit).offset(offset)).all()
     return AssetPage(items=list(items), total=int(total), limit=limit, offset=offset)
 
 
@@ -154,18 +152,12 @@ def list_point_definitions(session: Session) -> list[PointDefinition]:
 
 def count_children(session: Session, asset_id: str) -> int:
     return int(
-        session.scalar(
-            select(func.count()).select_from(Asset).where(Asset.parent_id == asset_id)
-        )
-        or 0
+        session.scalar(select(func.count()).select_from(Asset).where(Asset.parent_id == asset_id)) or 0
     )
 
 
 def count_asset_points(session: Session, asset_id: str) -> int:
-    return int(
-        session.scalar(select(func.count()).select_from(Point).where(Point.asset_id == asset_id))
-        or 0
-    )
+    return int(session.scalar(select(func.count()).select_from(Point).where(Point.asset_id == asset_id)) or 0)
 
 
 # ---------------------------------------------------------------------------
@@ -203,9 +195,7 @@ def get_asset_tree(
             "status": asset.status,
             "criticality": asset.criticality,
             "child_count": len(children.get(asset.asset_id, [])),
-            "children": [
-                node(child, None if remaining is None else remaining - 1) for child in kids
-            ],
+            "children": [node(child, None if remaining is None else remaining - 1) for child in kids],
         }
 
     if root_id is not None:
@@ -225,9 +215,7 @@ def get_asset_tree(
         "status": None,
         "criticality": None,
         "child_count": len(roots),
-        "children": [
-            node(root, None if depth is None else depth - 1) for root in roots
-        ],
+        "children": [node(root, None if depth is None else depth - 1) for root in roots],
     }
 
 
@@ -258,9 +246,7 @@ def get_descendants(session: Session, asset_id: str) -> list[Asset]:
 
 def get_asset_points(session: Session, asset_id: str) -> list[Point]:
     return list(
-        session.scalars(
-            select(Point).where(Point.asset_id == asset_id).order_by(Point.point_name)
-        ).all()
+        session.scalars(select(Point).where(Point.asset_id == asset_id).order_by(Point.point_name)).all()
     )
 
 
@@ -289,9 +275,7 @@ def list_points(
         statement = statement.where(Point.automatic_control_allowed.is_(automatic_control_allowed))
 
     total = session.scalar(select(func.count()).select_from(statement.subquery())) or 0
-    items = session.scalars(
-        statement.order_by(Point.point_id).limit(limit).offset(offset)
-    ).all()
+    items = session.scalars(statement.order_by(Point.point_id).limit(limit).offset(offset)).all()
     return list(items), int(total)
 
 
@@ -333,9 +317,7 @@ def get_asset_relationships(
         clauses.append(AssetRelationship.to_asset_id == asset_id)
 
     rows = session.scalars(
-        select(AssetRelationship)
-        .where(or_(*clauses))
-        .order_by(AssetRelationship.relationship_id)
+        select(AssetRelationship).where(or_(*clauses)).order_by(AssetRelationship.relationship_id)
     ).all()
 
     counterpart_ids = {
@@ -476,8 +458,7 @@ def _assets_by_id(session: Session, asset_ids: Iterable[str]) -> dict[str, Asset
     if not ids:
         return {}
     return {
-        asset.asset_id: asset
-        for asset in session.scalars(select(Asset).where(Asset.asset_id.in_(ids))).all()
+        asset.asset_id: asset for asset in session.scalars(select(Asset).where(Asset.asset_id.in_(ids))).all()
     }
 
 
@@ -490,9 +471,7 @@ def registry_summary(session: Session) -> dict[str, Any]:
     """Registry roll-up for the API and the operations dashboard."""
 
     def counts(column) -> dict[str, int]:
-        rows = session.execute(
-            select(column, func.count()).group_by(column).order_by(column)
-        ).all()
+        rows = session.execute(select(column, func.count()).group_by(column).order_by(column)).all()
         return {str(key): int(value) for key, value in rows}
 
     assets_total = session.scalar(select(func.count()).select_from(Asset)) or 0
@@ -501,26 +480,18 @@ def registry_summary(session: Session) -> dict[str, Any]:
     bindings_total = session.scalar(select(func.count()).select_from(PointBinding)) or 0
 
     open_field_assets = sum(
-        1
-        for open_fields in session.scalars(select(Asset.open_fields)).all()
-        if open_fields
+        1 for open_fields in session.scalars(select(Asset.open_fields)).all() if open_fields
     )
     open_field_count = sum(
-        len(open_fields or ())
-        for open_fields in session.scalars(select(Asset.open_fields)).all()
+        len(open_fields or ()) for open_fields in session.scalars(select(Asset.open_fields)).all()
     )
 
     control_capable = (
-        session.scalar(
-            select(func.count()).select_from(Point).where(Point.control_capable.is_(True))
-        )
-        or 0
+        session.scalar(select(func.count()).select_from(Point).where(Point.control_capable.is_(True))) or 0
     )
     automatic_control = (
         session.scalar(
-            select(func.count())
-            .select_from(Point)
-            .where(Point.automatic_control_allowed.is_(True))
+            select(func.count()).select_from(Point).where(Point.automatic_control_allowed.is_(True))
         )
         or 0
     )

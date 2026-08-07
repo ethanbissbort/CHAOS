@@ -77,7 +77,7 @@ class Incident(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     state: Mapped[str] = mapped_column(String(24), default="open", index=True)
     summary: Mapped[str | None] = mapped_column(Text)
 
-    alarms: Mapped[list["Alarm"]] = relationship(back_populates="incident")
+    alarms: Mapped[list[Alarm]] = relationship(back_populates="incident")
 
 
 class Alarm(Base, UUIDPrimaryKeyMixin, TimestampMixin):
@@ -116,9 +116,9 @@ class Alarm(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     incident_id: Mapped[str | None] = mapped_column(
         String(36), ForeignKey("incidents.id", ondelete="SET NULL"), index=True
     )
-    incident: Mapped["Incident | None"] = relationship(back_populates="alarms")
+    incident: Mapped[Incident | None] = relationship(back_populates="alarms")
 
-    events: Mapped[list["AlarmEvent"]] = relationship(
+    events: Mapped[list[AlarmEvent]] = relationship(
         back_populates="alarm", cascade="all, delete-orphan", order_by="AlarmEvent.occurred_at"
     )
 
@@ -139,7 +139,7 @@ class AlarmEvent(Base, UUIDPrimaryKeyMixin):
 
     # Reciprocal of ``Alarm.events``; without it mapper configuration fails for
     # the whole registry, which breaks every model in the platform.
-    alarm: Mapped["Alarm"] = relationship(back_populates="events")
+    alarm: Mapped[Alarm] = relationship(back_populates="events")
 
 
 class NotificationLog(Base, UUIDPrimaryKeyMixin):

@@ -334,9 +334,7 @@ class Reader:
 
     def _fail(self, source: str, exc: Exception) -> None:
         detail = str(getattr(exc, "orig", exc))
-        self.problems.append(
-            {"source": source, "error": type(exc).__name__, "detail": detail[:240]}
-        )
+        self.problems.append({"source": source, "error": type(exc).__name__, "detail": detail[:240]})
         try:
             self.session.rollback()
         except Exception:  # pragma: no cover - defensive
@@ -395,8 +393,8 @@ def _as_utc(value: dt.datetime | None) -> dt.datetime | None:
     if value is None:
         return None
     if value.tzinfo is None:
-        return value.replace(tzinfo=dt.timezone.utc)
-    return value.astimezone(dt.timezone.utc)
+        return value.replace(tzinfo=dt.UTC)
+    return value.astimezone(dt.UTC)
 
 
 def _iso(value: dt.datetime | None) -> str | None:
@@ -689,9 +687,7 @@ def _alarm_brief(alarm: Alarm, asset: Asset | None, incident: Incident | None) -
     }
 
 
-def _alarm_summary(
-    reader: Reader, snapshot: RegistrySnapshot, limit: int
-) -> tuple[dict, list[Alarm]]:
+def _alarm_summary(reader: Reader, snapshot: RegistrySnapshot, limit: int) -> tuple[dict, list[Alarm]]:
     alarms = _active_alarms(reader)
     by_severity = Counter(a.severity for a in alarms)
     by_state = Counter(a.state for a in alarms)
@@ -711,7 +707,7 @@ def _alarm_summary(
         alarms,
         key=lambda a: (
             SEVERITY_RANK.get(a.severity, len(SEVERITY_ORDER)),
-            -(_as_utc(a.detected_at) or dt.datetime.min.replace(tzinfo=dt.timezone.utc)).timestamp(),
+            -(_as_utc(a.detected_at) or dt.datetime.min.replace(tzinfo=dt.UTC)).timestamp(),
         ),
     )
     top = [
@@ -825,7 +821,9 @@ def _subsystem_rollup(reader: Reader, settings: Settings, detailed: bool = False
         failed = sum(1 for a in domain_assets if a.status in FAILED_STATUSES)
         domain_alarms = alarms_by_domain.get(domain, [])
         severities = Counter(a.severity for a in domain_alarms)
-        points = point_stats.get(domain, {"total": 0, "control_capable": 0, "bound": 0, "with_data": 0, "stale": 0})
+        points = point_stats.get(
+            domain, {"total": 0, "control_capable": 0, "bound": 0, "with_data": 0, "stale": 0}
+        )
 
         open_field_assets = [a for a in domain_assets if a.open_fields]
         open_field_count = sum(len(a.open_fields or []) for a in domain_assets)
@@ -1002,9 +1000,7 @@ def _site_operating_state(
         reasons.append(f"{alarm_summary['major_active']} active major alarm(s).")
     elif deployed == 0:
         state, label = "pre_deployment", "Pre-deployment"
-        reasons.append(
-            f"{len(assets)} assets are registered but none are installed or commissioned yet."
-        )
+        reasons.append(f"{len(assets)} assets are registered but none are installed or commissioned yet.")
     else:
         degraded = [s for s in subsystems if s["health"] in ("degraded", "alarm")]
         if degraded:
@@ -1348,12 +1344,7 @@ def _state_rollup(
 
 ALL_ROLE_POINT_NAMES: tuple[str, ...] = tuple(
     sorted(
-        {
-            name
-            for spec in METRICS.values()
-            for source in spec.sources
-            for name in source.point_names
-        }
+        {name for spec in METRICS.values() for source in spec.sources for name in source.point_names}
         | {
             "availability_state",
             "wan_state",
@@ -1831,9 +1822,7 @@ def get_control(asset_id: str, session: DbSession, settings: AppSettings) -> dic
     effective_mode_row = asset_mode or domain_mode or site_mode_row
     effective_mode = {
         "mode": effective_mode_row.mode if effective_mode_row else None,
-        "scope": (
-            "asset" if asset_mode else "domain" if domain_mode else "site" if site_mode_row else None
-        ),
+        "scope": ("asset" if asset_mode else "domain" if domain_mode else "site" if site_mode_row else None),
         "changed_by": effective_mode_row.changed_by if effective_mode_row else None,
         "changed_at": _iso(effective_mode_row.changed_at) if effective_mode_row else None,
         "reason": effective_mode_row.reason if effective_mode_row else None,
@@ -1875,7 +1864,9 @@ def get_control(asset_id: str, session: DbSession, settings: AppSettings) -> dic
             {
                 "name": profile.name,
                 "base_tier": profile.base_tier,
-                "effective_tier": profile.effective_tier if profile.effective_tier is not None else profile.base_tier,
+                "effective_tier": profile.effective_tier
+                if profile.effective_tier is not None
+                else profile.base_tier,
                 "tier_override_reason": profile.tier_override_reason,
                 "tier_override_expires_at": _iso(profile.tier_override_expires_at),
                 "criticality": profile.criticality,
@@ -1930,7 +1921,9 @@ def get_control(asset_id: str, session: DbSession, settings: AppSettings) -> dic
             "unit": p.unit,
             "enum_values": p.enum_values,
             "automatic_control_allowed": bool(p.automatic_control_allowed),
-            "binding_status": (bindings.get(p.point_id).binding_status if bindings.get(p.point_id) else "unbound"),
+            "binding_status": (
+                bindings.get(p.point_id).binding_status if bindings.get(p.point_id) else "unbound"
+            ),
             "current_value": (_current_value(states[p.point_id]) if p.point_id in states else None),
             "requested_value": (states[p.point_id].requested_value if p.point_id in states else None),
         }
@@ -1938,9 +1931,7 @@ def get_control(asset_id: str, session: DbSession, settings: AppSettings) -> dic
         if p.control_capable
     ]
 
-    commissioned = any(
-        b.binding_status in ("commissioned", "verified", "active") for b in bindings.values()
-    )
+    commissioned = any(b.binding_status in ("commissioned", "verified", "active") for b in bindings.values())
     commandable = {
         "asset_status": asset.status,
         "control_authority": asset.control_authority,
@@ -2010,11 +2001,7 @@ def get_control(asset_id: str, session: DbSession, settings: AppSettings) -> dic
             "blocking_count": len(blocking),
             "dispatch_blockers": dispatch_blockers,
             "dispatch_blocker_count": len(dispatch_blockers),
-            "note": (
-                None
-                if interlocks
-                else "No interlock evaluation has been recorded for this asset yet."
-            ),
+            "note": (None if interlocks else "No interlock evaluation has been recorded for this asset yet."),
         },
         "last_command": _command_view(last_command) if last_command else None,
         "recent_commands": [_command_view(c) for c in commands],

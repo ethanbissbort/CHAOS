@@ -266,9 +266,7 @@ class Notifier:
     @property
     def definitions(self) -> dict[str, AlarmDefinition]:
         if self._definitions is None:
-            self._definitions = {
-                d.alarm_key: d for d in self.session.scalars(select(AlarmDefinition)).all()
-            }
+            self._definitions = {d.alarm_key: d for d in self.session.scalars(select(AlarmDefinition)).all()}
         return self._definitions
 
     # -- routing -----------------------------------------------------------
@@ -341,9 +339,7 @@ class Notifier:
 
     # -- dispatch -----------------------------------------------------------
 
-    def _dispatch(
-        self, message: NotificationMessage, now: dt.datetime, result: NotificationResult
-    ) -> None:
+    def _dispatch(self, message: NotificationMessage, now: dt.datetime, result: NotificationResult) -> None:
         stage_channels = message.context.get("channels") or ["log"]
         result.dispatches += 1
         for channel in self._resolve_channels(list(stage_channels)):
@@ -387,9 +383,7 @@ class Notifier:
         if incident.state != "open":
             return result
 
-        members = list(
-            self.session.scalars(select(Alarm).where(Alarm.incident_id == incident.id)).all()
-        )
+        members = list(self.session.scalars(select(Alarm).where(Alarm.incident_id == incident.id)).all())
         root = next((m for m in members if m.id == incident.root_cause_alarm_id), None)
         if root is None:
             root = max(members, key=lambda m: severity_rank(m.severity), default=None)

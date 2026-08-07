@@ -30,8 +30,9 @@ from __future__ import annotations
 
 import datetime as dt
 import random
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Sequence
+from typing import Any
 
 from homestead_twin.envelope import CommandEnvelope
 from simulator.clock import hour_of_day
@@ -195,9 +196,30 @@ DEFAULT_LOADS: tuple[LoadConfig, ...] = (
         sdd_tier=2,
         base_kw=2.6,
         profile=_profile(
-            h0=0.5, h1=0.5, h2=0.55, h3=0.6, h4=0.6, h5=0.5, h6=0.4, h7=0.3, h8=0.3,
-            h9=0.4, h10=0.6, h11=0.8, h12=0.9, h13=1.0, h14=1.0, h15=0.9, h16=0.7,
-            h17=0.5, h18=0.4, h19=0.4, h20=0.45, h21=0.5, h22=0.5, h23=0.5,
+            h0=0.5,
+            h1=0.5,
+            h2=0.55,
+            h3=0.6,
+            h4=0.6,
+            h5=0.5,
+            h6=0.4,
+            h7=0.3,
+            h8=0.3,
+            h9=0.4,
+            h10=0.6,
+            h11=0.8,
+            h12=0.9,
+            h13=1.0,
+            h14=1.0,
+            h15=0.9,
+            h16=0.7,
+            h17=0.5,
+            h18=0.4,
+            h19=0.4,
+            h20=0.45,
+            h21=0.5,
+            h22=0.5,
+            h23=0.5,
         ),
         minimum_off_time_s=300.0,
         restart_delay_s=60.0,
@@ -409,9 +431,7 @@ class LoadBank(Component):
             return CommandOutcome(True, f"priority_offset={group.priority_offset}")
         return None
 
-    def _command_shed(
-        self, group: LoadGroup, command: CommandEnvelope, emergency: bool
-    ) -> CommandOutcome:
+    def _command_shed(self, group: LoadGroup, command: CommandEnvelope, emergency: bool) -> CommandOutcome:
         context = self._last_context
         reason = self._interlock_reason(group, context, emergency)
         if reason:
@@ -427,12 +447,8 @@ class LoadBank(Component):
         group.shed_reason = command.reason or "supervisory_shed"
         group.enabled_requested = False
         group._timer_s = 0.0
-        self.pending_events.append(
-            (group.asset_id, "load_shed_requested", {"reason": group.shed_reason})
-        )
-        return CommandOutcome(
-            True, f"shedding_in:{group.config.shed_delay_s:.0f}s", completed=False
-        )
+        self.pending_events.append((group.asset_id, "load_shed_requested", {"reason": group.shed_reason}))
+        return CommandOutcome(True, f"shedding_in:{group.config.shed_delay_s:.0f}s", completed=False)
 
     def _command_restore(self, group: LoadGroup, command: CommandEnvelope) -> CommandOutcome:
         if group.shed_state in (CONNECTED, RESTORE_PENDING):
@@ -444,12 +460,8 @@ class LoadBank(Component):
         group.shed_reason = command.reason or "supervisory_restore"
         group.enabled_requested = True
         group._timer_s = 0.0
-        self.pending_events.append(
-            (group.asset_id, "load_restore_requested", {"reason": group.shed_reason})
-        )
-        return CommandOutcome(
-            True, f"restoring_in:{group.config.restart_delay_s:.0f}s", completed=False
-        )
+        self.pending_events.append((group.asset_id, "load_restore_requested", {"reason": group.shed_reason}))
+        return CommandOutcome(True, f"restoring_in:{group.config.restart_delay_s:.0f}s", completed=False)
 
     # -- scenario control ----------------------------------------------------------
     def fail_equipment(self, asset_id: str, failed: bool = True) -> None:
@@ -516,9 +528,7 @@ class LoadBank(Component):
                 group.shed_state = CONNECTED
                 group._time_since_change_s = 0.0
                 group._inrush_remaining_s = config.inrush_s
-                self.pending_events.append(
-                    (asset_id, "load_restored", {"reason": group.shed_reason})
-                )
+                self.pending_events.append((asset_id, "load_restored", {"reason": group.shed_reason}))
             if not energized and group.shed_state != LOCKED_OUT:
                 group.shed_state = LOCKED_OUT
                 group.shed_reason = "bus_de_energized"
@@ -595,12 +605,8 @@ class LoadBank(Component):
 
         context.load_demand_kw = self.total_demand_kw()
         context.load_actual_kw = self.total_actual_kw()
-        context.critical_load_kw = sum(
-            g.power_kw for g in self.groups.values() if g.config.sdd_tier <= 1
-        )
-        context.rack_cooling_available = self.groups[
-            "energy.load.site.rack_cooling_01"
-        ].enabled_actual
+        context.critical_load_kw = sum(g.power_kw for g in self.groups.values() if g.config.sdd_tier <= 1)
+        context.rack_cooling_available = self.groups["energy.load.site.rack_cooling_01"].enabled_actual
         return out
 
     @staticmethod

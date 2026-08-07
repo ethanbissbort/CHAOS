@@ -161,8 +161,13 @@ class ServerRack(Component):
         self.router_cpu_pct = 18.0
 
         for spec in cfg.servers:
-            points = ["power_w", "cpu_utilization_pct", "memory_used_pct", "temperature_cpu_c",
-                      "availability_state"]
+            points = [
+                "power_w",
+                "cpu_utilization_pct",
+                "memory_used_pct",
+                "temperature_cpu_c",
+                "availability_state",
+            ]
             if spec.asset_id != SECONDARY_NODE:
                 # Only the rack Dells carry the ``network_device`` profile.
                 points += ["response_time_ms", "packet_loss_pct"]
@@ -196,22 +201,18 @@ class ServerRack(Component):
         )
         self.declare(
             PDU_BASIC,
-            ["power_total_kw", "current_total_a", "outlet_state", "overload_active",
-             "availability_state"],
+            ["power_total_kw", "current_total_a", "outlet_state", "overload_active", "availability_state"],
         )
         self.declare(
             PDU_RESERVE,
-            ["power_total_kw", "current_total_a", "outlet_state", "overload_active",
-             "availability_state"],
+            ["power_total_kw", "current_total_a", "outlet_state", "overload_active", "availability_state"],
         )
         for switch in (SWITCH_ACCESS, SWITCH_CORE):
             self.declare(
                 switch,
                 ["availability_state", "port_up_count", "temperature_c", "packet_error_rate"],
             )
-        self.declare(
-            ROUTER, ["wan_state", "vpn_state", "cpu_utilization_pct", "voice_gateway_state"]
-        )
+        self.declare(ROUTER, ["wan_state", "vpn_state", "cpu_utilization_pct", "voice_gateway_state"])
         self.declare(WLC, ["ap_online_count", "client_count", "alarm_summary"])
         self.declare(
             RACK_ASSET,
@@ -329,9 +330,7 @@ class ServerRack(Component):
         self._cooling_permitted = context.rack_cooling_available
 
         # -- IT load ------------------------------------------------------------
-        server_powers = {
-            spec.asset_id: self._server_power_w(spec, now, dt_s) for spec in cfg.servers
-        }
+        server_powers = {spec.asset_id: self._server_power_w(spec, now, dt_s) for spec in cfg.servers}
         it_w = sum(server_powers.values()) + cfg.network_load_w
         self.it_load_kw = it_w / 1000.0 / cfg.ups_efficiency
         context.rack_it_kw = self.it_load_kw
@@ -347,16 +346,14 @@ class ServerRack(Component):
             self.container_temperature_c - context.ambient_temperature_c
         )
         net_kw = heat_in_kw - cooling_thermal_kw - envelope_kw
-        self.container_temperature_c += (
-            net_kw * (dt_s / 3600.0) / cfg.container_thermal_capacity_kwh_per_c
-        )
+        self.container_temperature_c += net_kw * (dt_s / 3600.0) / cfg.container_thermal_capacity_kwh_per_c
         self.container_temperature_c = clamp(self.container_temperature_c, -30.0, 90.0)
         self.rack_inlet_c = self.container_temperature_c + (2.0 if self.door_open else 0.5)
         self.rack_exhaust_c = self.rack_inlet_c + cfg.rack_delta_t_per_kw * self.it_load_kw
         # Warm air holds relative humidity down for a fixed absolute humidity.
         self.humidity_pct = clamp(
-            context.humidity_pct * math.exp(-0.045 * (self.container_temperature_c
-                                                      - context.ambient_temperature_c)),
+            context.humidity_pct
+            * math.exp(-0.045 * (self.container_temperature_c - context.ambient_temperature_c)),
             8.0,
             95.0,
         )
@@ -367,8 +364,10 @@ class ServerRack(Component):
         self.ups_on_battery = not context.critical_bus_energized
         load_pct = clamp(100.0 * it_w / cfg.ups_rated_w, 0.0, 150.0)
         if self.ups_on_battery:
-            drain_pct = 100.0 * (dt_s / 60.0) / max(
-                cfg.ups_full_load_runtime_min * (100.0 / max(load_pct, 1.0)), 1e-6
+            drain_pct = (
+                100.0
+                * (dt_s / 60.0)
+                / max(cfg.ups_full_load_runtime_min * (100.0 / max(load_pct, 1.0)), 1e-6)
             )
             self.ups_charge_pct = clamp(self.ups_charge_pct - drain_pct, 0.0, 100.0)
         else:
@@ -376,9 +375,7 @@ class ServerRack(Component):
                 self.ups_charge_pct + 100.0 * dt_s / cfg.ups_recharge_time_s, 0.0, 100.0
             )
         runtime_min = (
-            cfg.ups_full_load_runtime_min
-            * (self.ups_charge_pct / 100.0)
-            * (100.0 / max(load_pct, 1.0))
+            cfg.ups_full_load_runtime_min * (self.ups_charge_pct / 100.0) * (100.0 / max(load_pct, 1.0))
         )
 
         out: dict[str, Any] = {}
@@ -424,8 +421,11 @@ class ServerRack(Component):
             out,
             UPS_ASSET,
             "alarm_summary",
-            "critical" if self.ups_on_battery and runtime_min < 2.0
-            else "warning" if self.ups_on_battery else "none",
+            "critical"
+            if self.ups_on_battery and runtime_min < 2.0
+            else "warning"
+            if self.ups_on_battery
+            else "none",
         )
         self.emit(out, UPS_ASSET, "fault_active", False)
 
@@ -492,7 +492,7 @@ class ServerRack(Component):
         # Wireless clients follow the working day; APs stay up while powered.
         self.ap_online_count = cfg.planned_ap_count if powered else 0
         target_clients = 4 + 8 * max(0.0, math.sin(math.pi * (now.hour + now.minute / 60.0 - 6) / 16))
-        self.client_count = int(round(approach(self.client_count, target_clients, dt_s, 900.0)))
+        self.client_count = round(approach(self.client_count, target_clients, dt_s, 900.0))
         self.emit(out, WLC, "ap_online_count", self.ap_online_count)
         self.emit(out, WLC, "client_count", max(0, self.client_count) if powered else 0)
         self.emit(

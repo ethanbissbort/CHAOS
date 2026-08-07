@@ -354,9 +354,7 @@ class Generator(Component):
                 self._retry_timer_s = 0.0
                 self.state = STATE_OFF
                 self._state_timer_s = 0.0
-                self.pending_events.append(
-                    ("generator_start_failed", {"attempt": self.failed_attempts})
-                )
+                self.pending_events.append(("generator_start_failed", {"attempt": self.failed_attempts}))
                 if self.failed_attempts >= cfg.start_attempt_limit:
                     # Attempt policy exhausted: lock out and demand a reset.
                     self.state = STATE_LOCKOUT
@@ -409,9 +407,7 @@ class Generator(Component):
         if self.state not in (STATE_WARMUP, STATE_RUNNING, STATE_COOLDOWN):
             return
         loading = self.output_kw / cfg.rated_power_kw if cfg.rated_power_kw else 0.0
-        lph = cfg.fuel_burn_lph_idle + loading * (
-            cfg.fuel_burn_lph_at_rated - cfg.fuel_burn_lph_idle
-        )
+        lph = cfg.fuel_burn_lph_idle + loading * (cfg.fuel_burn_lph_at_rated - cfg.fuel_burn_lph_idle)
         litres = lph * dt_s / 3600.0
         self.fuel_pct = clamp(self.fuel_pct - 100.0 * litres / cfg.fuel_capacity_l, 0.0, 100.0)
         if self.state in (STATE_WARMUP, STATE_RUNNING):

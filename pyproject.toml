@@ -41,3 +41,25 @@ filterwarnings = ["ignore::DeprecationWarning"]
 [tool.ruff]
 line-length = 110
 target-version = "py311"
+
+[tool.ruff.lint]
+# Ruff's default rule set, minus checks that conflict with deliberate choices
+# in this codebase. Each exclusion is a decision, not a convenience.
+ignore = [
+    # Implicit string concatenation inside collections. Used throughout for
+    # readable multi-line messages and assumption lists; none are missing commas.
+    "ISC004",
+    # Blind `except Exception`. Load-bearing here: a subsystem that fails to
+    # start, an MQTT handler that raises, or an interlock that errors must not
+    # take the platform down. A frozen greenhouse is worse than a logged error.
+    "BLE001",
+    # subprocess.run without check=. Deliberate: the validator's non-zero exit
+    # is an expected signal that gets turned into an actionable CommandError.
+    "PLW1510",
+    # Unused loop variable when unpacking. Naming the unused half of a pair is
+    # usually clearer than indexing.
+    "RUF059",
+    # Collapsible nested ifs. Kept where each level carries its own comment, or
+    # where the outer test keeps a chain of sibling branches parallel.
+    "SIM102",
+]

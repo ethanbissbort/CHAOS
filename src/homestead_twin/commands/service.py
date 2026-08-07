@@ -75,9 +75,7 @@ class CommandDispatchService:
 
         self._stop.clear()
         if self.sweep_interval_s > 0 and self._thread is None:
-            self._thread = threading.Thread(
-                target=self._sweep_loop, name="command-expiry-sweep", daemon=True
-            )
+            self._thread = threading.Thread(target=self._sweep_loop, name="command-expiry-sweep", daemon=True)
             self._thread.start()
 
     def stop(self) -> None:
@@ -94,15 +92,13 @@ class CommandDispatchService:
         """Bus handler. Never raises: a bad ack must not kill the subscription."""
         try:
             ack = parse_command_ack(message.payload)
-        except Exception:  # noqa: BLE001 - untrusted device payload
-            logger.warning(
-                "Discarding malformed command ack on %s: %s", message.topic, message.text[:400]
-            )
+        except Exception:
+            logger.warning("Discarding malformed command ack on %s: %s", message.topic, message.text[:400])
             return
         try:
             with self._session() as session:
                 CommandManager(session, self.bus, self.settings).record_ack(ack)
-        except Exception:  # noqa: BLE001 - one bad ack must not stop the service
+        except Exception:
             logger.exception("Failed to record ack for command %s", ack.command_id)
 
     # -- sweep -----------------------------------------------------------
@@ -123,7 +119,7 @@ class CommandDispatchService:
                 return
             try:
                 self.sweep()
-            except Exception:  # noqa: BLE001 - keep sweeping after a failure
+            except Exception:
                 logger.exception("Command expiry sweep failed")
 
     # -- plumbing --------------------------------------------------------
@@ -143,5 +139,5 @@ class CommandDispatchService:
                 self._session.close()
                 self._session = None
 
-    def _session(self) -> "CommandDispatchService._SessionScope":
+    def _session(self) -> CommandDispatchService._SessionScope:
         return self._SessionScope(self.session_factory)

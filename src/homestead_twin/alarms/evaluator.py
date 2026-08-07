@@ -293,17 +293,14 @@ class AlarmEvaluator:
     def modes(self) -> dict[tuple[str, str], str]:
         if self._mode_cache is None:
             self._mode_cache = {
-                (m.scope_type, m.scope_id): m.mode
-                for m in self.session.scalars(select(OperatingMode)).all()
+                (m.scope_type, m.scope_id): m.mode for m in self.session.scalars(select(OperatingMode)).all()
             }
         return self._mode_cache
 
     @property
     def definitions(self) -> dict[str, AlarmDefinition]:
         if self._definitions is None:
-            self._definitions = {
-                d.alarm_key: d for d in load_definitions(self.session, enabled_only=False)
-            }
+            self._definitions = {d.alarm_key: d for d in load_definitions(self.session, enabled_only=False)}
         return self._definitions
 
     # -- scope resolution ------------------------------------------------
@@ -425,9 +422,7 @@ class AlarmEvaluator:
         if behaviour == "suppress":
             return (
                 severity,
-                SuppressionReason.format(
-                    SuppressionReason.MAINTENANCE, f"{scope} is in {mode} mode"
-                ),
+                SuppressionReason.format(SuppressionReason.MAINTENANCE, f"{scope} is in {mode} mode"),
                 f"Notification withheld: {scope} is in {mode} mode (behaviour=suppress).",
             )
         if behaviour == "downgrade":
@@ -499,9 +494,7 @@ class AlarmEvaluator:
                     "suppressed": alarm.suppressed,
                     "suppression_reason": alarm.suppression_reason,
                     "incident_id": alarm.incident_id,
-                    "requires_manual_reset": bool(
-                        definition.requires_manual_reset if definition else False
-                    ),
+                    "requires_manual_reset": bool(definition.requires_manual_reset if definition else False),
                 },
             )
             self.bus.publish(topic, envelope.to_payload(), qos=1, retain=False)
@@ -558,21 +551,15 @@ class AlarmEvaluator:
                 f"Illegal lifecycle transition {alarm.state} -> {to_state} (SDD 14.2 is one-way)"
             )
 
-    def acknowledge(
-        self, alarm: Alarm | str, actor: str, note: str, now: dt.datetime | None = None
-    ) -> Alarm:
+    def acknowledge(self, alarm: Alarm | str, actor: str, note: str, now: dt.datetime | None = None) -> Alarm:
         """Operator has seen the alarm. Stops escalation; changes nothing physical."""
         alarm = self._require_alarm(alarm)
         self._guard_transition(alarm, "acknowledged")
         if not (note or "").strip():
             raise AlarmTransitionError("Acknowledgement requires a note (SDD 5.7)")
-        return self.transition(
-            alarm, "acknowledged", now or utcnow(), actor=actor, note=note
-        )
+        return self.transition(alarm, "acknowledged", now or utcnow(), actor=actor, note=note)
 
-    def mitigate(
-        self, alarm: Alarm | str, actor: str, note: str, now: dt.datetime | None = None
-    ) -> Alarm:
+    def mitigate(self, alarm: Alarm | str, actor: str, note: str, now: dt.datetime | None = None) -> Alarm:
         """Operator has taken action. The condition may still be present."""
         alarm = self._require_alarm(alarm)
         self._guard_transition(alarm, "mitigated")
@@ -610,9 +597,7 @@ class AlarmEvaluator:
             alarm, "cleared", now or utcnow(), actor=actor, note=note, definition=definition
         )
 
-    def review(
-        self, alarm: Alarm | str, actor: str, note: str, now: dt.datetime | None = None
-    ) -> Alarm:
+    def review(self, alarm: Alarm | str, actor: str, note: str, now: dt.datetime | None = None) -> Alarm:
         """Post-event review closes the SDD 14.2 lifecycle."""
         alarm = self._require_alarm(alarm)
         if alarm.state != "cleared":
@@ -646,9 +631,7 @@ class AlarmEvaluator:
                 return False
         return True
 
-    def _trigger_holds(
-        self, definition: AlarmDefinition, reading: _Reading, asset_id: str
-    ) -> bool:
+    def _trigger_holds(self, definition: AlarmDefinition, reading: _Reading, asset_id: str) -> bool:
         if not definition.trigger_operator:
             return False
         if not self._guards_pass(definition, asset_id):
@@ -670,9 +653,7 @@ class AlarmEvaluator:
         result = EvaluationResult()
 
         definitions = [d for d in self.definitions.values() if d.enabled]
-        quality_driven = {
-            d.alarm_key for d in definitions if d.trigger_operator == "quality_in"
-        }
+        quality_driven = {d.alarm_key for d in definitions if d.trigger_operator == "quality_in"}
 
         for definition in definitions:
             if definition.alarm_key in quality_driven:
@@ -697,9 +678,7 @@ class AlarmEvaluator:
         point_name = definition.point_name
         assert point_name is not None
         reading = self._reading(asset_id, point_name)
-        existing = self._open_alarm(
-            definition.alarm_key, asset_id, topics.point_id(asset_id, point_name)
-        )
+        existing = self._open_alarm(definition.alarm_key, asset_id, topics.point_id(asset_id, point_name))
 
         if reading is None:
             # No telemetry for this point yet -- an uncommissioned binding, not a
@@ -921,9 +900,7 @@ class AlarmEvaluator:
             return
         existing = self._open_alarm(quality.alarm_key, reading.asset_id, reading.point_id)
         if existing is None:
-            severity, suppression, maintenance_note = self.maintenance_decision(
-                quality, reading.asset_id
-            )
+            severity, suppression, maintenance_note = self.maintenance_decision(quality, reading.asset_id)
             alarm = Alarm(
                 alarm_key=quality.alarm_key,
                 asset_id=reading.asset_id,
@@ -1000,9 +977,7 @@ class AlarmEvaluator:
         if elapsed_s(now, pending_since) + 1e-9 < (quality.off_delay_s or 0):
             return
         if not quality.requires_manual_reset:
-            self.transition(
-                alarm, "cleared", now, actor="alarm-engine", note=note, definition=quality
-            )
+            self.transition(alarm, "cleared", now, actor="alarm-engine", note=note, definition=quality)
             result.cleared.append(alarm)
 
     def _reconcile_quality_alarms(
@@ -1011,9 +986,7 @@ class AlarmEvaluator:
         """Close data-quality alarms whose point has disappeared from current state."""
         if not quality_keys:
             return
-        statement = select(Alarm).where(
-            Alarm.alarm_key.in_(quality_keys), Alarm.state.in_(OPEN_STATES)
-        )
+        statement = select(Alarm).where(Alarm.alarm_key.in_(quality_keys), Alarm.state.in_(OPEN_STATES))
         for alarm in self.session.scalars(statement).all():
             if alarm.point_id and alarm.point_id in self.states:
                 continue
@@ -1038,7 +1011,7 @@ def as_utc(value: dt.datetime | None) -> dt.datetime | None:
     """
     if value is None:
         return None
-    return value if value.tzinfo is not None else value.replace(tzinfo=dt.timezone.utc)
+    return value if value.tzinfo is not None else value.replace(tzinfo=dt.UTC)
 
 
 def elapsed_s(now: dt.datetime, since: dt.datetime | None) -> float:

@@ -108,9 +108,7 @@ class Asset(Base, TimestampMixin):
     control_authority: Mapped[str] = mapped_column(String(60), nullable=False, default="none")
     functional_position: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    parent_id: Mapped[str | None] = mapped_column(
-        String(ID_LEN), ForeignKey("assets.asset_id"), index=True
-    )
+    parent_id: Mapped[str | None] = mapped_column(String(ID_LEN), ForeignKey("assets.asset_id"), index=True)
 
     location: Mapped[dict] = mapped_column(JSONType, default=dict)
     properties: Mapped[dict] = mapped_column(JSONType, default=dict)
@@ -126,11 +124,9 @@ class Asset(Base, TimestampMixin):
     tags: Mapped[list] = mapped_column(JSONType, default=list)
     notes: Mapped[list] = mapped_column(JSONType, default=list)
 
-    children: Mapped[list["Asset"]] = relationship(
-        back_populates="parent", cascade="all", passive_deletes=True
-    )
-    parent: Mapped["Asset | None"] = relationship(back_populates="children", remote_side=[asset_id])
-    points: Mapped[list["Point"]] = relationship(back_populates="asset", cascade="all, delete-orphan")
+    children: Mapped[list[Asset]] = relationship(back_populates="parent", cascade="all", passive_deletes=True)
+    parent: Mapped[Asset | None] = relationship(back_populates="children", remote_side=[asset_id])
+    points: Mapped[list[Point]] = relationship(back_populates="asset", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:  # pragma: no cover - debug helper
         return f"<Asset {self.asset_id}>"
@@ -141,9 +137,7 @@ class AssetRelationship(Base, TimestampMixin):
 
     __tablename__ = "asset_relationships"
     __table_args__ = (
-        UniqueConstraint(
-            "from_asset_id", "relationship_type", "to_asset_id", name="uq_relationship_triple"
-        ),
+        UniqueConstraint("from_asset_id", "relationship_type", "to_asset_id", name="uq_relationship_triple"),
         Index("ix_relationship_from_type", "from_asset_id", "relationship_type"),
         Index("ix_relationship_to_type", "to_asset_id", "relationship_type"),
     )
@@ -191,9 +185,7 @@ class ExternalIdentifier(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     """
 
     __tablename__ = "external_identifiers"
-    __table_args__ = (
-        UniqueConstraint("asset_id", "id_type", "value", name="uq_external_identifier"),
-    )
+    __table_args__ = (UniqueConstraint("asset_id", "id_type", "value", name="uq_external_identifier"),)
 
     asset_id: Mapped[str] = mapped_column(
         String(ID_LEN), ForeignKey("assets.asset_id", ondelete="CASCADE"), nullable=False, index=True
@@ -226,9 +218,7 @@ class Point(Base, TimestampMixin):
     asset_id: Mapped[str] = mapped_column(
         String(ID_LEN), ForeignKey("assets.asset_id", ondelete="CASCADE"), nullable=False
     )
-    point_name: Mapped[str] = mapped_column(
-        String(120), ForeignKey("point_definitions.name"), nullable=False
-    )
+    point_name: Mapped[str] = mapped_column(String(120), ForeignKey("point_definitions.name"), nullable=False)
     point_class: Mapped[str] = mapped_column(String(12), nullable=False)
     data_type: Mapped[str] = mapped_column(String(30), nullable=False)
     unit: Mapped[str | None] = mapped_column(String(30))
@@ -243,7 +233,7 @@ class Point(Base, TimestampMixin):
     stale_after_s: Mapped[int | None] = mapped_column(Integer)
     description: Mapped[str | None] = mapped_column(Text)
 
-    asset: Mapped["Asset"] = relationship(back_populates="points")
+    asset: Mapped[Asset] = relationship(back_populates="points")
 
     @staticmethod
     def make_id(asset_id: str, point_name: str) -> str:
@@ -332,7 +322,5 @@ class ConfigurationRevision(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     changed_by: Mapped[str] = mapped_column(String(120), nullable=False)
     reason: Mapped[str | None] = mapped_column(Text)
     diff: Mapped[dict] = mapped_column(JSONType, default=dict)
-    applied_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), default=utcnow, nullable=False
-    )
+    applied_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
     source_package_version: Mapped[str | None] = mapped_column(String(40))

@@ -12,7 +12,6 @@ needs a live broker to be exercised.
 
 from __future__ import annotations
 
-import fnmatch
 import logging
 import threading
 from collections.abc import Callable

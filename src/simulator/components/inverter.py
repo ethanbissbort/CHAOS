@@ -195,16 +195,12 @@ class InverterFarm(Component):
 
     # -- commands ---------------------------------------------------------------
     def handle_command(self, command: CommandEnvelope) -> CommandOutcome | None:
-        index = next(
-            (i for i, unit in enumerate(self.units) if unit.asset_id == command.asset_id), None
-        )
+        index = next((i for i, unit in enumerate(self.units) if unit.asset_id == command.asset_id), None)
         if index is None:
             return None
         unit = self.units[index]
         name = command.command
-        if name in ("start", "enabled_requested") and (
-            name == "start" or bool(command.value) is True
-        ):
+        if name in ("start", "enabled_requested") and (name == "start" or bool(command.value) is True):
             if unit.fault_active:
                 return CommandOutcome(False, f"fault_active:{unit.fault_code}")
             self.start_unit(index)

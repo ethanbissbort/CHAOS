@@ -306,13 +306,11 @@ class BatteryBank(Component):
         cfg = self.config
         loss_kw = abs(self.power_kw) * cfg.heat_fraction_of_throughput
         g_envelope = cfg.thermal_conductance_kw_per_c
-        g_hvac = max(0.0, conditioning_kw) * cfg.conditioning_cop / max(
-            cfg.conditioning_reference_delta_c, 1e-6
+        g_hvac = (
+            max(0.0, conditioning_kw) * cfg.conditioning_cop / max(cfg.conditioning_reference_delta_c, 1e-6)
         )
         g_total = g_envelope + g_hvac
-        equilibrium = (
-            g_envelope * ambient_c + g_hvac * cfg.conditioning_setpoint_c + loss_kw
-        ) / g_total
+        equilibrium = (g_envelope * ambient_c + g_hvac * cfg.conditioning_setpoint_c + loss_kw) / g_total
         tau_s = 3600.0 * cfg.thermal_capacity_kwh_per_c / g_total
         self.cell_temperature_c = approach(self.cell_temperature_c, equilibrium, dt_s, tau_s)
 

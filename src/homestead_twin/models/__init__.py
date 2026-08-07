@@ -90,7 +90,6 @@ __all__ = [
     "MaintenancePlan",
     "ModeTransition",
     "NotificationLog",
-    "NotificationLog",
     "OperatingMode",
     "Point",
     "PointBinding",

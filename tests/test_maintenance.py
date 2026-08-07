@@ -12,7 +12,7 @@ from homestead_twin.models.maintenance import Inspection, MaintenancePlan, Spare
 from homestead_twin.models.registry import Asset, AssetClass, Point, PointBinding, PointDefinition
 from homestead_twin.models.telemetry import CurrentState
 
-NOW = dt.datetime(2026, 8, 7, 12, 0, tzinfo=dt.timezone.utc)
+NOW = dt.datetime(2026, 8, 7, 12, 0, tzinfo=dt.UTC)
 
 
 @pytest.fixture()
@@ -112,7 +112,10 @@ def test_calendar_plan_becomes_due_and_reschedules(db_session, pump):
 
 def test_open_work_is_not_duplicated(db_session, pump):
     plan = MaintenancePlan(
-        asset_id=pump.asset_id, name="Filter clean", trigger_type="calendar", interval_days=7,
+        asset_id=pump.asset_id,
+        name="Filter clean",
+        trigger_type="calendar",
+        interval_days=7,
         next_due_at=NOW - dt.timedelta(days=1),
     )
     db_session.add(plan)
@@ -202,12 +205,12 @@ def test_seasonal_plan_fires_once_per_season(db_session, pump):
     db_session.add(plan)
     db_session.commit()
 
-    august = dt.datetime(2026, 8, 7, tzinfo=dt.timezone.utc)
-    january = dt.datetime(2026, 1, 10, tzinfo=dt.timezone.utc)
+    august = dt.datetime(2026, 8, 7, tzinfo=dt.UTC)
+    january = dt.datetime(2026, 1, 10, tzinfo=dt.UTC)
     assert scheduler.plan_is_due(db_session, plan, august) == (False, "out_of_season")
     assert scheduler.plan_is_due(db_session, plan, january)[0] is True
 
-    plan.last_completed_at = dt.datetime(2026, 1, 5, tzinfo=dt.timezone.utc)
+    plan.last_completed_at = dt.datetime(2026, 1, 5, tzinfo=dt.UTC)
     db_session.commit()
     assert scheduler.plan_is_due(db_session, plan, january) == (False, "already_done_this_season")
 
@@ -218,7 +221,9 @@ def test_seasonal_plan_fires_once_per_season(db_session, pump):
 
 
 def test_alarm_raises_corrective_work_once(db_session, pump):
-    db_session.add(AlarmDefinition(alarm_key="pump.overcurrent", name="Pump overcurrent", severity="critical"))
+    db_session.add(
+        AlarmDefinition(alarm_key="pump.overcurrent", name="Pump overcurrent", severity="critical")
+    )
     db_session.flush()
     alarm = Alarm(
         alarm_key="pump.overcurrent",
@@ -252,9 +257,13 @@ def test_failed_inspection_generates_follow_up(db_session, pump):
 
 def test_completion_consumes_spares(db_session, pump):
     db_session.add(
-        SparePart(part_number="FLT-100", description="Filter cartridge", quantity_on_hand=3, minimum_quantity=2)
+        SparePart(
+            part_number="FLT-100", description="Filter cartridge", quantity_on_hand=3, minimum_quantity=2
+        )
     )
-    order = WorkOrder(asset_id=pump.asset_id, title="Replace filter", state="open", opened_at=NOW, parts_used=[])
+    order = WorkOrder(
+        asset_id=pump.asset_id, title="Replace filter", state="open", opened_at=NOW, parts_used=[]
+    )
     db_session.add(order)
     db_session.commit()
 
@@ -303,7 +312,9 @@ def test_commissioning_gate_blocks_automatic_control_until_tested(db_session, pu
         commissioning.commission_binding(db_session, point.point_id, "tech.b", NOW, allow_automatic=True)
 
     # Manual (non-automatic) commissioning is still allowed.
-    binding = commissioning.commission_binding(db_session, point.point_id, "tech.b", NOW, allow_automatic=False)
+    binding = commissioning.commission_binding(
+        db_session, point.point_id, "tech.b", NOW, allow_automatic=False
+    )
     assert binding.binding_status == "commissioned"
     assert binding.automatic_control_allowed is False
 
@@ -314,7 +325,9 @@ def test_commissioning_gate_blocks_automatic_control_until_tested(db_session, pu
 
     permitted, _ = commissioning.may_enable_automatic_control(db_session, pump.asset_id)
     assert permitted is True
-    binding = commissioning.commission_binding(db_session, point.point_id, "tech.b", NOW, allow_automatic=True)
+    binding = commissioning.commission_binding(
+        db_session, point.point_id, "tech.b", NOW, allow_automatic=True
+    )
     assert binding.automatic_control_allowed is True
 
 
@@ -364,9 +377,7 @@ def test_work_order_api_round_trip(client, db_session, pump, operator_headers):
     assert completed.json()["state"] == "completed"
 
     # Completing twice is a conflict, not a silent no-op.
-    again = client.post(
-        f"/api/v1/work-orders/{order_id}/complete", json={}, headers=operator_headers
-    )
+    again = client.post(f"/api/v1/work-orders/{order_id}/complete", json={}, headers=operator_headers)
     assert again.status_code == 409
 
 
@@ -402,7 +413,7 @@ def test_maintenance_due_endpoint(client, db_session, pump, admin_headers):
             name="Monthly inspection",
             trigger_type="calendar",
             interval_days=30,
-            next_due_at=dt.datetime(2020, 1, 1, tzinfo=dt.timezone.utc),
+            next_due_at=dt.datetime(2020, 1, 1, tzinfo=dt.UTC),
         )
     )
     db_session.commit()

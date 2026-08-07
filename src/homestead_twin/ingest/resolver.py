@@ -118,9 +118,7 @@ class TopicResolver:
         derived_topics = len(topic_to_point)
 
         binding_rows = session.execute(
-            select(PointBinding.point_id, PointBinding.mqtt_topic).where(
-                PointBinding.mqtt_topic.is_not(None)
-            )
+            select(PointBinding.point_id, PointBinding.mqtt_topic).where(PointBinding.mqtt_topic.is_not(None))
         ).all()
         explicit = 0
         for point_id, mqtt_topic in binding_rows:

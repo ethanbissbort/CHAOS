@@ -61,9 +61,7 @@ OUT_OF_ORDER = "out_of_order"
 SEQUENCE_GAP = "sequence_gap"
 
 #: Faults that make a value untrustworthy.
-_BAD_QUALITY_PROBLEMS = frozenset(
-    {VALUE_TYPE_MISMATCH, ENUM_VIOLATION, UNIT_MISMATCH, OUT_OF_PHYSICAL_RANGE}
-)
+_BAD_QUALITY_PROBLEMS = frozenset({VALUE_TYPE_MISMATCH, ENUM_VIOLATION, UNIT_MISMATCH, OUT_OF_PHYSICAL_RANGE})
 
 #: Quality policies that refuse to publish a faulted value as current state.
 _REJECTING_POLICIES = frozenset({"reject_invalid", "reject_outside_physical_range"})
@@ -110,8 +108,8 @@ def as_utc(value: dt.datetime | None) -> dt.datetime | None:
     if value is None:
         return None
     if value.tzinfo is None:
-        return value.replace(tzinfo=dt.timezone.utc)
-    return value.astimezone(dt.timezone.utc)
+        return value.replace(tzinfo=dt.UTC)
+    return value.astimezone(dt.UTC)
 
 
 @dataclass(frozen=True)
@@ -293,9 +291,7 @@ class TelemetryWriter:
         meta = self.point_meta(session, point_id)
         if meta is None:
             self.counters["unknown_points"] += 1
-            result.problems.append(
-                Problem(UNKNOWN_POINT, f"{point_id} is not in the registry")
-            )
+            result.problems.append(Problem(UNKNOWN_POINT, f"{point_id} is not in the registry"))
             return result
         result.known_point = True
         self.counters["applied"] += 1
@@ -349,9 +345,7 @@ class TelemetryWriter:
             logger.info("Out-of-order sample for %s (%s < %s)", point_id, ts, stored_ts)
         else:
             if state is None:
-                state = CurrentState(
-                    point_id=point_id, asset_id=meta.asset_id, point_name=meta.point_name
-                )
+                state = CurrentState(point_id=point_id, asset_id=meta.asset_id, point_name=meta.point_name)
                 session.add(state)
             if publish_value:
                 _assign_value(state, columns)
@@ -464,9 +458,7 @@ class TelemetryWriter:
 
         if envelope.state == "offline":
             rows = (
-                session.execute(
-                    select(CurrentState).where(CurrentState.asset_id == envelope.asset_id)
-                )
+                session.execute(select(CurrentState).where(CurrentState.asset_id == envelope.asset_id))
                 .scalars()
                 .all()
             )
@@ -496,11 +488,7 @@ class TelemetryWriter:
         deterministic and testable.
         """
         now = as_utc(now) or utcnow()
-        rows = (
-            session.execute(select(CurrentState).where(CurrentState.quality == "good"))
-            .scalars()
-            .all()
-        )
+        rows = session.execute(select(CurrentState).where(CurrentState.quality == "good")).scalars().all()
         marked = 0
         for row in rows:
             ts = as_utc(row.ts)
@@ -536,8 +524,7 @@ class TelemetryWriter:
                 return {}, [
                     Problem(
                         VALUE_TYPE_MISMATCH,
-                        f"{meta.point_id} expects {meta.data_type}, got {type(value).__name__} "
-                        f"{value!r}",
+                        f"{meta.point_id} expects {meta.data_type}, got {type(value).__name__} {value!r}",
                     )
                 ]
             if kind == _NUMERIC_INT and isinstance(value, float) and not value.is_integer():

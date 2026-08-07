@@ -11,6 +11,8 @@ from __future__ import annotations
 import datetime as dt
 
 import pytest
+from test_ems_shedding import ALL_LOADS, COMPUTE, CONTROL_CORE, IRRIGATION, SPA, WORKSHOP
+from test_ems_state_machine import T0, at, make_derived, make_inputs
 
 from homestead_twin.ems import RecordingCommandPort
 from homestead_twin.ems.config import EmsConfig
@@ -19,8 +21,6 @@ from homestead_twin.ems.loader import effective_tier, load_schedule
 from homestead_twin.ems.state_machine import ensure_snapshot
 from homestead_twin.models.energy import PowerBudgetLease, PowerLoadProfile
 from homestead_twin.models.registry import Asset
-from test_ems_shedding import ALL_LOADS, COMPUTE, CONTROL_CORE, IRRIGATION, SPA, WORKSHOP
-from test_ems_state_machine import T0, at, make_derived, make_inputs
 
 
 @pytest.fixture()
@@ -253,9 +253,7 @@ def test_budgets_are_reported_per_asset(manager, db_session, config):
 
 def test_tier_override_requires_a_reason(manager, db_session, loads):
     with pytest.raises(ValueError):
-        manager.set_tier_override(
-            db_session, IRRIGATION, effective_tier=1, reason="", actor="op", now=T0
-        )
+        manager.set_tier_override(db_session, IRRIGATION, effective_tier=1, reason="", actor="op", now=T0)
 
 
 def test_tier_override_applies_and_expires(manager, db_session, loads, config):
@@ -318,9 +316,7 @@ def test_tier_override_is_bounded(manager, db_session, loads, config):
 
 def test_tier_override_cannot_promote_into_the_protected_tier(manager, db_session, loads):
     with pytest.raises(ValueError):
-        manager.set_tier_override(
-            db_session, SPA, effective_tier=0, reason="party", actor="op", now=T0
-        )
+        manager.set_tier_override(db_session, SPA, effective_tier=0, reason="party", actor="op", now=T0)
     # ... while a Tier 0 load stays Tier 0 with no override at all.
     assert effective_tier(db_session.get(PowerLoadProfile, CONTROL_CORE), T0) == 0
 

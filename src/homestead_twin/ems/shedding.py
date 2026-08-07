@@ -35,8 +35,9 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Any, Iterable
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -545,7 +546,11 @@ class ShedController:
     ) -> ShedStepResult:
         """Shed the next eligible group, or explain why nothing was shed."""
         result = ShedStepResult()
-        states = states if states is not None else current_load_states(session, inputs, now=now, config=self.config)
+        states = (
+            states
+            if states is not None
+            else current_load_states(session, inputs, now=now, config=self.config)
+        )
         result.active_groups = active_shed_groups(states)
 
         if not force and energy_state not in self.config.shed_states:
@@ -659,11 +664,7 @@ class ShedController:
             if state.is_shed:
                 continue
             since = state.since(now)
-            if (
-                state.shed_failed
-                and since is not None
-                and since < self.config.shed_reissue_interval_s
-            ):
+            if state.shed_failed and since is not None and since < self.config.shed_reissue_interval_s:
                 skipped[state.asset_id] = (
                     f"last attempt {since:.0f} s ago; waiting out the "
                     f"{self.config.shed_reissue_interval_s} s reissue interval"
@@ -882,7 +883,11 @@ class ShedController:
     ) -> RestoreStepResult:
         """Restore at most ``restore_max_per_step`` loads, staggered."""
         result = RestoreStepResult()
-        states = states if states is not None else current_load_states(session, inputs, now=now, config=self.config)
+        states = (
+            states
+            if states is not None
+            else current_load_states(session, inputs, now=now, config=self.config)
+        )
 
         qualified, why = self.restoration_qualified(
             energy_state=energy_state,
@@ -966,9 +971,7 @@ class ShedController:
                 int(state.restart.get("minimum_off_time_s") or 0),
             )
             if since < minimum_off:
-                deferred[state.asset_id] = (
-                    f"minimum off time {minimum_off} s not met ({since:.0f} s elapsed)"
-                )
+                deferred[state.asset_id] = f"minimum off time {minimum_off} s not met ({since:.0f} s elapsed)"
                 continue
             delay = int(state.restart.get("delay_s") or 0)
             if since < delay:
@@ -1134,9 +1137,7 @@ class ShedController:
 
 def active_shed_groups(states: dict[str, LoadState]) -> list[str]:
     groups = {
-        state.profile.shed_group
-        for state in states.values()
-        if state.is_shed and state.profile.shed_group
+        state.profile.shed_group for state in states.values() if state.is_shed and state.profile.shed_group
     }
     return sorted(groups, key=_group_index)
 
@@ -1171,7 +1172,7 @@ def _aware(value: dt.datetime | None) -> dt.datetime:
     if value is None:
         raise ValueError("timestamp required")
     if value.tzinfo is None:
-        return value.replace(tzinfo=dt.timezone.utc)
+        return value.replace(tzinfo=dt.UTC)
     return value
 
 
@@ -1188,9 +1189,7 @@ def summarise_loads(states: Iterable[LoadState]) -> list[dict[str, Any]]:
                 "effective_tier": state.tier,
                 "tier_override_reason": profile.tier_override_reason,
                 "tier_override_expires_at": (
-                    profile.tier_override_expires_at.isoformat()
-                    if profile.tier_override_expires_at
-                    else None
+                    profile.tier_override_expires_at.isoformat() if profile.tier_override_expires_at else None
                 ),
                 "criticality": profile.criticality,
                 "control_method": profile.control_method,

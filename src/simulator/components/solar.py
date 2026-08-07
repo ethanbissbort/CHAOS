@@ -160,16 +160,12 @@ def clear_sky_poa_w_m2(
     dec = math.radians(solar_declination_deg(doy))
     omega = math.radians(solar_hour_angle_deg(now, longitude_deg))
     lat_eff = math.radians(latitude_deg - tilt_deg)
-    cos_incidence = math.sin(dec) * math.sin(lat_eff) + math.cos(dec) * math.cos(
-        lat_eff
-    ) * math.cos(omega)
+    cos_incidence = math.sin(dec) * math.sin(lat_eff) + math.cos(dec) * math.cos(lat_eff) * math.cos(omega)
     cos_incidence = max(0.0, cos_incidence)
 
     tilt = math.radians(tilt_deg)
     poa = (
-        dni * cos_incidence
-        + dhi * (1.0 + math.cos(tilt)) / 2.0
-        + ghi * albedo * (1.0 - math.cos(tilt)) / 2.0
+        dni * cos_incidence + dhi * (1.0 + math.cos(tilt)) / 2.0 + ghi * albedo * (1.0 - math.cos(tilt)) / 2.0
     )
     return max(0.0, poa), elevation
 
@@ -253,12 +249,12 @@ class SolarArray(Component):
 
         # Cell temperature from the NOCT model, with a small wind correction.
         wind_relief = 1.0 + 0.08 * max(0.0, context.wind_speed_m_s - 1.0)
-        self.cell_temperature_c = context.ambient_temperature_c + (
-            (self.config.noct_c - 20.0) / 800.0
-        ) * self.poa_w_m2 / wind_relief
+        self.cell_temperature_c = (
+            context.ambient_temperature_c
+            + ((self.config.noct_c - 20.0) / 800.0) * self.poa_w_m2 / wind_relief
+        )
         temp_derate = clamp(
-            1.0
-            + self.config.temperature_coefficient_per_c * (self.cell_temperature_c - 25.0),
+            1.0 + self.config.temperature_coefficient_per_c * (self.cell_temperature_c - 25.0),
             0.5,
             1.15,
         )
@@ -300,9 +296,7 @@ class SolarArray(Component):
     def apply_delivered(self, delivered_dc_kw: float, dt_s: float, now: dt.datetime) -> None:
         """Record what the site actually took, and split it across the rows."""
         self.delivered_dc_kw = clamp(delivered_dc_kw, 0.0, max(self.available_dc_kw, 0.0))
-        share = (
-            self.delivered_dc_kw / self.available_dc_kw if self.available_dc_kw > 1e-9 else 0.0
-        )
+        share = self.delivered_dc_kw / self.available_dc_kw if self.available_dc_kw > 1e-9 else 0.0
         for row in self.rows:
             row.delivered_kw = row.available_kw * share
         day = local_day_index(now, self.config.utc_offset_h)
@@ -337,7 +331,5 @@ class SolarArray(Component):
         self.emit(out, array, "firmware_version", "sim-pv-1.0.0")
         for row in self.rows:
             self.emit(out, row.asset_id, "power_dc_kw", round(row.delivered_kw, 3))
-            self.emit(
-                out, row.asset_id, "availability_state", "online" if row.online else "offline"
-            )
+            self.emit(out, row.asset_id, "availability_state", "online" if row.online else "offline")
         return out

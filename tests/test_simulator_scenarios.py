@@ -158,18 +158,14 @@ class TestCatalogue:
 
 class TestWeatherDays:
     def test_clear_summer_day_delivers_a_real_harvest(self, settings):
-        site, _runner, _bus = run_scenario_capped(
-            settings, "clear_summer_day", "24h", step_s=120.0
-        )
+        site, _runner, _bus = run_scenario_capped(settings, "clear_summer_day", "24h", step_s=120.0)
         assert site.stats.pv_energy_kwh > 150.0  # 45 kWdc on the solstice
         assert site.stats.pv_peak_kw > 25.0
         assert site.stats.soc_max_pct > site.config.battery.initial_soc_pct
         assert site.stats.unserved_energy_kwh == pytest.approx(0.0, abs=1e-6)
 
     def test_overcast_winter_day_barely_generates(self, settings):
-        winter, _runner, _bus = run_scenario_capped(
-            settings, "overcast_winter_day", "24h", step_s=120.0
-        )
+        winter, _runner, _bus = run_scenario_capped(settings, "overcast_winter_day", "24h", step_s=120.0)
         # A clear solstice day delivers >150 kWh (see the test above); heavy
         # January overcast must come nowhere near it, and the bank must end the
         # day lower than it started.
@@ -206,31 +202,23 @@ class TestWeatherDays:
 
 class TestReserveAndGenerator:
     def test_reserve_decline_drives_soc_down(self, settings):
-        site, runner, _bus = run_scenario_capped(
-            settings, "reserve_decline", "9h", step_s=30.0
-        )
+        site, runner, _bus = run_scenario_capped(settings, "reserve_decline", "9h", step_s=30.0)
         assert site.battery.soc_pct < site.config.battery.initial_soc_pct - 5.0
         # The generator is in manual, so it is unavailable to rescue the reserve.
         assert site.generator.available is False
         assert site.generator.state == "off"
 
     def test_reserve_decline_shed_sequence_is_answered(self, settings):
-        site, runner, _bus = run_scenario_capped(
-            settings, "reserve_decline", "9h", step_s=30.0
-        )
+        site, runner, _bus = run_scenario_capped(settings, "reserve_decline", "9h", step_s=30.0)
         labels = [label for _, label in runner.fired]
         assert any("opportunistic" in label for label in labels)
         assert site.stats.commands_accepted >= 3
         assert site.stats.commands_rejected >= 1  # the Tier 0 attempt
-        assert any(
-            "tier0_control_survival_never_shed" in reason for reason in site.stats.rejections
-        )
+        assert any("tier0_control_survival_never_shed" in reason for reason in site.stats.rejections)
 
     def test_generator_support_completes_the_full_sequence(self, settings):
         """EMS-T009: start, warm up, transfer, charge, stop through cooldown."""
-        site, _runner, _bus = run_scenario_capped(
-            settings, "generator_support", "4h", step_s=5.0
-        )
+        site, _runner, _bus = run_scenario_capped(settings, "generator_support", "4h", step_s=5.0)
         assert site.generator.starts == 1
         assert site.generator.runtime_h > 1.0
         assert site.generator.state == "off"  # stopped through cooldown
@@ -241,9 +229,7 @@ class TestReserveAndGenerator:
 
     def test_generator_failure_locks_out_after_the_attempt_policy(self, settings):
         """EMS-T008 / SDD 34.7."""
-        site, _runner, _bus = run_scenario_capped(
-            settings, "generator_fails_to_start", "2h", step_s=5.0
-        )
+        site, _runner, _bus = run_scenario_capped(settings, "generator_fails_to_start", "2h", step_s=5.0)
         assert site.generator.state == "lockout"
         assert site.generator.failed_attempts >= 3
         assert site.generator.starts == site.config.generator.start_attempt_limit
@@ -255,9 +241,7 @@ class TestReserveAndGenerator:
 
     def test_generator_trip_during_run_transfers_back(self, settings):
         """EMS-T010."""
-        site, _runner, _bus = run_scenario_capped(
-            settings, "generator_fails_during_run", "2h", step_s=5.0
-        )
+        site, _runner, _bus = run_scenario_capped(settings, "generator_fails_during_run", "2h", step_s=5.0)
         assert site.generator.starts == 1
         assert site.generator.fault_active is True
         assert site.generator.output_kw == 0.0
@@ -291,9 +275,7 @@ class TestEquipmentFaults:
         assert charge_limit < site.config.battery.max_charge_kw
 
     def test_pv_underperformance_loses_rows(self, settings):
-        site, _runner, _bus = run_scenario_capped(
-            settings, "pv_underperformance", "3h", step_s=10.0
-        )
+        site, _runner, _bus = run_scenario_capped(settings, "pv_underperformance", "3h", step_s=10.0)
         assert sum(1 for row in site.solar.rows if not row.online) == 2
         assert site.solar.fault_active is True
 
@@ -321,9 +303,7 @@ class TestEquipmentFaults:
         assert site.context.rack_inlet_temperature_c > 35.0
 
     def test_rack_cooling_loss_raises_the_rack_alarm(self, settings):
-        site, _runner, bus = run_scenario(
-            settings, "rack_cooling_loss", duration_s="2h", step_s=60.0
-        )
+        site, _runner, bus = run_scenario(settings, "rack_cooling_loss", duration_s="2h", step_s=60.0)
         topic = topics.telemetry_topic("it.rack.power_container.01", "alarm_summary")
         assert parse_telemetry(bus.last(topic).payload).value in ("warning", "alarm", "critical")
 
@@ -362,9 +342,7 @@ class TestObservabilityScenarios:
         runner = ScenarioRunner(site, scenario)
         site.start()
         runner.pump()
-        battery_topic = topics.telemetry_topic(
-            "energy.battery_bank.power_container.01", "soc_pct"
-        )
+        battery_topic = topics.telemetry_topic("energy.battery_bank.power_container.01", "soc_pct")
         seen: list[tuple[float, bool]] = []
 
         def on_step(current, _balance):
@@ -395,8 +373,7 @@ class TestObservabilityScenarios:
             runner.pump()
 
         # Stop between the WAN drop (10 min) and its return (25 min).
-        site.run(duration_s=parse_duration("20m"), dt_s=10.0, pacer=SteppedPacer(),
-                 on_step=on_step)
+        site.run(duration_s=parse_duration("20m"), dt_s=10.0, pacer=SteppedPacer(), on_step=on_step)
         wan = topics.telemetry_topic("it.router.rack_01.isr4321_01", "wan_state")
         assert parse_telemetry(bus.last(wan).payload).value == "down"
         # Local control is untouched: the bus is up, loads are served, telemetry
@@ -413,9 +390,7 @@ class TestObservabilityScenarios:
         topic = topics.availability_topic("energy.battery_bank.power_container.01")
         assert parse_availability(bus.retained[topic].payload).state == "online"
         offline = [
-            m
-            for m in bus.published
-            if m.topic == topic and parse_availability(m.payload).state == "offline"
+            m for m in bus.published if m.topic == topic and parse_availability(m.payload).state == "offline"
         ]
         assert offline  # the will fired while the gateway was silent
 
@@ -446,9 +421,7 @@ class TestObservabilityScenarios:
             runner.pump()
 
         site.run(duration_s=parse_duration("100m"), dt_s=30.0, pacer=SteppedPacer(), on_step=on_step)
-        irradiance = topics.telemetry_topic(
-            "energy.pv_array.agrivoltaic_field.01", "solar_irradiance_w_m2"
-        )
+        irradiance = topics.telemetry_topic("energy.pv_array.agrivoltaic_field.01", "solar_irradiance_w_m2")
         published = [m for m in bus.published if m.topic == irradiance]
         assert published
         last = parse_telemetry(published[-1].payload)

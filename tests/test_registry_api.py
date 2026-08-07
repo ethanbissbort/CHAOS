@@ -149,16 +149,12 @@ def test_asset_relationships_endpoint(api):
         assert relationship["direction"] in {"incoming", "outgoing"}
         assert INVERTER in {relationship["from_asset_id"], relationship["to_asset_id"]}
 
-    outgoing = api.get(
-        f"{BASE}/assets/{INVERTER}/relationships", params={"direction": "outgoing"}
-    ).json()
+    outgoing = api.get(f"{BASE}/assets/{INVERTER}/relationships", params={"direction": "outgoing"}).json()
     assert all(item["from_asset_id"] == INVERTER for item in outgoing)
     assert len(outgoing) < len(relationships)
 
     assert (
-        api.get(
-            f"{BASE}/assets/{INVERTER}/relationships", params={"direction": "sideways"}
-        ).status_code
+        api.get(f"{BASE}/assets/{INVERTER}/relationships", params={"direction": "sideways"}).status_code
         == 422
     )
 
@@ -190,9 +186,7 @@ def test_asset_dependencies_endpoint(api):
     direct = {item["asset_id"] for item in response.json()}
     assert "energy.battery_bank.power_container.01" in direct
 
-    transitive = api.get(
-        f"{BASE}/assets/{INVERTER}/dependencies", params={"transitive": True}
-    ).json()
+    transitive = api.get(f"{BASE}/assets/{INVERTER}/dependencies", params={"transitive": True}).json()
     assert {item["asset_id"] for item in transitive} >= direct
 
 
@@ -210,9 +204,7 @@ def test_list_points_filters(api):
     assert for_asset["total"] == 19
     assert {item["asset_id"] for item in for_asset["items"]} == {INVERTER}
 
-    by_name = api.get(
-        f"{BASE}/points", params={"point_name": "availability_state", "limit": 1000}
-    ).json()
+    by_name = api.get(f"{BASE}/points", params={"point_name": "availability_state", "limit": 1000}).json()
     assert by_name["total"] > 1
     assert {item["point_name"] for item in by_name["items"]} == {"availability_state"}
 
@@ -309,9 +301,7 @@ def test_asset_class_dictionary_endpoint(api):
     assert by_name["inverter"]["allowed_domains"] == ["energy"]
     assert by_name["inverter"]["dictionary_status"]
 
-    energy_only = api.get(
-        f"{BASE}/registry/dictionary/asset-classes", params={"domain": "water"}
-    ).json()
+    energy_only = api.get(f"{BASE}/registry/dictionary/asset-classes", params={"domain": "water"}).json()
     assert 0 < len(energy_only) < 72
     assert all("water" in item["allowed_domains"] for item in energy_only)
 
@@ -331,9 +321,7 @@ def test_point_dictionary_endpoint(api):
         "unknown",
     ]
 
-    capable = api.get(
-        f"{BASE}/registry/dictionary/points", params={"control_capable": True}
-    ).json()
+    capable = api.get(f"{BASE}/registry/dictionary/points", params={"control_capable": True}).json()
     assert 0 < len(capable) < 214
     assert all(item["control_capable"] for item in capable)
 

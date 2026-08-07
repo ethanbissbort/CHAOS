@@ -12,14 +12,7 @@ from __future__ import annotations
 import datetime as dt
 
 import pytest
-
-from homestead_twin.alarms.correlation import CorrelationEngine
-from homestead_twin.alarms.definitions import sync_definitions
-from homestead_twin.alarms.evaluator import AlarmEvaluator
-from homestead_twin.alarms.notify import Notifier
-from homestead_twin.models.alarms import Alarm, Incident
-
-from test_alarm_correlation import (  # noqa: E402  (sibling test helper, not a package)
+from test_alarm_correlation import (
     AC_MAIN,
     SERVER,
     T0,
@@ -28,6 +21,12 @@ from test_alarm_correlation import (  # noqa: E402  (sibling test helper, not a 
     load_real_registry,
     set_state,
 )
+
+from homestead_twin.alarms.correlation import CorrelationEngine
+from homestead_twin.alarms.definitions import sync_definitions
+from homestead_twin.alarms.evaluator import AlarmEvaluator
+from homestead_twin.alarms.notify import Notifier
+from homestead_twin.models.alarms import Alarm, Incident
 
 BATTERY = "energy.battery_bank.power_container.01"
 GENERATOR = "energy.generator.site.01"
@@ -123,9 +122,7 @@ def test_alarm_history_filters(client, raise_alarms):
 
 def test_get_one_alarm_returns_its_lifecycle_and_definition(client, raise_alarms, seeded):
     raise_alarms()
-    alarm = next(
-        a for a in seeded.query(Alarm).all() if a.alarm_key == "power_container_ac_bus_lost"
-    )
+    alarm = next(a for a in seeded.query(Alarm).all() if a.alarm_key == "power_container_ac_bus_lost")
     payload = client.get(f"/api/v1/alarms/{alarm.id}").json()
 
     assert payload["alarm_key"] == "power_container_ac_bus_lost"
@@ -170,16 +167,14 @@ def test_definition_detail_carries_the_fr_008_context(client, seeded):
     assert all(a["name"] and a["criticality"] for a in payload["affected_assets"])
 
     relationships = payload["dependencies"]["relationships"]
-    assert any(
-        r["from_asset_id"] == AC_MAIN and r["relationship_type"] == "feeds" for r in relationships
-    )
+    assert any(r["from_asset_id"] == AC_MAIN and r["relationship_type"] == "feeds" for r in relationships)
 
     controls = {c["asset_id"]: c for c in payload["manual_controls"]}
     assert set(controls) == affected
     # The v0.3 register documents no manual overrides. Say so; do not imply there
     # is a handle to pull.
     assert all(c["status"] == "not_documented" for c in controls.values())
-    assert controls[AC_MAIN]["open_fields"]      # ... and show what is missing
+    assert controls[AC_MAIN]["open_fields"]  # ... and show what is missing
     assert "lockout_procedure" in controls[AC_MAIN]["open_fields"]
 
     assert payload["probable_causes"]
@@ -206,9 +201,7 @@ def test_definition_detail_reports_threshold_provenance(client, seeded):
 def test_class_scoped_definition_lists_every_instance(client, seeded):
     payload = client.get("/api/v1/alarms/definitions/inverter_fault").json()
     assert payload["scope"]["asset_class"] == "inverter"
-    inverters = [
-        a for a in payload["affected_assets"] if a["asset_class"] == "inverter"
-    ]
+    inverters = [a for a in payload["affected_assets"] if a["asset_class"] == "inverter"]
     assert len(inverters) == 4
 
 
@@ -276,28 +269,32 @@ def test_lifecycle_writes_require_the_operator_role(client, raise_alarms, seeded
     raise_alarms()
     alarm_id = _alarm_id(seeded, "power_container_ac_bus_lost")
 
-    assert client.post(
-        f"/api/v1/alarms/{alarm_id}/acknowledge", json={"note": "anonymous"}
-    ).status_code == 403
-    assert client.post(
-        f"/api/v1/alarms/{alarm_id}/acknowledge",
-        json={"note": "just looking"},
-        headers={"X-Operator": "viewer.vic", "X-Operator-Role": "viewer"},
-    ).status_code == 403
-    assert client.post(
-        f"/api/v1/alarms/{alarm_id}/acknowledge",
-        json={"note": "escalated privileges are fine"},
-        headers={"X-Operator": "admin.ada", "X-Operator-Role": "administrator"},
-    ).status_code == 200
+    assert (
+        client.post(f"/api/v1/alarms/{alarm_id}/acknowledge", json={"note": "anonymous"}).status_code == 403
+    )
+    assert (
+        client.post(
+            f"/api/v1/alarms/{alarm_id}/acknowledge",
+            json={"note": "just looking"},
+            headers={"X-Operator": "viewer.vic", "X-Operator-Role": "viewer"},
+        ).status_code
+        == 403
+    )
+    assert (
+        client.post(
+            f"/api/v1/alarms/{alarm_id}/acknowledge",
+            json={"note": "escalated privileges are fine"},
+            headers={"X-Operator": "admin.ada", "X-Operator-Role": "administrator"},
+        ).status_code
+        == 200
+    )
 
 
 def test_lifecycle_writes_require_a_reason(client, raise_alarms, seeded, operator_headers):
     raise_alarms()
     alarm_id = _alarm_id(seeded, "power_container_ac_bus_lost")
     for body in ({}, {"note": ""}, {"note": "  "}):
-        response = client.post(
-            f"/api/v1/alarms/{alarm_id}/acknowledge", json=body, headers=operator_headers
-        )
+        response = client.post(f"/api/v1/alarms/{alarm_id}/acknowledge", json=body, headers=operator_headers)
         assert response.status_code == 422, body
 
 
@@ -306,11 +303,14 @@ def test_illegal_transitions_are_rejected(client, raise_alarms, seeded, operator
     alarm_id = _alarm_id(seeded, "power_container_ac_bus_lost")
 
     # Cannot review before clearing.
-    assert client.post(
-        f"/api/v1/alarms/{alarm_id}/review",
-        json={"note": "skipping ahead"},
-        headers=operator_headers,
-    ).status_code == 409
+    assert (
+        client.post(
+            f"/api/v1/alarms/{alarm_id}/review",
+            json={"note": "skipping ahead"},
+            headers=operator_headers,
+        ).status_code
+        == 409
+    )
 
     client.post(
         f"/api/v1/alarms/{alarm_id}/acknowledge",
@@ -318,16 +318,17 @@ def test_illegal_transitions_are_rejected(client, raise_alarms, seeded, operator
         headers=operator_headers,
     )
     # Cannot acknowledge twice.
-    assert client.post(
-        f"/api/v1/alarms/{alarm_id}/acknowledge",
-        json={"note": "seen again"},
-        headers=operator_headers,
-    ).status_code == 409
+    assert (
+        client.post(
+            f"/api/v1/alarms/{alarm_id}/acknowledge",
+            json={"note": "seen again"},
+            headers=operator_headers,
+        ).status_code
+        == 409
+    )
 
 
-def test_clear_is_refused_while_the_condition_persists(
-    client, seeded, bus, settings, operator_headers
-):
+def test_clear_is_refused_while_the_condition_persists(client, seeded, bus, settings, operator_headers):
     set_state(seeded, GENERATOR, "start_failure_active", True)
     AlarmEvaluator(seeded, bus, settings).evaluate(at(0))
     seeded.commit()
@@ -378,9 +379,7 @@ def test_incident_endpoints(client, raise_alarms, seeded):
     assert client.get("/api/v1/incidents/does-not-exist").status_code == 404
 
 
-def test_clearing_the_last_member_closes_the_incident(
-    client, raise_alarms, seeded, operator_headers
-):
+def test_clearing_the_last_member_closes_the_incident(client, raise_alarms, seeded, operator_headers):
     incident_id = raise_alarms()
     for alarm in list(seeded.query(Alarm).all()):
         if alarm.state in ("cleared", "reviewed"):
@@ -427,9 +426,7 @@ def test_definitions_reload_requires_maintainer_and_is_idempotent(
     assert client.post("/api/v1/alarms/definitions/reload").status_code == 403
     # Reloading replaces safety-relevant trip thresholds; an operator may
     # acknowledge alarms but may not redefine them.
-    assert client.post(
-        "/api/v1/alarms/definitions/reload", headers=operator_headers
-    ).status_code == 403
+    assert client.post("/api/v1/alarms/definitions/reload", headers=operator_headers).status_code == 403
 
     response = client.post("/api/v1/alarms/definitions/reload", headers=admin_headers)
     assert response.status_code == 200

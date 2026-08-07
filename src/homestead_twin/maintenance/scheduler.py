@@ -67,7 +67,7 @@ def _as_aware(value: dt.datetime | None) -> dt.datetime | None:
     if value is None:
         return None
     if value.tzinfo is None:
-        return value.replace(tzinfo=dt.timezone.utc)
+        return value.replace(tzinfo=dt.UTC)
     return value
 
 
@@ -103,9 +103,7 @@ def plan_is_due(session: Session, plan: MaintenancePlan, now: dt.datetime) -> tu
         if quality in {"bad", "stale"}:
             # A frozen counter must not be read as "no wear accumulated".
             return False, f"counter_quality:{quality}"
-        interval = (
-            plan.interval_runtime_h if plan.trigger_type == "runtime_hours" else plan.interval_cycles
-        )
+        interval = plan.interval_runtime_h if plan.trigger_type == "runtime_hours" else plan.interval_cycles
         if not interval:
             return False, "missing_counter_interval"
         elapsed = value - (plan.counter_baseline or 0.0)
@@ -150,7 +148,9 @@ def _has_open_work(session: Session, plan_id: str) -> bool:
     return session.execute(stmt).first() is not None
 
 
-def generate_work_orders(session: Session, now: dt.datetime, plan_ids: list[str] | None = None) -> ScheduleResult:
+def generate_work_orders(
+    session: Session, now: dt.datetime, plan_ids: list[str] | None = None
+) -> ScheduleResult:
     """Create work orders for every due plan. Idempotent while work stays open."""
     result = ScheduleResult()
     stmt = select(MaintenancePlan)
@@ -199,15 +199,21 @@ def _priority_for(asset: Asset | None) -> str:
 
 def raise_for_alarm(session: Session, alarm: Alarm, now: dt.datetime) -> WorkOrder | None:
     """Create corrective work from an alarm occurrence (SDD section 18)."""
-    existing = session.execute(
-        select(WorkOrder).where(
-            WorkOrder.alarm_id == alarm.id, WorkOrder.state.in_(("open", "in_progress", "blocked"))
+    existing = (
+        session.execute(
+            select(WorkOrder).where(
+                WorkOrder.alarm_id == alarm.id, WorkOrder.state.in_(("open", "in_progress", "blocked"))
+            )
         )
-    ).scalars().first()
+        .scalars()
+        .first()
+    )
     if existing is not None:
         return None
 
-    asset = session.get(Asset, alarm.asset_id) if alarm.asset_id else None
+    # Priority comes from the alarm's severity here, not the asset's
+    # criticality: a critical alarm on a discretionary asset still needs
+    # attention now.
     order = WorkOrder(
         asset_id=alarm.asset_id,
         alarm_id=alarm.id,
@@ -280,9 +286,9 @@ def _consume_parts(session: Session, parts_used: list[dict]) -> None:
         quantity = int(entry.get("quantity", 0) or 0)
         if not part_number or quantity <= 0:
             continue
-        part = session.execute(
-            select(SparePart).where(SparePart.part_number == part_number)
-        ).scalars().first()
+        part = (
+            session.execute(select(SparePart).where(SparePart.part_number == part_number)).scalars().first()
+        )
         if part is not None:
             part.quantity_on_hand = max(0, part.quantity_on_hand - quantity)
 

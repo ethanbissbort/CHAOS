@@ -11,14 +11,14 @@ from __future__ import annotations
 import datetime as dt
 
 import pytest
+from test_ems_shedding import ALL_LOADS, COMPUTE, CONTROL_CORE, SPA, WORKSHOP
+from test_ems_state_machine import HEALTHY_INPUTS, seed_current_state
 
 from homestead_twin.ems.loader import load_schedule
 from homestead_twin.ems.state_machine import ensure_snapshot
 from homestead_twin.models.base import utcnow
 from homestead_twin.models.energy import PowerBudgetLease
 from homestead_twin.models.registry import Asset
-from test_ems_shedding import ALL_LOADS, COMPUTE, CONTROL_CORE, SPA, WORKSHOP
-from test_ems_state_machine import HEALTHY_INPUTS, seed_current_state
 
 
 @pytest.fixture()
@@ -198,9 +198,7 @@ def test_shed_actions_reflect_a_real_shed(client, energy_db, db_session, setting
     inputs = gather_inputs(db_session, now, config)
     derived = compute_derived(inputs, config, now=now)
     controller = ShedController(config, RecordingCommandPort(), settings=settings, bus=bus)
-    controller.shed_step(
-        db_session, energy_state="CRITICAL_RESERVE", inputs=inputs, derived=derived, now=now
-    )
+    controller.shed_step(db_session, energy_state="CRITICAL_RESERVE", inputs=inputs, derived=derived, now=now)
     db_session.commit()
 
     body = client.get("/api/v1/energy/shed-actions").json()
@@ -335,9 +333,7 @@ def test_revocation_requires_a_reason(client, energy_db, db_session, operator_he
         json={"asset_id": WORKSHOP, "requested_kw": 1.0, "reason": "welding"},
         headers=operator_headers,
     ).json()["lease_id"]
-    response = client.delete(
-        f"/api/v1/energy/load-budgets/reservations/{lease_id}", headers=operator_headers
-    )
+    response = client.delete(f"/api/v1/energy/load-budgets/reservations/{lease_id}", headers=operator_headers)
     assert response.status_code == 422
 
 
@@ -385,8 +381,9 @@ def test_dashboard_reports_data_quality_for_every_state_machine_value(client, en
 
 
 def test_dashboard_shows_impaired_observability(client, energy_db, db_session):
-    from homestead_twin.ems.inputs import SPEC_BY_KEY
     from test_ems_state_machine import write_point
+
+    from homestead_twin.ems.inputs import SPEC_BY_KEY
 
     write_point(
         db_session,

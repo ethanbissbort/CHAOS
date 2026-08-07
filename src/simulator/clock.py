@@ -21,10 +21,11 @@ import datetime as dt
 import math
 import re
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable, Protocol
+from typing import Protocol
 
-UTC = dt.timezone.utc
+UTC = dt.UTC
 
 #: Default simulated start instant: a summer morning, midnight local.
 DEFAULT_START = dt.datetime(2026, 6, 21, 5, 0, 0, tzinfo=UTC)
@@ -121,10 +122,10 @@ class Pacer(Protocol):
 class SteppedPacer:
     """No pacing at all: used by tests, EMS prototyping and offline runs."""
 
-    def pace(self, dt_s: float) -> None:  # noqa: D102 - protocol impl
+    def pace(self, dt_s: float) -> None:
         return None
 
-    def reset(self) -> None:  # noqa: D102 - protocol impl
+    def reset(self) -> None:
         return None
 
 
@@ -144,7 +145,7 @@ class RealTimePacer:
     _last: float | None = field(default=None, repr=False)
     slept_s: float = 0.0
 
-    def pace(self, dt_s: float) -> None:  # noqa: D102 - protocol impl
+    def pace(self, dt_s: float) -> None:
         if self.speed <= 0 or math.isinf(self.speed):
             return
         budget = dt_s / self.speed
@@ -161,7 +162,7 @@ class RealTimePacer:
         else:
             self._last = now
 
-    def reset(self) -> None:  # noqa: D102 - protocol impl
+    def reset(self) -> None:
         self._last = None
         self.slept_s = 0.0
 
@@ -185,7 +186,7 @@ _DURATION_RE = re.compile(r"(?P<value>\d+(?:\.\d+)?)\s*(?P<unit>ms|s|m|h|d)?", r
 _UNIT_SECONDS = {"ms": 0.001, "s": 1.0, "m": 60.0, "h": 3600.0, "d": 86400.0, None: 1.0}
 
 
-def parse_duration(value: str | float | int) -> float:
+def parse_duration(value: str | float) -> float:
     """Parse ``"24h"``, ``"90m"``, ``"1d12h"`` or a bare number of seconds.
 
     Used by the CLI and by scenario definitions so durations read the way an
@@ -216,7 +217,7 @@ def format_duration(seconds: float) -> str:
     seconds = float(seconds)
     if seconds < 60:
         return f"{seconds:.0f}s"
-    minutes, sec = divmod(int(round(seconds)), 60)
+    minutes, sec = divmod(round(seconds), 60)
     hours, minutes = divmod(minutes, 60)
     days, hours = divmod(hours, 24)
     parts = []

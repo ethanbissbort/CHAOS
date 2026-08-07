@@ -34,7 +34,7 @@ from homestead_twin.models.commands import OperatingMode
 from homestead_twin.models.registry import Asset, AssetClass, Point, PointDefinition
 from homestead_twin.models.telemetry import CurrentState
 
-T0 = dt.datetime(2026, 8, 7, 12, 0, 0, tzinfo=dt.timezone.utc)
+T0 = dt.datetime(2026, 8, 7, 12, 0, 0, tzinfo=dt.UTC)
 
 
 def at(seconds: float) -> dt.datetime:
@@ -65,9 +65,7 @@ def seed_asset(session, asset_id: str, **kwargs) -> Asset:
 
 def seed_point(session, asset_id: str, point_name: str, *, data_type: str = "float", unit=None):
     if session.get(PointDefinition, point_name) is None:
-        session.add(
-            PointDefinition(name=point_name, default_class="AI", data_type=data_type, unit=unit)
-        )
+        session.add(PointDefinition(name=point_name, default_class="AI", data_type=data_type, unit=unit))
     point_id = f"{asset_id}/{point_name}"
     if session.get(Point, point_id) is None:
         session.add(
@@ -169,9 +167,7 @@ def test_yaml_and_json_mirrors_are_equal():
 def test_every_numeric_threshold_declares_its_provenance(db_session, definitions):
     """No trip point may read as a decided setpoint (README: deliberately unresolved)."""
     numeric = [
-        d
-        for d in db_session.query(AlarmDefinition).all()
-        if d.trigger_operator in ("lt", "le", "gt", "ge")
+        d for d in db_session.query(AlarmDefinition).all() if d.trigger_operator in ("lt", "le", "gt", "ge")
     ]
     assert numeric
     for definition in numeric:
@@ -187,14 +183,14 @@ def test_every_definition_carries_the_sdd_14_3_fields(db_session, definitions):
     for definition in db_session.query(AlarmDefinition).all():
         key = definition.alarm_key
         assert definition.trigger_operator, key
-        assert derive_reset(definition)[0], key            # reset logic
-        assert definition.on_delay_s is not None, key      # delay
-        assert definition.severity in SEVERITIES, key      # severity
-        assert definition.probable_causes, key             # probable causes
-        assert definition.automatic_action, key            # automatic protective action
-        assert definition.operator_action, key             # operator action
-        assert definition.procedure_ref, key               # FR-008 procedure link
-        assert definition.escalation_path, key             # escalation path
+        assert derive_reset(definition)[0], key  # reset logic
+        assert definition.on_delay_s is not None, key  # delay
+        assert definition.severity in SEVERITIES, key  # severity
+        assert definition.probable_causes, key  # probable causes
+        assert definition.automatic_action, key  # automatic protective action
+        assert definition.operator_action, key  # operator action
+        assert definition.procedure_ref, key  # FR-008 procedure link
+        assert definition.escalation_path, key  # escalation path
         assert definition.suppression_conditions is not None, key
         assert definition.maintenance_mode_behaviour, key  # maintenance behaviour
         # Affected assets: dynamic data-quality alarms bind to a point at raise time.
@@ -204,9 +200,7 @@ def test_every_definition_carries_the_sdd_14_3_fields(db_session, definitions):
 
 def test_emergency_alarms_are_never_silenced_or_self_clearing(db_session, definitions):
     """SDD 14.1: the platform reports; it does not become the safety system."""
-    emergency = db_session.query(AlarmDefinition).filter(
-        AlarmDefinition.severity == "emergency"
-    ).all()
+    emergency = db_session.query(AlarmDefinition).filter(AlarmDefinition.severity == "emergency").all()
     assert emergency
     for definition in emergency:
         assert definition.maintenance_mode_behaviour in ("notify_only", "normal")
@@ -250,7 +244,7 @@ def test_on_delay_suppresses_a_transient(db_session, evaluator):
     evaluator.evaluate(at(0))
     candidate = open_alarms(db_session, "battery_soc_low")
     assert len(candidate) == 1
-    assert candidate[0].state == "detected"       # recorded, not active
+    assert candidate[0].state == "detected"  # recorded, not active
     assert candidate[0].activated_at is None
     assert candidate[0].notified is False
 
@@ -265,9 +259,9 @@ def test_on_delay_suppresses_a_transient(db_session, evaluator):
     assert not open_alarms(db_session, "battery_soc_low")
     assert len(result.transient) == 1
     history = all_alarms(db_session, "battery_soc_low")
-    assert len(history) == 1                       # never silently dropped
+    assert len(history) == 1  # never silently dropped
     assert history[0].state == "cleared"
-    assert history[0].activated_at is None         # never reached active
+    assert history[0].activated_at is None  # never reached active
     states = [e.to_state for e in history[0].events]
     assert states == ["detected", "cleared"]
     assert "transient" in history[0].events[-1].note
@@ -315,7 +309,7 @@ def test_hysteresis_prevents_chatter(db_session, evaluator):
         assert len(alarms) == 1, f"step {index} produced {len(alarms)} alarms"
         assert alarms[0].state == "active"
 
-    assert len(all_alarms(db_session, "battery_soc_low")) == 1   # exactly one alarm, no chatter
+    assert len(all_alarms(db_session, "battery_soc_low")) == 1  # exactly one alarm, no chatter
 
     # Cross the reset threshold: still needs the off-delay.
     set_state(db_session, BATTERY, "soc_pct", 46.0, unit="%")
@@ -333,9 +327,9 @@ def test_off_delay_restarts_when_the_condition_returns(db_session, evaluator):
     evaluator.evaluate(at(0))
     evaluator.evaluate(at(300))
 
-    set_state(db_session, BATTERY, "soc_pct", 46.0, unit="%")   # reset condition starts
+    set_state(db_session, BATTERY, "soc_pct", 46.0, unit="%")  # reset condition starts
     evaluator.evaluate(at(400))
-    set_state(db_session, BATTERY, "soc_pct", 38.0, unit="%")   # ... and is interrupted
+    set_state(db_session, BATTERY, "soc_pct", 38.0, unit="%")  # ... and is interrupted
     evaluator.evaluate(at(500))
     set_state(db_session, BATTERY, "soc_pct", 46.0, unit="%")
     evaluator.evaluate(at(600))
@@ -353,7 +347,7 @@ def test_derived_reset_uses_hysteresis_when_no_reset_is_declared(db_session, def
     definition.reset_value = None
     operator, payload = derive_reset(definition)
     assert operator == "ge"
-    assert payload["value"] == 45.0    # 40 trigger + 5 hysteresis
+    assert payload["value"] == 45.0  # 40 trigger + 5 hysteresis
 
 
 # ---------------------------------------------------------------------------
@@ -445,7 +439,7 @@ def test_manual_reset_alarm_does_not_self_clear(db_session, evaluator):
     set_state(db_session, GENERATOR, "start_failure_active", True)
     evaluator.evaluate(at(0))
     alarm = open_alarms(db_session, "generator_start_failed")[0]
-    assert alarm.state == "active"          # on_delay 0: critical, no delay
+    assert alarm.state == "active"  # on_delay 0: critical, no delay
 
     # The controller drops the flag on its own. The alarm must stay open.
     set_state(db_session, GENERATOR, "start_failure_active", False)
@@ -487,9 +481,9 @@ def test_maintenance_suppression_still_records_the_alarm(db_session, evaluator):
     evaluator.evaluate(at(definition.on_delay_s))
 
     alarms = open_alarms(db_session, "rack_door_open_extended")
-    assert len(alarms) == 1                       # evaluated and stored, not dropped
+    assert len(alarms) == 1  # evaluated and stored, not dropped
     alarm = alarms[0]
-    assert alarm.state == "active"                # the lifecycle still runs
+    assert alarm.state == "active"  # the lifecycle still runs
     assert alarm.suppressed is True
     assert SuppressionReason.kind(alarm.suppression_reason) == SuppressionReason.MAINTENANCE
     assert "maintenance" in alarm.suppression_reason
@@ -509,8 +503,8 @@ def test_maintenance_downgrade_lowers_severity_but_keeps_the_alarm(db_session, e
     alarm = open_alarms(db_session, "server_zone_temperature_high")[0]
 
     assert definition.severity == "major"
-    assert alarm.severity == "warning"            # downgraded one step
-    assert alarm.suppressed is False              # still notifies
+    assert alarm.severity == "warning"  # downgraded one step
+    assert alarm.suppressed is False  # still notifies
     assert any("downgraded" in (e.note or "").lower() for e in alarm.events)
 
 
@@ -549,7 +543,7 @@ def test_bad_quality_input_does_not_trigger_a_process_alarm(db_session, evaluato
     result = evaluator.evaluate(at(0))
     evaluator.evaluate(at(600))
 
-    assert not all_alarms(db_session, "battery_soc_low")     # process alarm never raised
+    assert not all_alarms(db_session, "battery_soc_low")  # process alarm never raised
     assert f"{BATTERY}/soc_pct" in result.quality_blocked
 
     quality_alarms = open_alarms(db_session, "energy_meter_data_invalid")

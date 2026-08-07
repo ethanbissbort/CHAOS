@@ -334,9 +334,7 @@ def _meta_payload(alarm: dict[str, Any], document: dict[str, Any]) -> dict[str, 
         "source_sections": list(alarm.get("source_sections") or []),
         "correlation": {
             "window_s": int(correlation.get("window_s", defaults.get("window_s", 900))),
-            "flood_threshold": int(
-                correlation.get("flood_threshold", defaults.get("flood_threshold", 5))
-            ),
+            "flood_threshold": int(correlation.get("flood_threshold", defaults.get("flood_threshold", 5))),
             "is_root_candidate": bool(correlation.get("is_root_candidate", False)),
         },
     }
@@ -471,8 +469,7 @@ def sync_definitions(
         if problems:
             if strict:
                 raise DefinitionError(
-                    "Alarm definitions failed cross-reference validation:\n  - "
-                    + "\n  - ".join(problems)
+                    "Alarm definitions failed cross-reference validation:\n  - " + "\n  - ".join(problems)
                 )
             result.warnings.extend(problems)
 

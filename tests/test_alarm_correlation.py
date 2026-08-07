@@ -36,7 +36,7 @@ from homestead_twin.models.registry import (
 )
 from homestead_twin.models.telemetry import CurrentState
 
-T0 = dt.datetime(2026, 8, 7, 12, 0, 0, tzinfo=dt.timezone.utc)
+T0 = dt.datetime(2026, 8, 7, 12, 0, 0, tzinfo=dt.UTC)
 
 
 def at(seconds: float) -> dt.datetime:
@@ -218,7 +218,7 @@ def test_graph_is_cycle_safe(db_session, registry):
     )
     db_session.flush()
     graph = DependencyGraph.from_session(db_session)
-    assert UPS in graph.descendants(AC_MAIN)      # terminates rather than looping
+    assert UPS in graph.descendants(AC_MAIN)  # terminates rather than looping
 
 
 # ---------------------------------------------------------------------------
@@ -251,9 +251,7 @@ def test_power_container_outage_produces_one_incident(db_session, engine_parts, 
         "pihole_01",
         "cucm_01",
     ):
-        set_state(
-            db_session, f"it.application_service.rack_01.{service}", "availability_state", "offline"
-        )
+        set_state(db_session, f"it.application_service.rack_01.{service}", "availability_state", "offline")
     for load in ("control_core_01", "server_rack_01", "rack_cooling_01", "battery_hvac_01"):
         set_state(db_session, f"energy.load.site.{load}", "shed_state", "shed_pending")
 
@@ -278,7 +276,7 @@ def test_power_container_outage_produces_one_incident(db_session, engine_parts, 
     assert incident.severity == "critical"
 
     members = correlator.incident_members(incident.id)
-    assert len(members) == len(active)          # every cascade alarm is a member
+    assert len(members) == len(active)  # every cascade alarm is a member
     assert all(m.incident_id == incident.id for m in members)
 
     # --- every symptom is recorded, and marked as a symptom ---------------
@@ -290,18 +288,16 @@ def test_power_container_outage_produces_one_incident(db_session, engine_parts, 
             SuppressionReason.SYMPTOM,
             SuppressionReason.FLOOD,
         )
-        assert symptom.state == "active"        # suppressed means "not notified", not "dropped"
+        assert symptom.state == "active"  # suppressed means "not notified", not "dropped"
 
     # --- one notification, not twenty-two ---------------------------------
     logs = db_session.query(NotificationLog).all()
     assert {log.incident_id for log in logs} == {incident.id}
-    assert [log for log in logs if log.incident_id is None] == []   # no per-alarm messages
+    assert [log for log in logs if log.incident_id is None] == []  # no per-alarm messages
 
     # One dispatch = one escalation stage told once. The channel fan-out below is
     # the same message on several transports, not several notifications.
-    dispatches = {
-        (log.incident_id, notification_detail(log)["stage"]) for log in logs
-    }
+    dispatches = {(log.incident_id, notification_detail(log)["stage"]) for log in logs}
     assert len(dispatches) == 1
     assert {log.channel for log in logs} == {"log", "email", "push"}
     assert [log.status for log in logs if log.channel == "log"] == ["sent"]
@@ -309,7 +305,7 @@ def test_power_container_outage_produces_one_incident(db_session, engine_parts, 
 
     body = logs[0].body
     assert "power_container_ac_bus_lost" in body
-    assert "OP-ENERGY-CONTAINER-OUTAGE" in body   # FR-008 procedure travels with the alert
+    assert "OP-ENERGY-CONTAINER-OUTAGE" in body  # FR-008 procedure travels with the alert
 
 
 def test_outage_incident_closes_when_every_member_clears(db_session, engine_parts):
@@ -348,15 +344,11 @@ def test_independent_alerting_paths_are_never_folded_into_the_outage(db_session,
     correlator.correlate(at(600))
     notifier.dispatch_pending(at(600))
 
-    outage = next(
-        a for a in open_alarms(db_session) if a.alarm_key == "power_container_ac_bus_lost"
-    )
+    outage = next(a for a in open_alarms(db_session) if a.alarm_key == "power_container_ac_bus_lost")
     secondary = next(
         a for a in open_alarms(db_session) if a.alarm_key == "secondary_control_node_unreachable"
     )
-    beacon = next(
-        a for a in open_alarms(db_session) if a.alarm_key == "alarm_beacon_unavailable"
-    )
+    beacon = next(a for a in open_alarms(db_session) if a.alarm_key == "alarm_beacon_unavailable")
 
     assert secondary.incident_id != outage.incident_id
     assert secondary.suppressed is False
@@ -432,9 +424,7 @@ def test_flood_guard_collapses_many_alarms_of_one_definition(db_session, engine_
         "cucm_01",
     ]
     for service in services:
-        set_state(
-            db_session, f"it.application_service.rack_01.{service}", "availability_state", "offline"
-        )
+        set_state(db_session, f"it.application_service.rack_01.{service}", "availability_state", "offline")
     # The host itself is fine, so there is no upstream alarm to hang them on.
     evaluator.evaluate(at(0))
     evaluator.evaluate(at(200))
@@ -452,16 +442,11 @@ def test_flood_guard_collapses_many_alarms_of_one_definition(db_session, engine_
     assert "Flood guard engaged" in incident.summary
 
     logs = db_session.query(NotificationLog).all()
-    assert {(log.incident_id, notification_detail(log)["stage"]) for log in logs} == {
-        (incident.id, 1)
-    }
+    assert {(log.incident_id, notification_detail(log)["stage"]) for log in logs} == {(incident.id, 1)}
     # Every service alarm except the incident's anchor is recorded but not notified.
     suppressed = [a for a in raised if a.suppressed]
     assert len(suppressed) == len(services) - 1
-    assert all(
-        SuppressionReason.kind(a.suppression_reason) == SuppressionReason.FLOOD
-        for a in suppressed
-    )
+    assert all(SuppressionReason.kind(a.suppression_reason) == SuppressionReason.FLOOD for a in suppressed)
     assert all(a.state == "active" for a in raised)
 
 
@@ -497,9 +482,7 @@ def test_alarms_outside_the_correlation_window_are_not_grouped(db_session, engin
     evaluator.evaluate(at(late + 60))
     correlator.correlate(at(late + 60))
 
-    outage = next(
-        a for a in open_alarms(db_session) if a.alarm_key == "power_container_ac_bus_lost"
-    )
+    outage = next(a for a in open_alarms(db_session) if a.alarm_key == "power_container_ac_bus_lost")
     ups = next(a for a in open_alarms(db_session) if a.alarm_key == "ups_on_battery")
     assert ups.incident_id != outage.incident_id
 
@@ -538,7 +521,7 @@ def test_unconfigured_channels_record_an_honest_failure(db_session, settings, de
         assert "No message was sent" in record.detail
         # The intended role is recorded; no address was ever resolved.
         assert record.recipient in (None, "operator", "on_call")
-    assert "CUCM" in by_channel["voice"].detail       # FR-007 names the escalation path
+    assert "CUCM" in by_channel["voice"].detail  # FR-007 names the escalation path
 
 
 def test_critical_alarm_escalates_then_stops_on_acknowledgement(db_session, engine_parts):
@@ -552,21 +535,19 @@ def test_critical_alarm_escalates_then_stops_on_acknowledgement(db_session, engi
     assert stage1 >= 1
 
     # Stage 2 of generator_start_failed fires at +600 s.
-    assert notifier.dispatch_pending(at(300)).dispatches == 0       # nothing due yet
+    assert notifier.dispatch_pending(at(300)).dispatches == 0  # nothing due yet
 
     assert notifier.dispatch_pending(at(600)).dispatches == 1
     escalated = db_session.query(NotificationLog).count()
     assert escalated > stage1
 
-    alarm = next(
-        a for a in open_alarms(db_session) if a.alarm_key == "generator_start_failed"
-    )
+    alarm = next(a for a in open_alarms(db_session) if a.alarm_key == "generator_start_failed")
     evaluator.acknowledge(alarm, "ops.alice", "On my way to the generator.", at(700))
     # Stage 3 is due at +1800 s and the re-notify timer has long expired, but the
     # alarm is acknowledged: escalation stops. It is not cleared, only owned.
     assert notifier.dispatch_pending(at(3600)).dispatches == 0
     assert db_session.query(NotificationLog).count() == escalated
-    assert alarm.state == "acknowledged" 
+    assert alarm.state == "acknowledged"
 
 
 def test_unacknowledged_critical_alarm_is_re_notified(db_session, engine_parts):
@@ -582,9 +563,9 @@ def test_unacknowledged_critical_alarm_is_re_notified(db_session, engine_parts):
     evaluator.evaluate(at(0))
     correlator.correlate(at(0))
 
-    result = notifier.dispatch_pending(at(0))          # stage 1
+    result = notifier.dispatch_pending(at(0))  # stage 1
     assert result.dispatches == 1
-    result = notifier.dispatch_pending(at(stage_two_at))   # stage 2
+    result = notifier.dispatch_pending(at(stage_two_at))  # stage 2
     assert result.dispatches == 1 and result.escalated == 1
 
     # Still inside the re-notification window: say nothing new.
@@ -592,18 +573,14 @@ def test_unacknowledged_critical_alarm_is_re_notified(db_session, engine_parts):
 
     result = notifier.dispatch_pending(at(stage_two_at + renotify))
     assert result.dispatches == 1
-    assert any(
-        "unacknowledged" in (r.subject or "") for r in db_session.query(NotificationLog).all()
-    )
+    assert any("unacknowledged" in (r.subject or "") for r in db_session.query(NotificationLog).all())
 
 
 def test_maintenance_suppressed_alarms_are_not_notified(db_session, engine_parts):
     from homestead_twin.models.commands import OperatingMode
 
     evaluator, correlator, notifier = engine_parts
-    db_session.add(
-        OperatingMode(scope_type="domain", scope_id="security", mode="maintenance", changed_at=T0)
-    )
+    db_session.add(OperatingMode(scope_type="domain", scope_id="security", mode="maintenance", changed_at=T0))
     db_session.flush()
 
     access = "security.access_controller.rack_01.ap9361_01"
@@ -613,11 +590,9 @@ def test_maintenance_suppressed_alarms_are_not_notified(db_session, engine_parts
     correlator.correlate(at(700))
     notifier.dispatch_pending(at(700))
 
-    alarm = next(
-        a for a in open_alarms(db_session) if a.alarm_key == "rack_door_open_extended"
-    )
+    alarm = next(a for a in open_alarms(db_session) if a.alarm_key == "rack_door_open_extended")
     assert alarm.suppressed is True
-    assert alarm.state == "active"                 # still fully recorded
+    assert alarm.state == "active"  # still fully recorded
     assert db_session.query(NotificationLog).count() == 0
 
 
@@ -640,8 +615,8 @@ def test_service_runs_a_whole_cycle_without_sleeping(session_factory, bus, setti
     db_session.commit()
 
     first = service.evaluate_once(at(0))
-    assert first.evaluation.detected            # candidates only, still in on-delay
-    assert first.correlation.opened == []       # a transient must not open an incident
+    assert first.evaluation.detected  # candidates only, still in on-delay
+    assert first.correlation.opened == []  # a transient must not open an incident
     assert first.notification.dispatches == 0
 
     result = service.evaluate_once(at(600))

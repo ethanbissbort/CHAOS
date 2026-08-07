@@ -164,8 +164,12 @@ class ManagerCommandPort:
             manager = self._resolve_manager()
         except Exception as exc:  # ImportError, TypeError, anything the manager raises
             self._unavailable_reason = f"{type(exc).__name__}: {exc}"
-            logger.warning("Command manager unavailable for %s: %s", request.asset_id, self._unavailable_reason)
-            return CommandOutcome.refused("blocked", f"command manager unavailable ({self._unavailable_reason})")
+            logger.warning(
+                "Command manager unavailable for %s: %s", request.asset_id, self._unavailable_reason
+            )
+            return CommandOutcome.refused(
+                "blocked", f"command manager unavailable ({self._unavailable_reason})"
+            )
 
         payload = request.as_dict()
         for method_name in ("issue", "issue_command", "request", "submit"):

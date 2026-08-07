@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 
 import pytest
+from test_ems_state_machine import T0, at, make_derived, make_inputs
 
 from homestead_twin.ems import CommandOutcome, RecordingCommandPort
 from homestead_twin.ems.config import EmsConfig
@@ -23,7 +24,6 @@ from homestead_twin.ems.shedding import (
 )
 from homestead_twin.models.energy import LoadShedAction, PowerLoadProfile
 from homestead_twin.models.registry import Asset
-from test_ems_state_machine import T0, at, make_derived, make_inputs
 
 CONTROL_CORE = "energy.load.site.control_core_01"
 RACK_COOLING = "energy.load.site.rack_cooling_01"
@@ -154,7 +154,9 @@ def test_tier_zero_loads_have_no_shed_group(db_session, loads):
 # ---------------------------------------------------------------------------
 
 
-def test_shedding_refuses_when_the_reserve_cannot_be_verified(controller, db_session, loads, config, port, bus):
+def test_shedding_refuses_when_the_reserve_cannot_be_verified(
+    controller, db_session, loads, config, port, bus
+):
     inputs = low_reserve_inputs(invalid=("battery_soc_pct",))
     result = shed(controller, db_session, inputs, config, T0)
     assert not result.performed
@@ -245,7 +247,7 @@ def test_spa_lease_is_withdrawn_without_an_equipment_command(controller, db_sess
     shed(controller, db_session, inputs, config, T0)  # S1
     result = shed(controller, db_session, inputs, config, at(config.shed_group_interval_s))  # S2
     assert result.group == "S2"
-    spa_action = [a for a in result.actions if a.asset_id == SPA][0]
+    spa_action = next(a for a in result.actions if a.asset_id == SPA)
     assert spa_action.outcome == "applied"
     assert not port.commands_for(SPA)
 
@@ -282,9 +284,7 @@ def test_minimum_on_time_blocks_an_immediate_reshed(controller, db_session, load
 # ---------------------------------------------------------------------------
 
 
-def test_rejected_shed_escalates_and_is_not_assumed_off(
-    config, db_session, loads, settings, bus
-):
+def test_rejected_shed_escalates_and_is_not_assumed_off(config, db_session, loads, settings, bus):
     port = RecordingCommandPort(
         responses={COMPUTE: CommandOutcome.refused("rejected", "local controller in manual")}
     )
@@ -294,7 +294,7 @@ def test_rejected_shed_escalates_and_is_not_assumed_off(
     result = shed(controller, db_session, inputs, config, T0)
     assert result.performed
     assert result.escalations
-    failure = [a for a in result.escalations if a.asset_id == COMPUTE][0]
+    failure = next(a for a in result.escalations if a.asset_id == COMPUTE)
     assert failure.outcome == "rejected"
     assert "recalculated with those loads still connected" in result.reason
 
@@ -321,8 +321,10 @@ def test_blocked_command_is_a_failure_not_a_success(config, db_session, loads, s
 
 def test_repeated_failure_locks_the_load_out(config, db_session, loads, settings, bus):
     port = RecordingCommandPort(
-        responses={COMPUTE: CommandOutcome.refused("rejected", "manual override"),
-                   TOOL_CHARGING: CommandOutcome.refused("rejected", "manual override")}
+        responses={
+            COMPUTE: CommandOutcome.refused("rejected", "manual override"),
+            TOOL_CHARGING: CommandOutcome.refused("rejected", "manual override"),
+        }
     )
     controller = ShedController(config, port, settings=settings, bus=bus)
     inputs = low_reserve_inputs()
@@ -341,9 +343,7 @@ def test_repeated_failure_locks_the_load_out(config, db_session, loads, settings
 
 
 def test_reissue_interval_prevents_rapid_on_off(config, db_session, loads, settings, bus):
-    port = RecordingCommandPort(
-        responses={COMPUTE: CommandOutcome.refused("rejected", "manual override")}
-    )
+    port = RecordingCommandPort(responses={COMPUTE: CommandOutcome.refused("rejected", "manual override")})
     controller = ShedController(config, port, settings=settings, bus=bus)
     inputs = low_reserve_inputs()
     shed(controller, db_session, inputs, config, T0)
@@ -362,10 +362,8 @@ def test_measured_reduction_confirms_the_shed(controller, db_session, loads, con
 
     quiet = low_reserve_inputs(at(120), **{load_input_key(COMPUTE, "power_kw"): 0.0})
     states = current_load_states(db_session, inputs=quiet, now=at(120), config=config)
-    outcomes = controller.confirm_pending(
-        db_session, states, energy_state="CRITICAL_RESERVE", now=at(120)
-    )
-    compute = [o for o in outcomes if o.asset_id == COMPUTE][0]
+    outcomes = controller.confirm_pending(db_session, states, energy_state="CRITICAL_RESERVE", now=at(120))
+    compute = next(o for o in outcomes if o.asset_id == COMPUTE)
     assert compute.outcome == "confirmed"
 
 
@@ -375,10 +373,8 @@ def test_load_still_drawing_power_raises_load_shed_failed(controller, db_session
 
     still_on = low_reserve_inputs(at(120), **{load_input_key(COMPUTE, "power_kw"): 1.2})
     states = current_load_states(db_session, inputs=still_on, now=at(120), config=config)
-    outcomes = controller.confirm_pending(
-        db_session, states, energy_state="CRITICAL_RESERVE", now=at(120)
-    )
-    compute = [o for o in outcomes if o.asset_id == COMPUTE][0]
+    outcomes = controller.confirm_pending(db_session, states, energy_state="CRITICAL_RESERVE", now=at(120))
+    compute = next(o for o in outcomes if o.asset_id == COMPUTE)
     assert compute.outcome == "no_reduction"
 
     fresh = current_load_states(db_session, inputs=still_on, now=at(121), config=config)
@@ -390,9 +386,7 @@ def test_unmeasurable_load_is_marked_unconfirmed(controller, db_session, loads, 
     inputs = low_reserve_inputs()
     shed(controller, db_session, inputs, config, T0)
     states = current_load_states(db_session, inputs, now=at(120), config=config)
-    outcomes = controller.confirm_pending(
-        db_session, states, energy_state="CRITICAL_RESERVE", now=at(120)
-    )
+    outcomes = controller.confirm_pending(db_session, states, energy_state="CRITICAL_RESERVE", now=at(120))
     assert [o.outcome for o in outcomes if o.asset_id == COMPUTE] == ["unconfirmed"]
 
 
@@ -550,9 +544,7 @@ def test_greenhouse_freeze_protection_is_restored_at_its_maximum_off_time(
 
     later = at(clock + 21 * 60)
     states = current_load_states(db_session, inputs, now=later, config=config)
-    forced = controller.forced_restores(
-        db_session, states, energy_state="CRITICAL_RESERVE", now=later
-    )
+    forced = controller.forced_restores(db_session, states, energy_state="CRITICAL_RESERVE", now=later)
     assert [f.asset_id for f in forced] == [GH_CLIMATE]
     assert "minimum_service_maximum_off_time" in forced[0].reason
 
@@ -562,9 +554,7 @@ def test_minimum_service_does_not_override_emergency(controller, db_session, loa
     inputs = low_reserve_inputs()
     later = at(clock + 3600)
     states = current_load_states(db_session, inputs, now=later, config=config)
-    assert not controller.forced_restores(
-        db_session, states, energy_state="EMERGENCY", now=later
-    )
+    assert not controller.forced_restores(db_session, states, energy_state="EMERGENCY", now=later)
 
 
 # ---------------------------------------------------------------------------

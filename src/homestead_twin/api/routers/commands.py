@@ -102,9 +102,7 @@ class CommandCreate(BaseModel):
     expires_at: dt.datetime | None = None
     ttl_s: int | None = Field(default=None, ge=1, description="TTL when expires_at is not given")
     idempotency_key: str | None = Field(default=None, max_length=120)
-    dry_run: bool = Field(
-        default=False, description="Evaluate every interlock but publish nothing"
-    )
+    dry_run: bool = Field(default=False, description="Evaluate every interlock but publish nothing")
     maintenance_override: bool = Field(
         default=False,
         description="Maintainer bypass of a maintenance lockout; recorded in the audit log",
@@ -375,9 +373,7 @@ def get_command(
     return _command_view(command)
 
 
-@router.post(
-    "/commands/{command_id}/cancel", response_model=CommandView, summary="Cancel a command"
-)
+@router.post("/commands/{command_id}/cancel", response_model=CommandView, summary="Cancel a command")
 def cancel_command(
     command_id: str,
     body: CancelBody,

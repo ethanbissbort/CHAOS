@@ -327,7 +327,7 @@ class ModeManager:
         actor_role = getattr(principal, "role", "viewer")
         actor_kind = getattr(principal, "kind", "human")
 
-        audit = lambda outcome, detail, why=None: self._audit(  # noqa: E731 - local shorthand
+        audit = lambda outcome, detail, why=None: self._audit(
             actor=actor,
             actor_role=actor_role,
             action="mode.set",
@@ -396,9 +396,7 @@ class ModeManager:
 
         latching = mode in LATCHING_MODES
         if latching and expires_at is not None:
-            logger.warning(
-                "Ignoring expires_at on a latching %s mode for %s:%s", mode, scope_type, scope_id
-            )
+            logger.warning("Ignoring expires_at on a latching %s mode for %s:%s", mode, scope_type, scope_id)
             expires_at = None
 
         if row is None:

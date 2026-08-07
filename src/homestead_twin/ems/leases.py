@@ -90,10 +90,10 @@ class LeaseManager:
 
     # -- queries ---------------------------------------------------------
     def active_leases(self, session: Session, now: dt.datetime) -> list[PowerBudgetLease]:
-        leases = session.scalars(
-            select(PowerBudgetLease).where(PowerBudgetLease.state == "active")
-        )
-        return [lease for lease in leases if _aware(lease.expires_at) > now and _aware(lease.starts_at) <= now]
+        leases = session.scalars(select(PowerBudgetLease).where(PowerBudgetLease.state == "active"))
+        return [
+            lease for lease in leases if _aware(lease.expires_at) > now and _aware(lease.starts_at) <= now
+        ]
 
     def granted_kw(self, session: Session, now: dt.datetime) -> float:
         return sum(lease.granted_kw for lease in self.active_leases(session, now))
@@ -134,8 +134,16 @@ class LeaseManager:
         reason in the record rather than a silent nothing.
         """
         if requested_kw <= 0:
-            return self._deny(session, asset_id, requested_kw, reason, requested_by, now,
-                              priority, "requested power must be positive")
+            return self._deny(
+                session,
+                asset_id,
+                requested_kw,
+                reason,
+                requested_by,
+                now,
+                priority,
+                "requested power must be positive",
+            )
         if not reason:
             raise ValueError("A power-budget lease requires a reason")
         if not (self.config.lease_min_priority <= priority <= self.config.lease_max_priority):
@@ -144,23 +152,33 @@ class LeaseManager:
                 f"{self.config.lease_max_priority}"
             )
 
-        requested_duration = (
-            duration_s if duration_s is not None else self.config.lease_default_duration_s
-        )
+        requested_duration = duration_s if duration_s is not None else self.config.lease_default_duration_s
         if requested_duration <= 0:
             raise ValueError("A lease must have a positive duration; leases always expire")
         duration = min(requested_duration, self.config.lease_max_duration_s)
 
         if energy_state not in self.config.lease_grant_states:
             return self._deny(
-                session, asset_id, requested_kw, reason, requested_by, now, priority,
+                session,
+                asset_id,
+                requested_kw,
+                reason,
+                requested_by,
+                now,
+                priority,
                 f"{energy_state} does not permit new power-budget grants",
             )
 
         available = self.grantable_kw(derived)
         if available is None:
             return self._deny(
-                session, asset_id, requested_kw, reason, requested_by, now, priority,
+                session,
+                asset_id,
+                requested_kw,
+                reason,
+                requested_by,
+                now,
+                priority,
                 "surplus power is not observable, so no budget can be allocated",
             )
 
@@ -168,7 +186,13 @@ class LeaseManager:
         headroom = available - already
         if requested_kw > headroom:
             return self._deny(
-                session, asset_id, requested_kw, reason, requested_by, now, priority,
+                session,
+                asset_id,
+                requested_kw,
+                reason,
+                requested_by,
+                now,
+                priority,
                 f"requested {requested_kw:.2f} kW exceeds the {headroom:.2f} kW remaining of the "
                 f"{available:.2f} kW grantable surplus ({already:.2f} kW already granted)",
                 available=available,
@@ -192,7 +216,11 @@ class LeaseManager:
         session.flush()
         logger.info(
             "Power lease %s granted: %s %.2f kW until %s (%s)",
-            lease.lease_id, asset_id, requested_kw, lease.expires_at, reason,
+            lease.lease_id,
+            asset_id,
+            requested_kw,
+            lease.expires_at,
+            reason,
         )
         return LeaseDecision(
             granted=True,
@@ -364,9 +392,7 @@ class LeaseManager:
         elif _aware(expires_at) <= now:
             raise ValueError("A dynamic priority change must expire in the future")
         elif (_aware(expires_at) - now).total_seconds() > self.config.tier_override_max_s:
-            raise ValueError(
-                f"A dynamic priority change may not exceed {self.config.tier_override_max_s} s"
-            )
+            raise ValueError(f"A dynamic priority change may not exceed {self.config.tier_override_max_s} s")
 
         profile.effective_tier = effective_tier
         profile.tier_override_reason = f"{reason} (by {actor})"
@@ -374,7 +400,11 @@ class LeaseManager:
         session.flush()
         logger.info(
             "Tier override on %s: base %s -> %s until %s (%s)",
-            asset_id, profile.base_tier, effective_tier, expires_at, reason,
+            asset_id,
+            profile.base_tier,
+            effective_tier,
+            expires_at,
+            reason,
         )
         return profile
 
@@ -425,5 +455,5 @@ def summarise_leases(leases: list[PowerBudgetLease]) -> list[dict[str, Any]]:
 
 def _aware(value: dt.datetime) -> dt.datetime:
     if value.tzinfo is None:
-        return value.replace(tzinfo=dt.timezone.utc)
+        return value.replace(tzinfo=dt.UTC)
     return value

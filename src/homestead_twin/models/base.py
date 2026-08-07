@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime as dt
 import uuid
+from typing import ClassVar
 
 from sqlalchemy import DateTime, MetaData, String
 from sqlalchemy.dialects.postgresql import JSONB
@@ -28,7 +29,7 @@ POINT_ID_LEN = 220
 
 def utcnow() -> dt.datetime:
     """Timezone-aware UTC now. All platform timestamps are UTC (SDD 16.3)."""
-    return dt.datetime.now(dt.timezone.utc)
+    return dt.datetime.now(dt.UTC)
 
 
 def new_uuid() -> str:
@@ -38,15 +39,14 @@ def new_uuid() -> str:
 class Base(DeclarativeBase):
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
 
-    type_annotation_map = {dict: JSONType, list: JSONType}
+    # SQLAlchemy reads this as declarative configuration, not as instance state.
+    type_annotation_map: ClassVar[dict] = {dict: JSONType, list: JSONType}
 
 
 class TimestampMixin:
     """Created/updated bookkeeping for every mutable record."""
 
-    created_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), default=utcnow, nullable=False
-    )
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
     updated_at: Mapped[dt.datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
     )

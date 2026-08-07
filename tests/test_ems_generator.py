@@ -13,11 +13,11 @@ from __future__ import annotations
 import json
 
 import pytest
+from test_ems_state_machine import T0, at, make_derived, make_inputs
 
 from homestead_twin.ems import CommandOutcome, RecordingCommandPort
 from homestead_twin.ems.config import EmsConfig
 from homestead_twin.ems.generator import GeneratorCoordinator, GeneratorRuntime
-from test_ems_state_machine import T0, at, make_derived, make_inputs
 
 GENERATOR = "energy.generator.site.01"
 

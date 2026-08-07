@@ -157,22 +157,19 @@ class Weather(Component):
 
         # Temperature: seasonal mean + diurnal swing + a slow AR(1) weather
         # anomaly, damped by cloud cover (cloudy days are flatter and cooler).
-        self._noise_c = self._noise_c * math.exp(-dt_s / 10800.0) + self.random.gauss(
-            0.0, 0.35
-        ) * min(dt_s / 600.0, 1.0)
+        self._noise_c = self._noise_c * math.exp(-dt_s / 10800.0) + self.random.gauss(0.0, 0.35) * min(
+            dt_s / 600.0, 1.0
+        )
         self.cloud_cover = self._cloud(dt_s)
         seasonal = self._seasonal_mean_c(now)
         diurnal = self._diurnal_offset_c(now) * (1.0 - 0.55 * self.cloud_cover)
         self.temperature_c = (
-            seasonal + diurnal + self._noise_c - 2.0 * self.cloud_cover
-            + self.config.temperature_offset_c
+            seasonal + diurnal + self._noise_c - 2.0 * self.cloud_cover + self.config.temperature_offset_c
         )
 
         # Humidity rises with cloud and falls with temperature above the mean.
         target_rh = clamp(
-            self.config.mean_humidity_pct
-            + 25.0 * self.cloud_cover
-            - 1.6 * (self.temperature_c - seasonal),
+            self.config.mean_humidity_pct + 25.0 * self.cloud_cover - 1.6 * (self.temperature_c - seasonal),
             15.0,
             100.0,
         )

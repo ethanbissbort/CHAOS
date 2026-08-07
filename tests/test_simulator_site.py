@@ -28,7 +28,7 @@ from simulator.components.generator import GeneratorConfig
 from simulator.components.weather import WeatherConfig
 from simulator.site import SimulatedSite, SiteConfig
 
-UTC = dt.timezone.utc
+UTC = dt.UTC
 NOON = dt.datetime(2026, 6, 21, 17, 0, tzinfo=UTC)  # 12:00 local
 MIDNIGHT = dt.datetime(2026, 6, 21, 5, 0, tzinfo=UTC)  # 00:00 local
 SUNRISE = dt.datetime(2026, 6, 21, 13, 0, tzinfo=UTC)  # 08:00 local
@@ -118,9 +118,7 @@ class TestConstruction:
 
     def test_every_bound_point_is_simulated(self, bus, settings):
         """``point_bindings.yaml`` is the agreed target set: cover all of it."""
-        bindings = yaml.safe_load(
-            (settings.data_dir / "point_bindings.yaml").read_text()
-        )["bindings"]
+        bindings = yaml.safe_load((settings.data_dir / "point_bindings.yaml").read_text())["bindings"]
         bound = {binding["point_id"] for binding in bindings}
         site = build_site(bus, settings)
         assert bound <= set(site.point_ids())
@@ -161,9 +159,7 @@ class TestPublishing:
         site.step(5.0)
         soc = bus.last(topics.telemetry_topic("energy.battery_bank.power_container.01", "soc_pct"))
         assert parse_telemetry(soc.payload).unit == "%"
-        power = bus.last(
-            topics.telemetry_topic("energy.battery_bank.power_container.01", "power_kw")
-        )
+        power = bus.last(topics.telemetry_topic("energy.battery_bank.power_container.01", "power_kw"))
         assert parse_telemetry(power.payload).unit == "kW"
 
     def test_availability_is_retained_online_then_offline(self, bus, settings):
@@ -205,9 +201,7 @@ class TestPublishing:
 
 class TestEnergyBalance:
     def test_pv_is_zero_at_night_and_peaks_near_solar_noon(self, bus, settings):
-        site = build_site(
-            bus, settings, start=MIDNIGHT, weather=WeatherConfig(cloud_mode="clear")
-        )
+        site = build_site(bus, settings, start=MIDNIGHT, weather=WeatherConfig(cloud_mode="clear"))
         peak_kw, peak_hour = 0.0, None
         readings = []
         for _ in range(288):  # 24 h at 5 min
@@ -308,12 +302,8 @@ class TestCommands:
         site = build_site(bus, settings, start=NOON)
         site.step(5.0)
         bus.clear()
-        publish_command(
-            site, command("energy.load.site.opportunistic_compute_01", "shed", reason="surplus")
-        )
-        results = [
-            ack.result for ack in acks_for(bus, "energy.load.site.opportunistic_compute_01", "shed")
-        ]
+        publish_command(site, command("energy.load.site.opportunistic_compute_01", "shed", reason="surplus"))
+        results = [ack.result for ack in acks_for(bus, "energy.load.site.opportunistic_compute_01", "shed")]
         assert results == ["accepted", "succeeded"]
         assert site.stats.commands_received == 1
         assert site.stats.commands_accepted == 1
@@ -335,9 +325,7 @@ class TestCommands:
         assert site.loads.group("energy.load.site.control_core_01").power_kw > 0
 
     def test_generator_start_rejected_when_a_permissive_fails(self, bus, settings):
-        site = build_site(
-            bus, settings, start=MIDNIGHT, generator=GeneratorConfig(mode="manual")
-        )
+        site = build_site(bus, settings, start=MIDNIGHT, generator=GeneratorConfig(mode="manual"))
         site.step(5.0)
         bus.clear()
         publish_command(
@@ -394,15 +382,11 @@ class TestCommands:
         )
         ack = site.apply_command(expired)
         assert ack.result == "expired"
-        assert site.loads.group("energy.load.site.opportunistic_compute_01").shed_state == (
-            "connected"
-        )
+        assert site.loads.group("energy.load.site.opportunistic_compute_01").shed_state == ("connected")
 
     def test_malformed_command_payload_is_ignored(self, bus, settings):
         site = build_site(bus, settings)
-        bus.publish(
-            topics.command_topic("energy.load.site.spa_01", "shed"), b"{not json", qos=1
-        )
+        bus.publish(topics.command_topic("energy.load.site.spa_01", "shed"), b"{not json", qos=1)
         assert site.stats.commands_received == 0  # never counted, never crashed
 
     def test_power_budget_command_throttles_a_load(self, bus, settings):
@@ -450,9 +434,7 @@ class TestFaultInjection:
         point = "energy.battery_bank.power_container.01/temperature_cell_max_c"
         site.inject_sensor_fault(point, mode="bad", quality="bad")
         site.step(5.0)
-        topic = topics.telemetry_topic(
-            "energy.battery_bank.power_container.01", "temperature_cell_max_c"
-        )
+        topic = topics.telemetry_topic("energy.battery_bank.power_container.01", "temperature_cell_max_c")
         envelope = parse_telemetry(bus.last(topic).payload)
         assert envelope.quality == "bad"
         assert envelope.value == -999.0
@@ -460,15 +442,11 @@ class TestFaultInjection:
     def test_stale_sensor_stops_publishing_one_point_only(self, bus, settings):
         site = build_site(bus, settings, start=NOON)
         site.step(5.0)
-        site.inject_sensor_fault(
-            "energy.pv_array.agrivoltaic_field.01/solar_irradiance_w_m2", mode="stale"
-        )
+        site.inject_sensor_fault("energy.pv_array.agrivoltaic_field.01/solar_irradiance_w_m2", mode="stale")
         bus.clear()
         for _ in range(20):
             site.step(30.0)
-        irradiance = topics.telemetry_topic(
-            "energy.pv_array.agrivoltaic_field.01", "solar_irradiance_w_m2"
-        )
+        irradiance = topics.telemetry_topic("energy.pv_array.agrivoltaic_field.01", "solar_irradiance_w_m2")
         power = topics.telemetry_topic("energy.pv_array.agrivoltaic_field.01", "power_dc_kw")
         assert bus.last(irradiance) is None
         assert bus.last(power) is not None
@@ -536,15 +514,9 @@ class TestBlackStart:
         for _ in range(400):
             site.step(2.0)
             bus.clear()
-            if (
-                control_core_restored_at is None
-                and site.loads.group(control_core).shed_state == "connected"
-            ):
+            if control_core_restored_at is None and site.loads.group(control_core).shed_state == "connected":
                 control_core_restored_at = site.clock.elapsed_s
-            if (
-                greenhouse_restored_at is None
-                and site.loads.group(greenhouse).shed_state == "connected"
-            ):
+            if greenhouse_restored_at is None and site.loads.group(greenhouse).shed_state == "connected":
                 greenhouse_restored_at = site.clock.elapsed_s
         assert control_core_restored_at is not None
         assert greenhouse_restored_at is not None
@@ -587,9 +559,7 @@ class TestDeterminism:
     def test_same_seed_produces_identical_traffic(self, settings):
         def run():
             bus = InMemoryBus()
-            site = SimulatedSite(
-                bus=bus, settings=settings, config=SiteConfig(seed=99, start=NOON)
-            )
+            site = SimulatedSite(bus=bus, settings=settings, config=SiteConfig(seed=99, start=NOON))
             site.start()
             for _ in range(40):
                 site.step(15.0)
@@ -625,9 +595,7 @@ class TestDeterminism:
             site = SimulatedSite(
                 bus=bus,
                 settings=settings,
-                config=SiteConfig(
-                    seed=7, start=SUNRISE, weather=WeatherConfig(cloud_mode="clear")
-                ),
+                config=SiteConfig(seed=7, start=SUNRISE, weather=WeatherConfig(cloud_mode="clear")),
             )
             site.start()
             elapsed = 0.0
@@ -658,9 +626,7 @@ class TestRunLoop:
     def test_run_paces_when_asked(self, bus, settings):
         slept: list[float] = []
         ticks = iter([float(i) * 0.0 for i in range(200)])
-        pacer = RealTimePacer(
-            speed=100.0, sleeper=slept.append, monotonic=lambda: next(ticks, 0.0)
-        )
+        pacer = RealTimePacer(speed=100.0, sleeper=slept.append, monotonic=lambda: next(ticks, 0.0))
         site = build_site(bus, settings, start=NOON)
         site.run(duration_s=300, dt_s=30.0, pacer=pacer)
         assert len(slept) == 10

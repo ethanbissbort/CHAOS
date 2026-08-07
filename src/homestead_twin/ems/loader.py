@@ -186,7 +186,7 @@ def effective_tier(profile: PowerLoadProfile, now) -> int:
     if expires_at.tzinfo is None:
         import datetime as _dt
 
-        expires_at = expires_at.replace(tzinfo=_dt.timezone.utc)
+        expires_at = expires_at.replace(tzinfo=_dt.UTC)
     if expires_at <= now:
         return profile.base_tier
     return profile.effective_tier

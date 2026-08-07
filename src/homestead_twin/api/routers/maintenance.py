@@ -200,7 +200,9 @@ def list_due(session: DbSession, horizon_days: int = 30) -> dict:
     for plan in session.execute(select(MaintenancePlan)).scalars():
         is_due, reason = scheduler.plan_is_due(session, plan, now)
         if is_due:
-            due_now.append({"plan_id": plan.id, "asset_id": plan.asset_id, "name": plan.name, "reason": reason})
+            due_now.append(
+                {"plan_id": plan.id, "asset_id": plan.asset_id, "name": plan.name, "reason": reason}
+            )
     return {
         "evaluated_at": now,
         "due_now": due_now,
@@ -273,9 +275,7 @@ def complete(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Unknown work order")
     if order.state == "completed":
         raise HTTPException(status.HTTP_409_CONFLICT, "Work order already completed")
-    scheduler.complete_work_order(
-        session, order, utcnow(), principal.name, payload.note, payload.parts_used
-    )
+    scheduler.complete_work_order(session, order, utcnow(), principal.name, payload.note, payload.parts_used)
     session.commit()
     return _work_order_payload(session, order)
 
@@ -297,9 +297,7 @@ def record_inspection(payload: InspectionIn, session: DbSession, principal: Oper
     if session.get(Asset, payload.asset_id) is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"Unknown asset: {payload.asset_id}")
     now = utcnow()
-    inspection = Inspection(
-        **payload.model_dump(), inspected_at=now, inspector=principal.name
-    )
+    inspection = Inspection(**payload.model_dump(), inspected_at=now, inspector=principal.name)
     session.add(inspection)
     session.flush()
     follow_up = scheduler.raise_for_inspection(session, inspection, now)
@@ -331,12 +329,8 @@ def list_inspections(session: DbSession, asset_id: str | None = None, limit: int
 
 
 @router.post("/maintenance/calibrations", status_code=status.HTTP_201_CREATED)
-def record_calibration(
-    payload: CalibrationIn, session: DbSession, principal: MaintainerPrincipal
-) -> dict:
-    calibration = Calibration(
-        **payload.model_dump(), calibrated_at=utcnow(), calibrated_by=principal.name
-    )
+def record_calibration(payload: CalibrationIn, session: DbSession, principal: MaintainerPrincipal) -> dict:
+    calibration = Calibration(**payload.model_dump(), calibrated_at=utcnow(), calibrated_by=principal.name)
     session.add(calibration)
     session.commit()
     return {"calibration_id": calibration.id, "point_id": calibration.point_id}

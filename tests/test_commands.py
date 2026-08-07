@@ -43,7 +43,7 @@ ASSET_ID = "water.pump.orchard.01"
 POINT_ID = f"{ASSET_ID}/start"
 COMMAND_TOPIC = "homestead/water/orchard/pump_01/cmd/start"
 ACK_TOPIC = f"{COMMAND_TOPIC}/ack"
-NOW = dt.datetime(2026, 8, 7, 12, 0, tzinfo=dt.timezone.utc)
+NOW = dt.datetime(2026, 8, 7, 12, 0, tzinfo=dt.UTC)
 
 
 # ---------------------------------------------------------------------------
@@ -96,9 +96,7 @@ def seed_pump(
         session.add(AssetClass(name="pump", allowed_domains=["water"]))
     if session.get(PointDefinition, point_name) is None:
         session.add(
-            PointDefinition(
-                name=point_name, default_class="CMD", data_type="boolean", control_capable=True
-            )
+            PointDefinition(name=point_name, default_class="CMD", data_type="boolean", control_capable=True)
         )
     session.add(
         Asset(
@@ -369,9 +367,7 @@ def test_level_one_may_reject_what_level_three_requests(pump, bus, control_setti
 
 
 def test_fire_and_forget_commands_complete_at_dispatch(pump, bus, control_settings):
-    command = manager(pump, bus, control_settings).issue(
-        request_start(requires_ack=False), OPERATOR, now=NOW
-    )
+    command = manager(pump, bus, control_settings).issue(request_start(requires_ack=False), OPERATOR, now=NOW)
 
     assert command.state == "succeeded"
     assert command.dispatched_at is not None
@@ -394,9 +390,7 @@ def test_service_issued_commands_are_recorded_as_such(pump, bus, control_setting
 
 
 def test_dry_run_evaluates_everything_and_publishes_nothing(pump, bus, control_settings):
-    command = manager(pump, bus, control_settings).issue(
-        request_start(dry_run=True), OPERATOR, now=NOW
-    )
+    command = manager(pump, bus, control_settings).issue(request_start(dry_run=True), OPERATOR, now=NOW)
 
     assert bus.published == []
     assert command.dispatched_at is None
@@ -468,9 +462,7 @@ def test_superseded_commands_ignore_late_acks(pump, bus, control_settings):
     first = mgr.issue(request_start(), OPERATOR, now=NOW)
     mgr.issue(request_start(reason="second thoughts"), OPERATOR, now=NOW + dt.timedelta(seconds=1))
 
-    mgr.record_ack(
-        CommandAckEnvelope(command_id=first.command_id, asset_id=ASSET_ID, result="succeeded")
-    )
+    mgr.record_ack(CommandAckEnvelope(command_id=first.command_id, asset_id=ASSET_ID, result="succeeded"))
 
     assert first.state == "superseded"
     assert audit(pump, "command.ack")[0].outcome == "ignored_terminal"
@@ -510,9 +502,7 @@ def test_default_ttl_comes_from_settings(pump, bus):
 def test_expiry_leaves_terminal_commands_alone(pump, bus, control_settings):
     mgr = manager(pump, bus, control_settings)
     command = mgr.issue(request_start(ttl_s=60), OPERATOR, now=NOW)
-    mgr.record_ack(
-        CommandAckEnvelope(command_id=command.command_id, asset_id=ASSET_ID, result="succeeded")
-    )
+    mgr.record_ack(CommandAckEnvelope(command_id=command.command_id, asset_id=ASSET_ID, result="succeeded"))
 
     assert mgr.expire_due(NOW + dt.timedelta(hours=1)) == []
     assert command.state == "succeeded"
@@ -535,9 +525,7 @@ def test_cancel_records_who_stopped_waiting_and_why(pump, bus, control_settings)
 def test_cancelling_a_terminal_command_is_refused(pump, bus, control_settings):
     mgr = manager(pump, bus, control_settings)
     command = mgr.issue(request_start(), OPERATOR, now=NOW)
-    mgr.record_ack(
-        CommandAckEnvelope(command_id=command.command_id, asset_id=ASSET_ID, result="succeeded")
-    )
+    mgr.record_ack(CommandAckEnvelope(command_id=command.command_id, asset_id=ASSET_ID, result="succeeded"))
 
     with pytest.raises(CommandStateError):
         mgr.cancel(command.command_id, OPERATOR, "too late", now=NOW)
@@ -652,9 +640,7 @@ def test_ack_subscription_matches_the_command_ack_topic():
     assert not topic_matches(ack_subscription("homestead"), COMMAND_TOPIC)
 
 
-def test_service_records_acknowledgements_arriving_on_the_bus(
-    session_factory, bus, control_settings
-):
+def test_service_records_acknowledgements_arriving_on_the_bus(session_factory, bus, control_settings):
     session = session_factory()
     seed_pump(session)
     command = manager(session, bus, control_settings).issue(request_start(), OPERATOR, now=NOW)
@@ -696,14 +682,10 @@ def test_service_survives_a_malformed_ack(session_factory, bus, control_settings
     session.close()
 
 
-def test_service_sweep_expires_commands_and_clears_temporary_modes(
-    session_factory, bus, control_settings
-):
+def test_service_sweep_expires_commands_and_clears_temporary_modes(session_factory, bus, control_settings):
     session = session_factory()
     seed_pump(session)
-    command = manager(session, bus, control_settings).issue(
-        request_start(ttl_s=30), OPERATOR, now=NOW
-    )
+    command = manager(session, bus, control_settings).issue(request_start(ttl_s=30), OPERATOR, now=NOW)
     command_id = command.command_id
     ModeManager(session, site_id=SITE_ID).set_mode(
         "asset",
@@ -730,9 +712,7 @@ def test_service_sweep_expires_commands_and_clears_temporary_modes(
 def test_service_sweep_never_clears_an_emergency(session_factory, bus, control_settings):
     session = session_factory()
     seed_pump(session)
-    ModeManager(session, site_id=SITE_ID).set_mode(
-        "site", SITE_ID, "emergency", OPERATOR, "flood", now=NOW
-    )
+    ModeManager(session, site_id=SITE_ID).set_mode("site", SITE_ID, "emergency", OPERATOR, "flood", now=NOW)
     session.close()
 
     service = CommandDispatchService(session_factory, bus, control_settings, sweep_interval_s=0)
@@ -758,9 +738,7 @@ def test_service_start_and_stop_are_clean(session_factory, bus, control_settings
     assert len([f for f, _ in bus.subscriptions if f == ack_subscription("homestead")]) == 1
 
 
-def test_service_matches_the_runtime_background_service_protocol(
-    session_factory, bus, control_settings
-):
+def test_service_matches_the_runtime_background_service_protocol(session_factory, bus, control_settings):
     from homestead_twin.runtime import BackgroundService
 
     service = CommandDispatchService(session_factory, bus, control_settings)
@@ -796,9 +774,7 @@ def post_command(client, headers, **overrides):
     return client.post("/api/v1/commands", json=body, headers=headers)
 
 
-def test_api_refuses_and_explains_when_the_master_switch_is_off(
-    pump, client, operator_headers, bus
-):
+def test_api_refuses_and_explains_when_the_master_switch_is_off(pump, client, operator_headers, bus):
     response = post_command(client, operator_headers)
 
     assert response.status_code == 403
@@ -876,9 +852,7 @@ def test_api_get_list_cancel_and_ack(pump, control_client, operator_headers):
     assert fetched.status_code == 200
     assert fetched.json()["command_id"] == command_id
 
-    listed = control_client.get(
-        "/api/v1/commands", params={"asset_id": ASSET_ID, "state": "dispatched"}
-    )
+    listed = control_client.get("/api/v1/commands", params={"asset_id": ASSET_ID, "state": "dispatched"})
     assert [item["command_id"] for item in listed.json()] == [command_id]
 
     acked = control_client.post(
@@ -994,7 +968,5 @@ def test_api_audit_trail_is_maintainer_only(pump, control_client, operator_heade
     assert entries[0]["actor"] == "test.operator"
     assert entries[0]["outcome"] == "accepted"
 
-    by_actor = control_client.get(
-        "/api/v1/audit", params={"actor": "nobody"}, headers=admin_headers
-    ).json()
+    by_actor = control_client.get("/api/v1/audit", params={"actor": "nobody"}, headers=admin_headers).json()
     assert by_actor == []

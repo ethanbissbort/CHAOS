@@ -23,20 +23,18 @@ from homestead_twin.models.base import (
 
 # Command lifecycle states.
 COMMAND_STATES = (
-    "pending",       # accepted by the API, not yet dispatched
-    "dispatched",    # published to the device / controller
+    "pending",  # accepted by the API, not yet dispatched
+    "dispatched",  # published to the device / controller
     "acknowledged",  # device acknowledged receipt
-    "succeeded",     # device reported the final result
-    "rejected",      # refused by interlock, permission or local controller
-    "failed",        # dispatch or execution error
-    "expired",       # TTL elapsed without a final result
-    "superseded",    # replaced by a newer command for the same target
+    "succeeded",  # device reported the final result
+    "rejected",  # refused by interlock, permission or local controller
+    "failed",  # dispatch or execution error
+    "expired",  # TTL elapsed without a final result
+    "superseded",  # replaced by a newer command for the same target
     "cancelled",
 )
 
-TERMINAL_COMMAND_STATES = frozenset(
-    {"succeeded", "rejected", "failed", "expired", "superseded", "cancelled"}
-)
+TERMINAL_COMMAND_STATES = frozenset({"succeeded", "rejected", "failed", "expired", "superseded", "cancelled"})
 
 
 class Command(Base, TimestampMixin):
@@ -78,7 +76,7 @@ class Command(Base, TimestampMixin):
     interlocks_evaluated: Mapped[list] = mapped_column(JSONType, default=list)
     correlation_id: Mapped[str | None] = mapped_column(String(64), index=True)
 
-    results: Mapped[list["CommandResult"]] = relationship(
+    results: Mapped[list[CommandResult]] = relationship(
         back_populates="command", cascade="all, delete-orphan", order_by="CommandResult.reported_at"
     )
 
@@ -101,7 +99,7 @@ class CommandResult(Base, UUIDPrimaryKeyMixin):
     reported_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     payload: Mapped[dict | None] = mapped_column(JSONType)
 
-    command: Mapped["Command"] = relationship(back_populates="results")
+    command: Mapped[Command] = relationship(back_populates="results")
 
 
 class OperatingMode(Base, TimestampMixin):

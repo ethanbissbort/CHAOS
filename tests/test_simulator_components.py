@@ -46,7 +46,7 @@ from simulator.components.solar import (
 )
 from simulator.components.weather import Weather, WeatherConfig
 
-UTC = dt.timezone.utc
+UTC = dt.UTC
 
 
 @pytest.fixture()
@@ -122,9 +122,7 @@ class TestClock:
     def test_real_time_pacer_sleeps_the_remaining_budget(self):
         slept: list[float] = []
         ticks = iter([0.0, 0.0, 1.0, 1.0, 2.0, 2.0, 3.0, 3.0])
-        pacer = RealTimePacer(
-            speed=10.0, sleeper=slept.append, monotonic=lambda: next(ticks)
-        )
+        pacer = RealTimePacer(speed=10.0, sleeper=slept.append, monotonic=lambda: next(ticks))
         pacer.pace(100.0)  # budget 10 s wall, nothing spent yet
         assert slept and slept[0] == pytest.approx(10.0)
 
@@ -233,9 +231,7 @@ class TestWeather:
         assert mean_temperature(7) > mean_temperature(1) + 15.0
 
     def test_passing_clouds_are_periodic(self, catalog):
-        config = WeatherConfig(
-            seed=1, cloud_mode="passing_clouds", cloud_period_s=600, cloud_duration_s=240
-        )
+        config = WeatherConfig(seed=1, cloud_mode="passing_clouds", cloud_period_s=600, cloud_duration_s=240)
         weather = Weather(catalog, config)
         context = SiteContext()
         clock = SimClock()
@@ -425,9 +421,7 @@ class TestBattery:
         assert battery.stored_kwh < start  # losses, never a free lunch
         assert battery.energy_charged_kwh == pytest.approx(10.0)
         assert battery.energy_discharged_kwh == pytest.approx(10.0)
-        expected_loss = 10.0 * (1 - config.charge_efficiency) + 10.0 * (
-            1 / config.discharge_efficiency - 1
-        )
+        expected_loss = 10.0 * (1 - config.charge_efficiency) + 10.0 * (1 / config.discharge_efficiency - 1)
         assert start - battery.stored_kwh == pytest.approx(expected_loss, rel=1e-6)
 
     def test_charge_limit_tapers_at_high_soc(self, catalog):
@@ -512,24 +506,18 @@ class TestBattery:
 
     def test_contactor_command_round_trip(self, catalog):
         battery = BatteryBank(catalog)
-        outcome = battery.handle_command(
-            make_command("energy.bms.power_container.01", "open_contactor")
-        )
+        outcome = battery.handle_command(make_command("energy.bms.power_container.01", "open_contactor"))
         assert outcome and outcome.accepted
         assert battery.contactor_state == "open"
         assert battery.limits() == (0.0, 0.0)
-        outcome = battery.handle_command(
-            make_command("energy.bms.power_container.01", "close_contactor")
-        )
+        outcome = battery.handle_command(make_command("energy.bms.power_container.01", "close_contactor"))
         assert outcome and outcome.accepted
         assert battery.contactor_state == "closed"
 
     def test_contactor_close_refused_while_faulted(self, catalog):
         battery = BatteryBank(catalog)
         battery.inject_fault("bms_internal_fault")
-        outcome = battery.handle_command(
-            make_command("energy.bms.power_container.01", "close_contactor")
-        )
+        outcome = battery.handle_command(make_command("energy.bms.power_container.01", "close_contactor"))
         assert outcome and not outcome.accepted
         assert "bms_fault_active" in outcome.detail
 
@@ -584,14 +572,10 @@ class TestInverter:
     def test_hardware_lockout_cannot_be_cleared_remotely(self, catalog):
         farm = InverterFarm(catalog)
         farm.inject_fault(0, "hardware_lockout")
-        outcome = farm.handle_command(
-            make_command("energy.inverter.power_container.01", "clear_fault")
-        )
+        outcome = farm.handle_command(make_command("energy.inverter.power_container.01", "clear_fault"))
         assert outcome and not outcome.accepted
         farm.inject_fault(1, "dc_overvoltage")
-        outcome = farm.handle_command(
-            make_command("energy.inverter.power_container.02", "clear_fault")
-        )
+        outcome = farm.handle_command(make_command("energy.inverter.power_container.02", "clear_fault"))
         assert outcome and outcome.accepted
 
     def test_stop_all_de_energizes_the_block(self, catalog):
@@ -613,9 +597,7 @@ class TestGenerator:
         return context
 
     def test_start_sequence_takes_crank_plus_warmup_plus_transfer(self, catalog):
-        generator = Generator(
-            catalog, GeneratorConfig(crank_time_s=8, warmup_time_s=60, transfer_time_s=5)
-        )
+        generator = Generator(catalog, GeneratorConfig(crank_time_s=8, warmup_time_s=60, transfer_time_s=5))
         assert generator.request_start("test").accepted
         self._run(generator, 5)
         assert generator.state != STATE_RUNNING
@@ -646,9 +628,7 @@ class TestGenerator:
     def test_cooldown_precedes_stop(self, catalog):
         generator = Generator(
             catalog,
-            GeneratorConfig(
-                crank_time_s=5, warmup_time_s=10, minimum_run_time_s=30, cooldown_time_s=120
-            ),
+            GeneratorConfig(crank_time_s=5, warmup_time_s=10, minimum_run_time_s=30, cooldown_time_s=120),
         )
         generator.request_start("test")
         self._run(generator, 60)
@@ -663,9 +643,7 @@ class TestGenerator:
     def test_start_can_fail_and_locks_out_after_the_attempt_policy(self, catalog):
         generator = Generator(
             catalog,
-            GeneratorConfig(
-                crank_time_s=5, retry_delay_s=10, fail_start_attempts=9, start_attempt_limit=3
-            ),
+            GeneratorConfig(crank_time_s=5, retry_delay_s=10, fail_start_attempts=9, start_attempt_limit=3),
         )
         generator.request_start("critical_reserve")
         self._run(generator, 400)
@@ -694,9 +672,7 @@ class TestGenerator:
     def test_start_request_is_a_request_not_a_command(self, catalog):
         """The EMS asserts a request; the native controller decides."""
         generator = Generator(catalog, GeneratorConfig(maintenance_lockout=True))
-        command = make_command(
-            "energy.generator.site.01", "generator_start_request", True, reason="reserve"
-        )
+        command = make_command("energy.generator.site.01", "generator_start_request", True, reason="reserve")
         outcome = generator.handle_command(command)
         assert outcome and not outcome.accepted
         assert generator.state == STATE_OFF
@@ -806,9 +782,7 @@ class TestLoads:
         assert outcome and not outcome.accepted
         assert outcome.detail == "tier0_control_survival_never_shed"
         # Even an emergency-mode command is refused.
-        emergency = loads.handle_command(
-            make_command(asset, "shed", operating_mode="emergency")
-        )
+        emergency = loads.handle_command(make_command(asset, "shed", operating_mode="emergency"))
         assert emergency and not emergency.accepted
         assert loads.group(asset).power_kw > 0.0
 
@@ -829,18 +803,14 @@ class TestLoads:
         refusal = loads.handle_command(make_command(hvac, "shed"))
         assert refusal and not refusal.accepted
         assert refusal.detail == "battery_temperature_outside_safe_band"
-        override = loads.handle_command(
-            make_command(hvac, "shed", operating_mode="emergency")
-        )
+        override = loads.handle_command(make_command(hvac, "shed", operating_mode="emergency"))
         assert override and override.accepted
 
     def test_rack_cooling_interlock_depends_on_the_rack(self, catalog):
         loads = LoadBank(catalog, seed=1)
         context = SiteContext(rack_inlet_temperature_c=28.0, rack_it_kw=1.4, cell_temperature_c=20.0)
         self._step(loads, context, 60)
-        refusal = loads.handle_command(
-            make_command("energy.load.site.rack_cooling_01", "shed")
-        )
+        refusal = loads.handle_command(make_command("energy.load.site.rack_cooling_01", "shed"))
         assert refusal and not refusal.accepted
         assert refusal.detail == "rack_energized_temperature_governed"
 
@@ -985,15 +955,11 @@ class TestRack:
     def test_switched_outlet_command_and_reserved_outlet(self, catalog):
         rack = ServerRack(catalog)
         outcome = rack.handle_command(
-            make_command(
-                "energy.pdu.rack_01.switched_01", "outlet_state", {"outlet": 4, "state": False}
-            )
+            make_command("energy.pdu.rack_01.switched_01", "outlet_state", {"outlet": 4, "state": False})
         )
         assert outcome and outcome.accepted
         reserved = rack.handle_command(
-            make_command(
-                "energy.pdu.rack_01.switched_01", "outlet_state", {"outlet": 0, "state": False}
-            )
+            make_command("energy.pdu.rack_01.switched_01", "outlet_state", {"outlet": 0, "state": False})
         )
         assert reserved and not reserved.accepted
 
@@ -1027,9 +993,7 @@ class TestRack:
         values = self._run(rack, context, 120)
         assert values["it.router.rack_01.isr4321_01/wan_state"] == "down"
         assert values["it.router.rack_01.isr4321_01/vpn_state"] == "down"
-        assert values["it.router.rack_01.isr4321_01/voice_gateway_state"] == (
-            "degraded_internal_only"
-        )
+        assert values["it.router.rack_01.isr4321_01/voice_gateway_state"] == ("degraded_internal_only")
         # Everything else on the rack carries on exactly as before.
         assert values["it.switch.rack_01.catalyst_2960x_01/availability_state"] == "online"
         assert values["energy.ups.rack_01.01/on_battery"] is False

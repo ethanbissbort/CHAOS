@@ -23,7 +23,7 @@ from homestead_twin.ingest.writer import TelemetryWriter
 from homestead_twin.models.registry import Asset, AssetClass, Point, PointBinding, PointDefinition
 from homestead_twin.models.telemetry import CurrentState, IngestDeadLetter
 
-T0 = dt.datetime(2026, 8, 7, 12, 0, 0, tzinfo=dt.timezone.utc)
+T0 = dt.datetime(2026, 8, 7, 12, 0, 0, tzinfo=dt.UTC)
 
 BATTERY = "energy.battery_bank.power_container.01"
 CISTERN = "water.cistern.orchard.01"
@@ -120,9 +120,7 @@ def seeded(db_session, settings):
         )
     writer.apply(
         db_session,
-        TelemetryEnvelope(
-            ts=T0, asset_id=CISTERN, point="level_pct", value=41.0, source="water.gateway"
-        ),
+        TelemetryEnvelope(ts=T0, asset_id=CISTERN, point="level_pct", value=41.0, source="water.gateway"),
         now=T0,
     )
     writer.apply(
@@ -316,9 +314,9 @@ def test_stats_exposes_ingest_counters_when_the_service_is_registered(
 
 
 def test_simulate_requires_an_operator(client, seeded):
-    payload = TelemetryEnvelope(
-        ts=T0, asset_id=BATTERY, point="soc_pct", value=61.0, unit="%"
-    ).model_dump(mode="json")
+    payload = TelemetryEnvelope(ts=T0, asset_id=BATTERY, point="soc_pct", value=61.0, unit="%").model_dump(
+        mode="json"
+    )
 
     anonymous = client.post("/api/v1/telemetry/simulate", json=payload)
     assert anonymous.status_code == 403

@@ -209,15 +209,12 @@ def _dependencies(session, assets: list[Asset]) -> dict[str, Any]:
         return {"declared": [], "relationships": []}
     rows = session.scalars(
         select(AssetRelationship).where(
-            AssetRelationship.from_asset_id.in_(asset_ids)
-            | AssetRelationship.to_asset_id.in_(asset_ids)
+            AssetRelationship.from_asset_id.in_(asset_ids) | AssetRelationship.to_asset_id.in_(asset_ids)
         )
     ).all()
     return {
         "declared": [
-            {"asset_id": a.asset_id, "dependencies": a.dependencies or []}
-            for a in assets
-            if a.dependencies
+            {"asset_id": a.asset_id, "dependencies": a.dependencies or []} for a in assets if a.dependencies
         ],
         "relationships": [
             {
@@ -253,9 +250,7 @@ def list_active_alarms(
     ] = True,
 ) -> dict[str, Any]:
     states = list(OPEN_STATES) if include_pending else list(ACTIVE_STATES)
-    statement = (
-        select(Alarm).where(Alarm.state.in_(states)).order_by(Alarm.detected_at.desc())
-    )
+    statement = select(Alarm).where(Alarm.state.in_(states)).order_by(Alarm.detected_at.desc())
     alarms = list(session.scalars(statement).all())
     if not include_suppressed:
         alarms = [a for a in alarms if not a.suppressed]
@@ -312,9 +307,11 @@ def get_alarm_definition(alarm_key: str, session: DbSession) -> dict[str, Any]:
     meta = definition_meta(definition)
     scoped = [definition.asset_id] if definition.asset_id else []
     affected_ids = list(dict.fromkeys([*scoped, *(definition.affected_assets or [])]))
-    affected = list(
-        session.scalars(select(Asset).where(Asset.asset_id.in_(affected_ids))).all()
-    ) if affected_ids else []
+    affected = (
+        list(session.scalars(select(Asset).where(Asset.asset_id.in_(affected_ids))).all())
+        if affected_ids
+        else []
+    )
     if definition.asset_class:
         affected.extend(
             session.scalars(
@@ -327,21 +324,15 @@ def get_alarm_definition(alarm_key: str, session: DbSession) -> dict[str, Any]:
         )
 
     parent = (
-        session.get(AlarmDefinition, definition.parent_alarm_key)
-        if definition.parent_alarm_key
-        else None
+        session.get(AlarmDefinition, definition.parent_alarm_key) if definition.parent_alarm_key else None
     )
     children = list(
         session.scalars(
-            select(AlarmDefinition.alarm_key).where(
-                AlarmDefinition.parent_alarm_key == definition.alarm_key
-            )
+            select(AlarmDefinition.alarm_key).where(AlarmDefinition.parent_alarm_key == definition.alarm_key)
         ).all()
     )
     open_count = session.scalar(
-        select(Alarm.id).where(
-            Alarm.alarm_key == definition.alarm_key, Alarm.state.in_(OPEN_STATES)
-        ).limit(1)
+        select(Alarm.id).where(Alarm.alarm_key == definition.alarm_key, Alarm.state.in_(OPEN_STATES)).limit(1)
     )
 
     payload = _definition_summary(definition)
@@ -582,9 +573,7 @@ def list_incidents(
 
     payload = []
     for incident in incidents:
-        members = list(
-            session.scalars(select(Alarm.id).where(Alarm.incident_id == incident.id)).all()
-        )
+        members = list(session.scalars(select(Alarm.id).where(Alarm.incident_id == incident.id)).all())
         entry = _incident_dict(incident)
         entry["member_count"] = len(members)
         payload.append(entry)

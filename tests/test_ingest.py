@@ -47,7 +47,7 @@ from homestead_twin.models.registry import (
 )
 from homestead_twin.models.telemetry import CurrentState, IngestDeadLetter, TelemetrySample
 
-T0 = dt.datetime(2026, 8, 7, 12, 0, 0, tzinfo=dt.timezone.utc)
+T0 = dt.datetime(2026, 8, 7, 12, 0, 0, tzinfo=dt.UTC)
 
 BATTERY = "energy.battery_bank.power_container.01"
 CISTERN = "water.cistern.orchard.01"
@@ -201,9 +201,7 @@ def test_resolver_derives_topic_for_point_without_explicit_binding(db_session, s
 
 
 def test_resolver_prefers_explicit_binding_topic(db_session, registry):
-    point = registry.point(
-        CISTERN, "level_pct", unit="%", mqtt_topic="vendor/gateway7/tank/level"
-    )
+    point = registry.point(CISTERN, "level_pct", unit="%", mqtt_topic="vendor/gateway7/tank/level")
     resolver = TopicResolver()
     stats = resolver.refresh(db_session)
 
@@ -278,13 +276,9 @@ def test_stale_after_falls_back_to_settings_default(db_session, writer, registry
     assert state.stale_after_s == settings.default_stale_after_s
 
 
-def test_out_of_order_sample_is_historised_but_does_not_rewind_current_state(
-    db_session, writer, soc_point
-):
+def test_out_of_order_sample_is_historised_but_does_not_rewind_current_state(db_session, writer, soc_point):
     writer.apply(db_session, envelope(soc_point, 73.4, ts=T0, sequence=1), now=T0)
-    late = writer.apply(
-        db_session, envelope(soc_point, 10.0, ts=T0 - seconds(30), sequence=2), now=T0
-    )
+    late = writer.apply(db_session, envelope(soc_point, 10.0, ts=T0 - seconds(30), sequence=2), now=T0)
     db_session.commit()
 
     assert late.out_of_order and late.historised
@@ -301,9 +295,7 @@ def test_out_of_order_sample_is_historised_but_does_not_rewind_current_state(
 
 def test_sequence_gap_is_counted_as_a_warning(db_session, writer, soc_point):
     writer.apply(db_session, envelope(soc_point, 73.4, ts=T0, sequence=100), now=T0)
-    result = writer.apply(
-        db_session, envelope(soc_point, 73.9, ts=T0 + seconds(5), sequence=104), now=T0
-    )
+    result = writer.apply(db_session, envelope(soc_point, 73.9, ts=T0 + seconds(5), sequence=104), now=T0)
     db_session.commit()
 
     assert result.sequence_gap == 3
@@ -335,9 +327,7 @@ def test_matching_unit_is_accepted(db_session, writer, soc_point):
 
 def test_non_numeric_value_on_analog_point_is_rejected(db_session, writer, soc_point):
     writer.apply(db_session, envelope(soc_point, 73.4), now=T0)
-    result = writer.apply(
-        db_session, envelope(soc_point, "seventy three", ts=T0 + seconds(5)), now=T0
-    )
+    result = writer.apply(db_session, envelope(soc_point, "seventy three", ts=T0 + seconds(5)), now=T0)
     db_session.commit()
 
     assert result.quality == "bad"
@@ -432,9 +422,7 @@ def test_historian_policy_none_keeps_current_state_only(db_session, writer, regi
 
 
 def test_event_on_change_policy_skips_unchanged_values(db_session, writer, registry):
-    point = registry.point(
-        BATTERY, "fault_active", data_type="boolean", historian_policy="event_on_change"
-    )
+    point = registry.point(BATTERY, "fault_active", data_type="boolean", historian_policy="event_on_change")
     first = writer.apply(db_session, envelope(point, False, ts=T0), now=T0)
     same = writer.apply(db_session, envelope(point, False, ts=T0 + seconds(5)), now=T0)
     changed = writer.apply(db_session, envelope(point, True, ts=T0 + seconds(10)), now=T0)
@@ -611,9 +599,7 @@ def test_service_ingests_published_telemetry(db_session, bus, service, soc_point
     assert service.counters["dead_lettered"] == 0
 
 
-def test_service_subscribes_to_explicit_binding_topics_outside_the_base(
-    db_session, bus, service, registry
-):
+def test_service_subscribes_to_explicit_binding_topics_outside_the_base(db_session, bus, service, registry):
     point = registry.point(CISTERN, "level_pct", unit="%", mqtt_topic="vendor/gw7/tank/level")
     started(service)
 
@@ -701,9 +687,7 @@ def test_empty_retained_payload_is_ignored(db_session, bus, service, soc_point):
     assert db_session.query(IngestDeadLetter).count() == 0
 
 
-def test_availability_offline_over_the_bus_marks_points_stale(
-    db_session, bus, service, registry, soc_point
-):
+def test_availability_offline_over_the_bus_marks_points_stale(db_session, bus, service, registry, soc_point):
     registry.point(
         BATTERY,
         "availability_state",
@@ -712,9 +696,7 @@ def test_availability_offline_over_the_bus_marks_points_stale(
         enum_values=["online", "offline", "degraded", "unknown"],
     )
     started(service)
-    bus.publish(
-        topics.telemetry_topic(BATTERY, "soc_pct"), envelope(soc_point, 73.4).to_payload()
-    )
+    bus.publish(topics.telemetry_topic(BATTERY, "soc_pct"), envelope(soc_point, 73.4).to_payload())
     bus.publish(
         topics.availability_topic(BATTERY),
         AvailabilityEnvelope(asset_id=BATTERY, state="offline", ts=T0).to_payload(),
@@ -733,9 +715,7 @@ def test_event_topic_materialises_the_event_point(db_session, bus, service, regi
 
     bus.publish(
         topics.event_topic(GATE, "motion_event"),
-        EventEnvelope(
-            asset_id=GATE, event="motion_event", detail={"zone": "north"}, ts=T0
-        ).to_payload(),
+        EventEnvelope(asset_id=GATE, event="motion_event", detail={"zone": "north"}, ts=T0).to_payload(),
     )
 
     refresh_view(db_session)
@@ -904,9 +884,9 @@ def test_downsample_keeps_the_worst_quality_in_the_bucket(db_session, writer, so
     db_session.commit()
 
     aggregate = next(
-        s for s in samples_for(db_session, soc_point.point_id) if s.source.startswith(
-            DOWNSAMPLE_SOURCE_PREFIX
-        )
+        s
+        for s in samples_for(db_session, soc_point.point_id)
+        if s.source.startswith(DOWNSAMPLE_SOURCE_PREFIX)
     )
     assert aggregate.quality == "bad"
 
@@ -920,9 +900,9 @@ def test_downsample_is_repeatable_over_the_same_window(db_session, writer, soc_p
     db_session.commit()
 
     aggregates = [
-        s for s in samples_for(db_session, soc_point.point_id) if s.source.startswith(
-            DOWNSAMPLE_SOURCE_PREFIX
-        )
+        s
+        for s in samples_for(db_session, soc_point.point_id)
+        if s.source.startswith(DOWNSAMPLE_SOURCE_PREFIX)
     ]
     assert len(aggregates) == 1
 
@@ -1011,9 +991,7 @@ def _registry_loader_available() -> bool:
 @pytest.mark.skipif(
     not _registry_loader_available(), reason="registry loader not present in this working tree"
 )
-def test_end_to_end_against_the_loaded_register(
-    loaded_registry, db_session, bus, session_factory, settings
-):
+def test_end_to_end_against_the_loaded_register(loaded_registry, db_session, bus, session_factory, settings):
     """The 90-asset register must be ingestable with no per-point wiring.
 
     None of the v0.3 bindings carry an ``mqtt_topic`` yet, so this exercises the

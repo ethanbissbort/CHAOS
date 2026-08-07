@@ -45,7 +45,7 @@ from homestead_twin.models.telemetry import CurrentState
 ASSET_ID = "water.pump.orchard.01"
 POINT_ID = f"{ASSET_ID}/start"
 SOC_POINT_ID = "energy.battery.power_container.01/soc_pct"
-NOW = dt.datetime(2026, 8, 7, 12, 0, tzinfo=dt.timezone.utc)
+NOW = dt.datetime(2026, 8, 7, 12, 0, tzinfo=dt.UTC)
 
 
 # ---------------------------------------------------------------------------
@@ -71,13 +71,9 @@ def world(db_session):
     """A commissioned, control-capable pump ready to accept a start command."""
     db_session.add(AssetClass(name="pump", allowed_domains=["water"]))
     db_session.add(
-        PointDefinition(
-            name="start", default_class="CMD", data_type="boolean", control_capable=True
-        )
+        PointDefinition(name="start", default_class="CMD", data_type="boolean", control_capable=True)
     )
-    db_session.add(
-        PointDefinition(name="soc_pct", default_class="AI", data_type="float", unit="%")
-    )
+    db_session.add(PointDefinition(name="soc_pct", default_class="AI", data_type="float", unit="%"))
     db_session.add(
         Asset(
             asset_id=ASSET_ID,
@@ -166,9 +162,7 @@ def test_master_switch_allows_when_commissioning_has_enabled_control(world):
 
 def test_dry_run_passes_the_master_switch_but_never_dispatches(world):
     settings = make_settings(allow_physical_control=False)
-    result = physical_control_disabled(
-        world, make_request(dry_run=True), make_context(world, settings)
-    )
+    result = physical_control_disabled(world, make_request(dry_run=True), make_context(world, settings))
 
     assert result.allowed is True
     assert result.blocks_dispatch is True
@@ -389,9 +383,7 @@ def _add_state(session, quality="good", ts=NOW, point_id=SOC_POINT_ID):
 
 
 def test_declared_dependency_with_no_measurement_denies(world):
-    result = StaleInputInterlock()(
-        world, make_request(depends_on=[SOC_POINT_ID]), make_context(world)
-    )
+    result = StaleInputInterlock()(world, make_request(depends_on=[SOC_POINT_ID]), make_context(world))
 
     assert result.allowed is False
     assert result.code == STALE_INPUT
@@ -401,9 +393,7 @@ def test_declared_dependency_with_no_measurement_denies(world):
 @pytest.mark.parametrize("quality", ["bad", "stale"])
 def test_unusable_quality_denies(world, quality):
     _add_state(world, quality=quality)
-    result = StaleInputInterlock()(
-        world, make_request(depends_on=[SOC_POINT_ID]), make_context(world)
-    )
+    result = StaleInputInterlock()(world, make_request(depends_on=[SOC_POINT_ID]), make_context(world))
 
     assert result.allowed is False
     assert result.detail["problems"][0]["quality"] == quality
@@ -411,9 +401,7 @@ def test_unusable_quality_denies(world, quality):
 
 def test_measurement_older_than_the_point_timeout_denies(world):
     _add_state(world, ts=NOW - dt.timedelta(seconds=900))
-    result = StaleInputInterlock()(
-        world, make_request(depends_on=[SOC_POINT_ID]), make_context(world)
-    )
+    result = StaleInputInterlock()(world, make_request(depends_on=[SOC_POINT_ID]), make_context(world))
 
     assert result.allowed is False
     assert result.detail["problems"][0]["reason"] == "older than the point timeout"
@@ -421,9 +409,7 @@ def test_measurement_older_than_the_point_timeout_denies(world):
 
 def test_fresh_good_measurement_allows(world):
     _add_state(world)
-    result = StaleInputInterlock()(
-        world, make_request(depends_on=[SOC_POINT_ID]), make_context(world)
-    )
+    result = StaleInputInterlock()(world, make_request(depends_on=[SOC_POINT_ID]), make_context(world))
 
     assert result.allowed is True
     assert SOC_POINT_ID in result.detail["checked"]
@@ -445,13 +431,9 @@ def test_quality_tolerance_is_configurable(world):
     _add_state(world, quality="uncertain")
     strict = StaleInputInterlock(unusable_qualities=frozenset({"bad", "stale", "uncertain"}))
 
+    assert strict(world, make_request(depends_on=[SOC_POINT_ID]), make_context(world)).allowed is False
     assert (
-        strict(world, make_request(depends_on=[SOC_POINT_ID]), make_context(world)).allowed is False
-    )
-    assert (
-        StaleInputInterlock()(
-            world, make_request(depends_on=[SOC_POINT_ID]), make_context(world)
-        ).allowed
+        StaleInputInterlock()(world, make_request(depends_on=[SOC_POINT_ID]), make_context(world)).allowed
         is True
     )
 
@@ -540,9 +522,7 @@ def test_clean_world_passes_every_interlock(world):
 
 
 def test_dry_run_is_allowed_but_not_dispatchable(world):
-    evaluation = default_registry().evaluate(
-        world, make_request(dry_run=True), make_context(world)
-    )
+    evaluation = default_registry().evaluate(world, make_request(dry_run=True), make_context(world))
 
     assert evaluation.allowed is True
     assert evaluation.dispatch_allowed is False

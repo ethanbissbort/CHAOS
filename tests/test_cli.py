@@ -183,9 +183,7 @@ def test_status_on_a_database_without_tables(db_url, capsys):
     assert "init-db" in out
 
 
-def test_secondary_node_status_notes_that_the_ems_is_suppressed(
-    initialised_db, capsys, monkeypatch
-):
+def test_secondary_node_status_notes_that_the_ems_is_suppressed(initialised_db, capsys, monkeypatch):
     monkeypatch.setenv("HOMESTEAD_NODE_ROLE", "secondary")
     assert run("--database-url", initialised_db, "status", "--json") == cli.EXIT_OK
     payload = json.loads(capsys.readouterr().out)
@@ -293,9 +291,7 @@ def test_backup_writes_a_portable_archive(initialised_db, tmp_path, capsys):
 
 def test_backup_can_include_history(initialised_db, tmp_path):
     archive = tmp_path / "backup-history.tar.gz"
-    rc = run(
-        "--database-url", initialised_db, "backup", "--output", str(archive), "--include-history"
-    )
+    rc = run("--database-url", initialised_db, "backup", "--output", str(archive), "--include-history")
     assert rc == cli.EXIT_OK
     with tarfile.open(archive) as tar:
         manifest = json.loads(tar.extractfile("manifest.json").read().decode())
@@ -427,9 +423,7 @@ def test_simulate_forwards_arguments_verbatim(monkeypatch):
         seen["argv"] = argv
         return 0
 
-    monkeypatch.setattr(
-        cli, "resolve_subsystem", lambda *a, **k: fake_main if "simulator" in a[0] else None
-    )
+    monkeypatch.setattr(cli, "resolve_subsystem", lambda *a, **k: fake_main if "simulator" in a[0] else None)
     assert run("simulate", "--", "--profile", "sunny", "--duration", "60") == cli.EXIT_OK
     assert seen["argv"] == ["--profile", "sunny", "--duration", "60"]
 
@@ -454,9 +448,7 @@ def test_resolve_subsystem_raises_a_typed_error_for_a_missing_module():
 
 def test_resolve_subsystem_raises_when_the_callable_is_absent():
     with pytest.raises(cli.SubsystemUnavailable) as excinfo:
-        cli.resolve_subsystem(
-            "homestead_twin.topics", ("no_such_function",), subsystem="Topics"
-        )
+        cli.resolve_subsystem("homestead_twin.topics", ("no_such_function",), subsystem="Topics")
     assert "exposes none of" in str(excinfo.value)
 
 

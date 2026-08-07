@@ -105,9 +105,7 @@ def test_json_mirror_is_content_equal(data_path: Path):
     assert load_json(json_path) == load_yaml(data_path), f"{json_path.name} drifted from {data_path.name}"
 
 
-@pytest.mark.parametrize(
-    "stem", ["rack_layout", "water_assets", "water_points", "asset_lifecycle"]
-)
+@pytest.mark.parametrize("stem", ["rack_layout", "water_assets", "water_points", "asset_lifecycle"])
 def test_extension_has_draft_2020_12_schema(stem: str):
     from jsonschema import Draft202012Validator
 
@@ -220,7 +218,9 @@ def test_pdu_outlets_and_switch_ports_are_claimed_once(rack_layout):
             assert key not in outlet_claims, f"{key} claimed twice"
             outlet_claims[key] = item["asset_id"]
         connections = [(item["switch_asset_id"], item["switch_port"])]
-        connections += [(c["switch_asset_id"], c["switch_port"]) for c in item["additional_switch_connections"]]
+        connections += [
+            (c["switch_asset_id"], c["switch_port"]) for c in item["additional_switch_connections"]
+        ]
         for switch, port in connections:
             if switch is None or port is None:
                 continue
@@ -326,7 +326,14 @@ def test_every_water_asset_records_its_unknowns(water_assets):
 
 def test_water_assets_cover_the_section_3_4_systems(water_assets):
     tags = {tag for asset in water_assets["assets"] for tag in asset["tags"]}
-    for expected in ("potable_chain", "rainwater", "irrigation", "graywater", "freeze_protection", "leak_detection"):
+    for expected in (
+        "potable_chain",
+        "rainwater",
+        "irrigation",
+        "graywater",
+        "freeze_protection",
+        "leak_detection",
+    ):
         assert expected in tags, expected
 
 
@@ -449,9 +456,9 @@ def test_spares_policy_follows_register_criticality(asset_lifecycle, register):
         asset = by_id.get(asset_id)
         if asset is None:
             continue
-        assert record["spares_policy_required"] == (
-            asset["criticality"] in {"life_safety", "critical"}
-        ), asset_id
+        assert record["spares_policy_required"] == (asset["criticality"] in {"life_safety", "critical"}), (
+            asset_id
+        )
 
 
 def test_import_instructions_tell_a_human_what_to_supply(asset_lifecycle):

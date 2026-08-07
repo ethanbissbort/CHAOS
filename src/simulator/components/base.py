@@ -22,10 +22,11 @@ simulator can be trusted as an ingest test source.
 from __future__ import annotations
 
 import datetime as dt
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any
 
 import yaml
 
@@ -171,8 +172,7 @@ class PointCatalog:
         allowed = self.allowed_points(asset_id)
         if point_name not in allowed:
             raise UnknownPointError(
-                f"point {point_name!r} is not defined for {asset_id!r} "
-                f"(allowed: {sorted(allowed)})"
+                f"point {point_name!r} is not defined for {asset_id!r} (allowed: {sorted(allowed)})"
             )
         definition = self._points[point_name]
         binding = self.binding(asset_id, point_name)
@@ -400,7 +400,7 @@ class Component:
 
 def clamp(value: float, low: float, high: float) -> float:
     """Clamp helper used throughout the physical models."""
-    return low if value < low else high if value > high else value
+    return low if value < low else min(value, high)
 
 
 def approach(current: float, target: float, dt_s: float, tau_s: float) -> float:

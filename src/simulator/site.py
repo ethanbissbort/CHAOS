@@ -32,8 +32,9 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
-from typing import Any, Callable, Mapping, Sequence
+from typing import Any
 
 from homestead_twin import topics
 from homestead_twin.config import Settings, get_settings
@@ -105,7 +106,7 @@ class SiteConfig:
     #: DC-side losses between the array and the inverter DC input.
     dc_wiring_efficiency: float = 0.985
 
-    def seeded(self, seed: int) -> "SiteConfig":
+    def seeded(self, seed: int) -> SiteConfig:
         """Return a copy with ``seed`` pushed into every component config."""
         return replace(
             self,
@@ -193,9 +194,7 @@ class SimulatedSite:
         self.battery = BatteryBank(self.catalog, cfg.battery)
         self.inverters = InverterFarm(self.catalog, cfg.inverter)
         self.generator = Generator(self.catalog, cfg.generator)
-        self.loads = LoadBank(
-            self.catalog, cfg.loads, seed=cfg.seed, utc_offset_h=cfg.utc_offset_h
-        )
+        self.loads = LoadBank(self.catalog, cfg.loads, seed=cfg.seed, utc_offset_h=cfg.utc_offset_h)
         self.rack = ServerRack(self.catalog, cfg.rack)
         self.components: list[Component] = [
             self.weather,
@@ -308,9 +307,7 @@ class SimulatedSite:
             detail=detail or None,
             source=SITE_SOURCE,
         )
-        self.bus.publish(
-            topics.event_topic(asset_id, event, self.base_topic), envelope.to_payload(), qos=1
-        )
+        self.bus.publish(topics.event_topic(asset_id, event, self.base_topic), envelope.to_payload(), qos=1)
         self.stats.event_messages += 1
         self.stats.events.append(f"{asset_id}/{event}")
 
@@ -486,9 +483,7 @@ class SimulatedSite:
         self.black_start_stage = 0
         self.context.black_start_stage = "de_energized"
         if self._started:
-            self.publish_event(
-                self.generator.config.ats_asset_id, "ac_blackout", {"reason": reason}
-            )
+            self.publish_event(self.generator.config.ats_asset_id, "ac_blackout", {"reason": reason})
 
     def request_black_start(self) -> bool:
         """Begin the SDD 35.3 recovery sequence. Refused while a fault persists."""
@@ -546,17 +541,13 @@ class SimulatedSite:
             self._enter_black_start_stage(stage_name)
         self.black_start_timer_s += dt_s
         self.context.black_start_stage = stage_name
-        if self.black_start_timer_s >= dwell and self.black_start_stage < len(
-            self.BLACK_START_STAGES
-        ):
+        if self.black_start_timer_s >= dwell and self.black_start_stage < len(self.BLACK_START_STAGES):
             self.black_start_stage += 1
             self.black_start_timer_s = 0.0
             if self.black_start_stage == len(self.BLACK_START_STAGES):
                 self.black_start_active = False
                 self.context.black_start_stage = "complete"
-                self.publish_event(
-                    "energy.bms.power_container.01", "black_start_completed", {}
-                )
+                self.publish_event("energy.bms.power_container.01", "black_start_completed", {})
 
     def _enter_black_start_stage(self, stage_name: str) -> None:
         if stage_name == "close_contactor":
@@ -576,9 +567,7 @@ class SimulatedSite:
         elif stage_name == "restore_general_loads":
             for asset_id in self.GENERAL_RESTORE_ORDER:
                 self.loads.restore_from_lockout(asset_id)
-        self.publish_event(
-            "energy.bms.power_container.01", "black_start_stage", {"stage": stage_name}
-        )
+        self.publish_event("energy.bms.power_container.01", "black_start_stage", {"stage": stage_name})
 
     # ------------------------------------------------------------------
     # energy balance
@@ -741,9 +730,7 @@ class SimulatedSite:
         """Decide whether the AC bus survived this step."""
         context = self.context
         was_energized = context.ac_bus_energized
-        energized = balance.ac_bus_energized and (
-            self.inverters.running_count() > 0 or self.generator.loaded
-        )
+        energized = balance.ac_bus_energized and (self.inverters.running_count() > 0 or self.generator.loaded)
         if energized and balance.unserved_kw > 0.25 * max(balance.load_kw, 1e-9):
             # More than a quarter of the load cannot be served: the bus collapses.
             energized = False
@@ -793,7 +780,7 @@ class SimulatedSite:
         dt_s: float = 5.0,
         speed: float | None = None,
         pacer: Pacer | None = None,
-        on_step: Callable[["SimulatedSite", EnergyBalance], None] | None = None,
+        on_step: Callable[[SimulatedSite, EnergyBalance], None] | None = None,
     ) -> SiteStats:
         """Run for ``duration_s`` of simulated time.
 

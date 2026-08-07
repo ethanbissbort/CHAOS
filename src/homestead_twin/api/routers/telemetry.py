@@ -68,7 +68,7 @@ class CurrentStateOut(BaseModel):
     alarm_state: str | None = None
 
     @classmethod
-    def from_row(cls, row: CurrentState, now: dt.datetime) -> "CurrentStateOut":
+    def from_row(cls, row: CurrentState, now: dt.datetime) -> CurrentStateOut:
         ts = as_utc(row.ts)
         return cls(
             point_id=row.point_id,
@@ -96,7 +96,7 @@ class SampleOut(BaseModel):
     source: str | None = None
 
     @classmethod
-    def from_row(cls, row: TelemetrySample) -> "SampleOut":
+    def from_row(cls, row: TelemetrySample) -> SampleOut:
         value: Any = row.value_numeric
         if value is None:
             value = row.value_bool if row.value_bool is not None else row.value_text
@@ -115,9 +115,7 @@ class HistoryOut(BaseModel):
     start: dt.datetime | None = None
     end: dt.datetime | None = None
     count: int
-    truncated: bool = Field(
-        default=False, description="True when older samples exist beyond `limit`."
-    )
+    truncated: bool = Field(default=False, description="True when older samples exist beyond `limit`.")
     samples: list[SampleOut]
 
 
@@ -236,9 +234,7 @@ def get_history(
     start: Annotated[dt.datetime | None, Query(description="Inclusive lower bound (UTC)")] = None,
     end: Annotated[dt.datetime | None, Query(description="Exclusive upper bound (UTC)")] = None,
     limit: Annotated[int, Query(ge=1, le=10000)] = 1000,
-    source: Annotated[
-        str | None, Query(description='Filter by source, e.g. "downsample:1min"')
-    ] = None,
+    source: Annotated[str | None, Query(description='Filter by source, e.g. "downsample:1min"')] = None,
 ) -> HistoryOut:
     """The most recent ``limit`` samples in range, returned oldest-first.
 
@@ -258,9 +254,7 @@ def get_history(
     if source:
         stmt = stmt.where(TelemetrySample.source == source)
 
-    rows = (
-        session.execute(stmt.order_by(TelemetrySample.ts.desc()).limit(limit + 1)).scalars().all()
-    )
+    rows = session.execute(stmt.order_by(TelemetrySample.ts.desc()).limit(limit + 1)).scalars().all()
     truncated = len(rows) > limit
     rows = list(reversed(rows[:limit]))
     return HistoryOut(
@@ -295,11 +289,7 @@ def list_dead_letters(
         stmt = stmt.where(IngestDeadLetter.topic.contains(topic))
     if reason:
         stmt = stmt.where(IngestDeadLetter.reason.contains(reason))
-    rows = (
-        session.execute(stmt.order_by(IngestDeadLetter.created_at.desc()).limit(limit))
-        .scalars()
-        .all()
-    )
+    rows = session.execute(stmt.order_by(IngestDeadLetter.created_at.desc()).limit(limit)).scalars().all()
     return [
         DeadLetterOut(
             id=row.id,
@@ -317,9 +307,7 @@ def get_stats(request: Request, session: DbSession) -> dict[str, Any]:
     """Ingest health for the operator UI and for ``/health`` style checks."""
     service = _ingest_service(request)
     quality_counts = dict(
-        session.execute(
-            select(CurrentState.quality, func.count()).group_by(CurrentState.quality)
-        ).all()
+        session.execute(select(CurrentState.quality, func.count()).group_by(CurrentState.quality)).all()
     )
     return {
         "ingest": service.stats() if service is not None else None,
@@ -329,15 +317,11 @@ def get_stats(request: Request, session: DbSession) -> dict[str, Any]:
             "current_state_rows": session.execute(
                 select(func.count()).select_from(CurrentState)
             ).scalar_one(),
-            "samples": session.execute(
-                select(func.count()).select_from(TelemetrySample)
-            ).scalar_one(),
+            "samples": session.execute(select(func.count()).select_from(TelemetrySample)).scalar_one(),
             "indexed_series": session.execute(
                 select(func.count()).select_from(PointSampleIndex)
             ).scalar_one(),
-            "dead_letters": session.execute(
-                select(func.count()).select_from(IngestDeadLetter)
-            ).scalar_one(),
+            "dead_letters": session.execute(select(func.count()).select_from(IngestDeadLetter)).scalar_one(),
             "quality": quality_counts,
         },
         "generated_at": utcnow(),
@@ -372,9 +356,7 @@ def simulate(
     result = writer.apply(session, envelope, source=SIMULATED_SOURCE)
     if not result.known_point:
         session.rollback()
-        raise HTTPException(
-            status.HTTP_404_NOT_FOUND, f"Unknown point: {envelope.point_id}"
-        )
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"Unknown point: {envelope.point_id}")
     _record_problems(session, envelope, result, principal.name)
     session.commit()
     return SimulateOut(
