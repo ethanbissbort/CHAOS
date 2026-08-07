@@ -12,3 +12,4 @@ windows/**/obj/
 windows/**/publish/
 windows/build/out/
 *.user
+windows/src/Chaos.Shell/.mono/

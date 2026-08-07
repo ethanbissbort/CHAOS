@@ -1,0 +1,295 @@
+using System.Diagnostics;
+using System.Net.Http;
+using Chaos.Shell.Core;
+using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Windowing;
+using Windows.Graphics;
+
+namespace Chaos.Shell;
+
+/// <summary>
+/// The operator console, hosted in WebView2 against the local gateway.
+///
+/// The window never shows an empty WebView2. It waits behind a gate panel until
+/// <c>/health</c> answers, and if the budget runs out it shows a diagnostic
+/// naming what was tried and what to do about it. A blank white window is the
+/// worst possible outcome for a control system: it says nothing about whether
+/// the platform is running.
+/// </summary>
+public sealed partial class MainWindow : Window
+{
+    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(4) };
+
+    private readonly App _app;
+    private readonly DispatcherQueue _dispatcher;
+    private readonly StartupSequence _startup;
+    private readonly CancellationTokenSource _closing = new();
+
+    private LinkStatus _link = LinkStatus.Connecting();
+    private AlarmCounts _counts = AlarmCounts.None;
+    private bool _consoleShown;
+
+    public MainWindow(App app)
+    {
+        _app = app;
+        _dispatcher = DispatcherQueue.GetForCurrentThread();
+        _startup = new StartupSequence(app.Endpoints.Health);
+
+        InitializeComponent();
+
+        Title = "Project CHAOS — Operator Console";
+        HostText.Text = app.Endpoints.BaseUri.ToString();
+
+        RestorePlacement();
+
+        Closed += OnClosed;
+
+        _ = RunStartupAsync();
+        _ = PollAsync();
+    }
+
+    private void RestorePlacement()
+    {
+        // WindowPlacementResolver refuses to restore onto a monitor that no
+        // longer exists; a window placed off-screen is indistinguishable from
+        // a shell that failed to start.
+        var monitors = MonitorEnumerator.Current();
+        if (monitors.Count == 0)
+        {
+            AppWindow.Resize(new SizeInt32(1440, 940));
+            return;
+        }
+
+        var resolved = WindowPlacementResolver.Resolve(
+            _app.Layout.Main, monitors, new ScreenRect(0, 0, 1440, 940));
+        var b = resolved.Bounds;
+        AppWindow.MoveAndResize(new RectInt32(b.Left, b.Top, b.Width, b.Height));
+    }
+
+    internal WindowPlacement? CurrentPlacement()
+    {
+        var pos = AppWindow.Position;
+        var size = AppWindow.Size;
+        return WindowPlacement.FromBounds(
+            new ScreenRect(pos.X, pos.Y, size.Width, size.Height));
+    }
+
+    internal void BringToFront()
+    {
+        AppWindow.Show();
+        if (AppWindow.Presenter is OverlappedPresenter p)
+        {
+            p.Restore();
+        }
+    }
+
+    // ------------------------------------------------------------ startup --
+
+    private async Task RunStartupAsync()
+    {
+        var attempt = 0;
+        var started = DateTimeOffset.UtcNow;
+        string? lastError = null;
+
+        while (!_closing.IsCancellationRequested)
+        {
+            var elapsed = DateTimeOffset.UtcNow - started;
+            var ok = await ProbeAsync().ConfigureAwait(true);
+            var decision = _startup.Next(attempt, elapsed, ok, lastError);
+
+            GateProgress.Value = decision.Fraction;
+            GateProgressText.Text = decision.Progress;
+
+            switch (decision.Action)
+            {
+                case StartupAction.Ready:
+                    ShowConsole();
+                    return;
+
+                case StartupAction.GiveUp:
+                    ShowDiagnostic(StartupDiagnostic.GatewayUnreachable(
+                        _app.Endpoints, attempt, elapsed, lastError, LogDirectory,
+                        ShellMessages.ServiceName));
+                    return;
+
+                case StartupAction.Wait:
+                    attempt++;
+                    try
+                    {
+                        await Task.Delay(decision.Delay, _closing.Token).ConfigureAwait(true);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        return;
+                    }
+                    break;
+
+                default:
+                    attempt++;
+                    break;
+            }
+
+            lastError = _link.LastError;
+        }
+    }
+
+    private async Task<bool> ProbeAsync()
+    {
+        try
+        {
+            using var response = await Http.GetAsync(_app.Endpoints.Health, _closing.Token)
+                .ConfigureAwait(true);
+            if (!response.IsSuccessStatusCode)
+            {
+                _link = LinkStatus.Offline(
+                    _link.LastContactUtc,
+                    $"HTTP {(int)response.StatusCode}",
+                    _link.ConsecutiveFailures + 1);
+                return false;
+            }
+
+            var body = await response.Content.ReadAsStringAsync(_closing.Token).ConfigureAwait(true);
+            PlatformHealth.TryRead(body, out var health, out _);
+            _link = LinkStatus.Online(DateTimeOffset.UtcNow, health?.Version);
+            return true;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _link = LinkStatus.Offline(
+                _link.LastContactUtc, ex.Message, _link.ConsecutiveFailures + 1);
+            return false;
+        }
+    }
+
+    private void ShowConsole()
+    {
+        if (_consoleShown)
+        {
+            return;
+        }
+
+        try
+        {
+            ConsoleView.Source = _app.Endpoints.Console;
+            ConsoleView.Visibility = Visibility.Visible;
+            GatePanel.Visibility = Visibility.Collapsed;
+            _consoleShown = true;
+        }
+        catch (Exception ex)
+        {
+            // Almost always the WebView2 runtime being absent. Say that, rather
+            // than failing with a COM error the operator cannot act on.
+            ShowDiagnostic(StartupDiagnostic.WebViewRuntimeMissing(_app.Endpoints, ex.Message));
+        }
+    }
+
+    private void ShowDiagnostic(StartupDiagnostic diagnostic)
+    {
+        GateTitle.Text = diagnostic.Title;
+        GateSummary.Text = diagnostic.Summary;
+        GateFacts.ItemsSource = diagnostic.Facts
+            .Select(f => $"{f.Label}: {f.Value}")
+            .ToList();
+        GateSteps.ItemsSource = diagnostic.NextSteps.ToList();
+        GateProgress.Visibility = Visibility.Collapsed;
+        RetryButton.Visibility = Visibility.Visible;
+        LogsButton.Visibility = Visibility.Visible;
+        GatePanel.Visibility = Visibility.Visible;
+        ConsoleView.Visibility = Visibility.Collapsed;
+    }
+
+    // --------------------------------------------------------------- poll --
+
+    /// <summary>
+    /// One poller for the whole shell. The tray renders whatever this last saw,
+    /// so the window and the tray icon can never disagree about platform state.
+    /// </summary>
+    private async Task PollAsync()
+    {
+        while (!_closing.IsCancellationRequested)
+        {
+            var ok = await ProbeAsync().ConfigureAwait(true);
+            if (ok)
+            {
+                await ReadAlarmsAsync().ConfigureAwait(true);
+            }
+
+            LinkText.Text = _link.Phase switch
+            {
+                LinkPhase.Online => $"linked · {_link.PlatformVersion ?? "version unknown"}",
+                LinkPhase.Connecting => "connecting…",
+                _ => $"NO CONTACT · {_link.LastError}",
+            };
+
+            _app.UpdateTray(_link, _counts);
+
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(5), _closing.Token).ConfigureAwait(true);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+        }
+    }
+
+    private async Task ReadAlarmsAsync()
+    {
+        try
+        {
+            var body = await Http.GetStringAsync(_app.Endpoints.ActiveAlarms, _closing.Token)
+                .ConfigureAwait(true);
+            if (AlarmSummaryReader.TryRead(body, out var counts, out _))
+            {
+                _counts = counts;
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // Leave the previous counts in place; the link status already says
+            // the data is not current, and zeroing them here would render as
+            // "no alarms" on the tray.
+        }
+    }
+
+    // ------------------------------------------------------------ commands --
+
+    private void OnReload(object sender, RoutedEventArgs e)
+    {
+        if (_consoleShown)
+        {
+            ConsoleView.Reload();
+        }
+    }
+
+    private void OnOpenAnnunciator(object sender, RoutedEventArgs e) => _app.ShowAnnunciator();
+
+    private void OnOpenInBrowser(object sender, RoutedEventArgs e) =>
+        Process.Start(new ProcessStartInfo(_app.Endpoints.Console.ToString()) { UseShellExecute = true });
+
+    private void OnRetry(object sender, RoutedEventArgs e)
+    {
+        RetryButton.Visibility = Visibility.Collapsed;
+        LogsButton.Visibility = Visibility.Collapsed;
+        GateProgress.Visibility = Visibility.Visible;
+        GateTitle.Text = "Starting Project CHAOS";
+        GateSummary.Text = "Waiting for the platform gateway to answer.";
+        GateFacts.ItemsSource = null;
+        GateSteps.ItemsSource = null;
+        _ = RunStartupAsync();
+    }
+
+    private static string LogDirectory =>
+        Environment.ExpandEnvironmentVariables(@"%ProgramData%\Project CHAOS\logs");
+
+    private void OnOpenLogs(object sender, RoutedEventArgs e) =>
+        Process.Start(new ProcessStartInfo(LogDirectory) { UseShellExecute = true });
+
+    private void OnClosed(object sender, WindowEventArgs args)
+    {
+        _closing.Cancel();
+        _app.SaveLayout();
+    }
+}
