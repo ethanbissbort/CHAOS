@@ -5,3 +5,10 @@ __pycache__/
 .pytest_cache/
 *.egg-info/
 node_modules/
+
+# .NET / Windows build output
+windows/**/bin/
+windows/**/obj/
+windows/**/publish/
+windows/build/out/
+*.user

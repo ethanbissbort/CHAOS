@@ -1,0 +1,19 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsNotAsErrors>NU1900</WarningsNotAsErrors>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <Product>Project CHAOS</Product>
+    <Company>Homestead</Company>
+    <Authors>Homestead</Authors>
+    <Version>0.5.0</Version>
+    <!-- The platform version this host is contracted against. The gateway
+         refuses to proxy to a backend reporting a different major/minor,
+         because a route-ownership table is only meaningful against a known
+         API surface. -->
+    <ChaosPlatformVersion>0.4.0</ChaosPlatformVersion>
+  </PropertyGroup>
+</Project>
