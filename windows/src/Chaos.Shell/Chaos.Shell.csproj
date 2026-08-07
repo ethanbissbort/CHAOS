@@ -36,8 +36,18 @@
     <IsPackable>false</IsPackable>
 
     <!-- Program.cs owns Main so that a second launch can be redirected to the
-         running instance before any XAML is created. -->
-    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+         running instance before any XAML is created.
+
+         The constant goes FIRST. Appending it as "$(DefineConstants);NAME"
+         yields a leading semicolon when DefineConstants is still empty, and the
+         XAML compiler does not reliably honour the constant in that form: it
+         then emits its own Program.Main into App.g.i.cs, which calls a
+         parameterless "new App()" that does not exist here.
+
+         StartupObject is set as well so that which Main runs is stated
+         explicitly rather than inferred. -->
+    <DefineConstants>DISABLE_XAML_GENERATED_MAIN;$(DefineConstants)</DefineConstants>
+    <StartupObject>Chaos.Shell.ShellEntryPoint</StartupObject>
   </PropertyGroup>
 
   <!--
@@ -73,6 +83,11 @@
     <OutputType>Library</OutputType>
     <EnableDefaultItems>false</EnableDefaultItems>
     <ApplicationManifest />
+
+    <!-- A library has no entry point, and specifying one is an error (CS2017).
+         Cleared here rather than made conditional above so the Windows path
+         keeps a single, unconditional declaration of its startup object. -->
+    <StartupObject />
 
     <!-- MSIX/PRI tooling shells out to makepri.exe, which is a Windows binary. -->
     <EnableMsixTooling>false</EnableMsixTooling>

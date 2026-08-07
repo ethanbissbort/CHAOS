@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using Chaos.Shell.Core;
 using Microsoft.UI.Dispatching;
 using Microsoft.Windows.AppLifecycle;
@@ -6,16 +5,23 @@ using Microsoft.Windows.AppLifecycle;
 namespace Chaos.Shell;
 
 /// <summary>
-/// Entry point. Owns <c>Main</c> rather than letting the XAML generator produce
-/// one (see DISABLE_XAML_GENERATED_MAIN in the csproj), because single-instance
-/// redirection has to happen BEFORE any XAML is created: a second launch must
-/// reach the running shell, not build a second one and then throw it away.
+/// Entry point.
+///
+/// Named ShellEntryPoint rather than Program on purpose: when
+/// DISABLE_XAML_GENERATED_MAIN is not in force, the XAML compiler emits its own
+/// <c>Chaos.Shell.Program</c> into App.g.i.cs, and a class of ours by that name
+/// collides with it. The csproj also names this type as StartupObject so there
+/// is never any ambiguity about which Main runs.
+///
+/// This owns Main because single-instance redirection has to happen BEFORE any
+/// XAML is created: a second launch must reach the running shell rather than
+/// build a second one and throw it away.
 ///
 /// The Windows App SDK bootstrapper is injected as a module initializer for an
-/// unpackaged WinExe, so it has already run by the time this method executes.
-/// Do not call Bootstrap.TryInitialize here as well.
+/// unpackaged WinExe, so it has already run by the time this executes. Do not
+/// call Bootstrap.TryInitialize here as well.
 /// </summary>
-public static class Program
+public static class ShellEntryPoint
 {
     [STAThread]
     public static int Main(string[] rawArgs)
@@ -37,11 +43,16 @@ public static class Program
 
         global::WinRT.ComWrappersSupport.InitializeComWrappers();
 
-        Microsoft.UI.Xaml.Application.Start(_ =>
+        // The callback parameter is deliberately NOT named "_": that would make
+        // any discard assignment inside the body assign to the parameter.
+        Microsoft.UI.Xaml.Application.Start(callbackParams =>
         {
             var context = new DispatcherQueueSynchronizationContext(
                 DispatcherQueue.GetForCurrentThread());
             SynchronizationContext.SetSynchronizationContext(context);
+
+            // Application.Start owns the instance's lifetime; it must not be
+            // assigned to anything here.
             _ = new App(options, instance);
         });
 
