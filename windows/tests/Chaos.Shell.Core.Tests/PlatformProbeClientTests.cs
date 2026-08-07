@@ -245,12 +245,74 @@ public sealed class PlatformProbeClientTests
     [Fact]
     public async Task A_setup_run_is_posted_to_the_documented_path()
     {
-        var handler = StubHandler.Returning(HttpStatusCode.Accepted, string.Empty);
+        var handler = StubHandler.Returning(HttpStatusCode.Accepted, """{"accepted":true}""");
         var result = await Client(handler).RunSetupAsync(Endpoints);
 
         Assert.True(result.Accepted);
         Assert.Equal(HttpMethod.Post, handler.Requests[0].Method);
         Assert.Equal("http://chaos-node:8080/host/setup/run", handler.Requests[0].RequestUri!.ToString());
+    }
+
+    [Fact]
+    public async Task A_refusal_arrives_as_HTTP_200_and_must_not_be_read_as_success()
+    {
+        // The gateway answers 202 when it started a run and 200 when it refused.
+        // Reading 2xx as success would tell an operator setup is running while
+        // the platform does nothing at all.
+        var result = await Client(StubHandler.Returning(
+                HttpStatusCode.OK,
+                """
+                {"accepted":false,"reason":"force_required",
+                 "detail":"Automatic setup is off; re-send with force=true."}
+                """))
+            .RunSetupAsync(Endpoints);
+
+        Assert.False(result.Accepted);
+        Assert.Contains("did not start setup", result.Message, StringComparison.Ordinal);
+        Assert.Contains("force=true", result.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Forcing_is_passed_on_the_query_string_only_when_asked_for()
+    {
+        var plain = StubHandler.Returning(HttpStatusCode.Accepted, """{"accepted":true}""");
+        await Client(plain).RunSetupAsync(Endpoints, force: false);
+        Assert.DoesNotContain("force", plain.Requests[0].RequestUri!.Query, StringComparison.Ordinal);
+
+        var forced = StubHandler.Returning(HttpStatusCode.Accepted, """{"accepted":true}""");
+        await Client(forced).RunSetupAsync(Endpoints, force: true);
+        Assert.Equal("?force=true", forced.Requests[0].RequestUri!.Query);
+    }
+
+    [Fact]
+    public async Task An_accepted_run_repeats_what_the_platform_said_about_it()
+    {
+        var result = await Client(StubHandler.Returning(
+                HttpStatusCode.Accepted,
+                """{"accepted":true,"detail":"Run 2 started from the shell."}"""))
+            .RunSetupAsync(Endpoints);
+
+        Assert.True(result.Accepted);
+        Assert.Contains("Run 2 started from the shell.", result.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task A_202_with_no_body_is_still_read_as_a_started_run()
+    {
+        var result = await Client(StubHandler.Returning(HttpStatusCode.Accepted, string.Empty))
+            .RunSetupAsync(Endpoints);
+
+        Assert.True(result.Accepted);
+    }
+
+    [Fact]
+    public async Task A_200_with_no_body_is_not_read_as_a_started_run()
+    {
+        var result = await Client(StubHandler.Returning(HttpStatusCode.OK, string.Empty))
+            .RunSetupAsync(Endpoints);
+
+        Assert.False(result.Accepted);
+        Assert.Contains("did not say why", result.Message, StringComparison.Ordinal);
     }
 
     [Fact]

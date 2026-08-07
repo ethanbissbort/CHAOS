@@ -40,6 +40,73 @@ public sealed class SetupSnapshotReaderTests
         Assert.False(snapshot.IsReady);
     }
 
+    /// <summary>
+    /// The body the gateway actually sends, field for field, including the ones
+    /// this shell did not originally expect.
+    /// </summary>
+    [Fact]
+    public void The_gateways_own_payload_shape_is_read()
+    {
+        var snapshot = SetupSnapshotReader.Read(
+            """
+            {
+              "state": "needs_attention",
+              "stateExplanation": "Setup completed but something needs a person to look at it.",
+              "summary": "The database is present but two points have no binding.",
+              "autoSetupEnabled": true,
+              "inProgress": false,
+              "setupRequired": true,
+              "runRequiresForce": true,
+              "steps": [
+                {"id": "database", "title": "Database", "state": "present",
+                 "stateExplanation": "Checked, and there.", "detail": "Opened var/chaos.db.",
+                 "count": null, "value": "sqlite:///var/chaos.db"},
+                {"id": "bindings", "title": "Bindings", "state": "partial",
+                 "stateExplanation": "Checked, and there but incomplete.", "detail": null,
+                 "count": 2, "value": null},
+                {"id": "load_schedule", "title": "Load schedule", "state": "absent",
+                 "stateExplanation": "Checked, and not there.", "detail": null}
+              ],
+              "failure": null
+            }
+            """);
+
+        Assert.Equal(SetupAvailability.Available, snapshot.Availability);
+        Assert.Equal(SetupState.NeedsAttention, snapshot.State);
+        Assert.True(snapshot.RunRequiresForce);
+        Assert.Equal("The database is present but two points have no binding.", snapshot.Summary);
+
+        Assert.Equal(new[] { "Database", "Bindings", "Load schedule" },
+            snapshot.Steps.Select(s => s.Label));
+
+        Assert.Equal(
+            new[] { SetupStepState.Ready, SetupStepState.Partial, SetupStepState.Absent },
+            snapshot.Steps.Select(s => s.State));
+
+        // A null detail falls back to the gateway's own sentence for the state,
+        // never to this shell's generic wording.
+        Assert.Equal("Checked, and there but incomplete.", snapshot.Steps[1].Detail);
+    }
+
+    [Theory]
+    [InlineData("unknown", SetupStepState.Unknown)]
+    [InlineData("absent", SetupStepState.Absent)]
+    [InlineData("partial", SetupStepState.Partial)]
+    [InlineData("present", SetupStepState.Ready)]
+    [InlineData("running", SetupStepState.Running)]
+    [InlineData("failed", SetupStepState.Failed)]
+    public void Every_step_state_in_the_gateways_vocabulary_is_understood(
+        string word, SetupStepState expected) =>
+        Assert.Equal(expected, SetupSnapshotReader.ParseStepState(word));
+
+    [Fact]
+    public void A_force_flag_the_gateway_did_not_send_is_read_as_not_required()
+    {
+        // Forcing a run the gateway wanted a human decision about is exactly
+        // what its guard exists to prevent, so absence never means "go ahead".
+        Assert.False(SetupSnapshotReader.Read("""{"state": "ready"}""").RunRequiresForce);
+    }
+
     [Theory]
     [InlineData("not_started", SetupState.NotStarted)]
     [InlineData("checking", SetupState.Checking)]

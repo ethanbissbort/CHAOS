@@ -45,6 +45,19 @@ public sealed record HostEndpoints
     /// <summary>Triggers or retries first-run setup. POST.</summary>
     public Uri RunSetup => new(BaseUri, "host/setup/run");
 
+    /// <summary>
+    /// The setup-run URL, optionally forced.
+    /// </summary>
+    /// <remarks>
+    /// The gateway refuses an ordinary run when automatic setup is off or when
+    /// it assessed the database as needing a human decision, and only
+    /// <c>?force=true</c> gets past that. Forcing is never inferred by the
+    /// shell: it is passed only when the setup report itself said it was
+    /// required, because that guard exists to stop a run nobody chose.
+    /// </remarks>
+    public Uri RunSetupUrl(bool force) =>
+        force ? new(BaseUri, "host/setup/run?force=true") : RunSetup;
+
     /// <summary>OpenAPI docs, offered from the Help menu.</summary>
     public Uri ApiDocs => new(BaseUri, "docs");
 

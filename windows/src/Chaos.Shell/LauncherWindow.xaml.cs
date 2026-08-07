@@ -197,7 +197,7 @@ public sealed partial class LauncherWindow : Window
     /// </summary>
     private void MaybeOpenConsole(LauncherView view)
     {
-        if (_operatorInteracted || view.Phase != LauncherPhase.Ready)
+        if (_operatorInteracted || !view.SafeToAdvanceUnattended)
         {
             return;
         }
@@ -608,11 +608,21 @@ public sealed partial class LauncherWindow : Window
 
     private async Task RunSetupAsync()
     {
-        Busy("Asking the platform to run first-run setup.");
+        // Force only when the gateway's own report said an ordinary run would
+        // be refused. The shell never decides to override that guard by itself.
+        var force = _setup.RunRequiresForce;
+
+        Busy(force
+            ? "Asking the platform to run setup, overriding its own guard because its report says a "
+              + "plain request would be refused."
+            : "Asking the platform to run first-run setup.");
 
         try
         {
-            var result = await _app.Probe.RunSetupAsync(_app.Endpoints, _closing.Token).ConfigureAwait(true);
+            var result = await _app.Probe
+                .RunSetupAsync(_app.Endpoints, force, _closing.Token)
+                .ConfigureAwait(true);
+
             _lastActionMessage = result.Message;
         }
         finally

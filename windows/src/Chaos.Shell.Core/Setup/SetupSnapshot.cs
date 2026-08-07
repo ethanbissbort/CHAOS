@@ -45,6 +45,15 @@ public enum SetupStepState
     /// <summary>In progress.</summary>
     Running = 2,
 
+    /// <summary>
+    /// Checked, and definitely not there. Distinct from
+    /// <see cref="Pending"/>: the host looked, rather than not having got to it.
+    /// </summary>
+    Absent = 7,
+
+    /// <summary>Checked, and there but incomplete or inconsistent.</summary>
+    Partial = 8,
+
     /// <summary>Done.</summary>
     Ready = 3,
 
@@ -121,6 +130,14 @@ public sealed record SetupSnapshot
 
     /// <summary>The host's own one-line summary, when it sent one.</summary>
     public string? Summary { get; init; }
+
+    /// <summary>
+    /// The gateway will refuse a plain run request and needs <c>?force=true</c>.
+    /// It reports this itself; the shell never guesses at it, because forcing a
+    /// run the gateway wanted a human decision about is exactly the thing the
+    /// guard exists to prevent.
+    /// </summary>
+    public bool RunRequiresForce { get; init; }
 
     /// <summary>True only when the platform positively said it is set up.</summary>
     public bool IsReady => Availability == SetupAvailability.Available && State == SetupState.Ready;
@@ -228,7 +245,14 @@ public static class SetupSnapshotReader
                 State = ParseState(raw),
                 RawState = raw,
                 Steps = steps,
-                Summary = FirstString(root, "summary", "detail", "message", "description"),
+                Summary = FirstString(
+                    root, "summary", "stateExplanation", "detail", "message", "description"),
+
+                // The gateway refuses an ordinary run when automatic setup is
+                // off, or when it assessed the database as needing a human
+                // decision. It says so here rather than making the shell infer
+                // it, and the shell passes force only when told to.
+                RunRequiresForce = ReadBool(root, "runRequiresForce") ?? false,
                 Problem = null,
             };
         }
@@ -247,12 +271,22 @@ public static class SetupSnapshotReader
         _ => SetupState.Unknown,
     };
 
-    /// <summary>Maps a step state word. Anything unrecognised is Unknown, never Ready.</summary>
+    /// <summary>
+    /// Maps a step state word. Anything unrecognised is Unknown, never Ready.
+    /// </summary>
+    /// <remarks>
+    /// The gateway's own vocabulary is <c>unknown | absent | partial | present |
+    /// running | failed</c>. The extra words accepted here are the obvious
+    /// synonyms, so a later rename on the host side degrades to "I don't know"
+    /// rather than to a wrong answer.
+    /// </remarks>
     public static SetupStepState ParseStepState(string? value) => Normalize(value) switch
     {
+        "absent" or "missing" or "not_present" => SetupStepState.Absent,
+        "partial" or "incomplete" or "inconsistent" => SetupStepState.Partial,
         "pending" or "not_started" or "notstarted" or "waiting" or "queued" => SetupStepState.Pending,
         "running" or "in_progress" or "inprogress" or "checking" => SetupStepState.Running,
-        "ready" or "ok" or "complete" or "completed" or "done" or "present" => SetupStepState.Ready,
+        "present" or "ready" or "ok" or "complete" or "completed" or "done" => SetupStepState.Ready,
         "failed" or "error" or "fault" => SetupStepState.Failed,
         "needs_attention" or "needsattention" or "attention" or "warning" or "degraded"
             => SetupStepState.NeedsAttention,
@@ -326,11 +360,17 @@ public static class SetupSnapshotReader
         // derives: the host knows what it is actually checking.
         var label = FirstString(element, "label", "title", "displayName", "name") ?? Humanize(id);
 
+        // "stateExplanation" is the gateway's own sentence for the state word.
+        // It is taken when there is no step-specific detail, so a row never
+        // falls back to this shell's generic wording while the host had
+        // something better to say.
         return new SetupStep(
             id,
             label,
             ParseStepState(FirstString(element, "state", "status", "result")),
-            FirstString(element, "detail", "explanation", "message", "description", "reason")
+            FirstString(
+                element, "detail", "explanation", "message", "description", "reason",
+                "stateExplanation")
                 ?? string.Empty);
     }
 
@@ -436,6 +476,16 @@ public static class SetupSnapshotReader
         value = default;
         return false;
     }
+
+    private static bool? ReadBool(JsonElement root, string name) =>
+        root.TryGetProperty(name, out var element)
+            ? element.ValueKind switch
+            {
+                JsonValueKind.True => true,
+                JsonValueKind.False => false,
+                _ => null,
+            }
+            : null;
 
     private static string? FirstString(JsonElement root, params string[] names)
     {

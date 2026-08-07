@@ -538,6 +538,74 @@ public sealed class LauncherStateMachineTests
     }
 
     [Fact]
+    public void The_launcher_only_gets_out_of_the_way_when_everything_checked_out()
+    {
+        // The common case: one double-click, and the operator lands on the
+        // console without touching anything.
+        Assert.True(LauncherStateMachine.Evaluate(Facts.New(
+            gateway: Facts.Answering(),
+            service: Facts.Service(PlatformServiceState.Running),
+            setup: Facts.SetupSaying("ready"))).SafeToAdvanceUnattended);
+    }
+
+    [Fact]
+    public void A_host_too_old_to_report_setup_still_gets_out_of_the_way()
+    {
+        // A known gap with a known explanation is not a reason to stop an
+        // operator at a start screen every morning.
+        Assert.True(LauncherStateMachine.Evaluate(Facts.New(
+            gateway: Facts.Answering(),
+            setup: SetupSnapshot.Absent("HTTP 404"))).SafeToAdvanceUnattended);
+    }
+
+    [Fact]
+    public void An_anomaly_the_shell_cannot_explain_keeps_the_operator_on_the_start_screen()
+    {
+        // Hiding an unexplained reading behind a console that looks fine is
+        // the one thing this screen exists to prevent.
+        foreach (var setup in new[]
+        {
+            SetupSnapshot.Unreadable("not JSON"),
+            SetupSnapshot.NotChecked,
+            Facts.SetupSaying("halfway-ish"),
+        })
+        {
+            var view = LauncherStateMachine.Evaluate(Facts.New(
+                gateway: Facts.Answering(), setup: setup));
+
+            Assert.Equal(LauncherPhase.Ready, view.Phase);
+            Assert.False(view.SafeToAdvanceUnattended);
+        }
+    }
+
+    [Fact]
+    public void Nothing_advances_unattended_from_any_phase_but_ready()
+    {
+        foreach (var facts in EveryInterestingCase())
+        {
+            var view = LauncherStateMachine.Evaluate(facts);
+            if (view.SafeToAdvanceUnattended)
+            {
+                Assert.Equal(LauncherPhase.Ready, view.Phase);
+                Assert.True(view.ConsoleIsUsable);
+            }
+        }
+    }
+
+    [Fact]
+    public void A_setup_state_the_shell_cannot_read_stops_it_sending_a_setup_command()
+    {
+        var view = LauncherStateMachine.Evaluate(Facts.New(
+            gateway: Facts.Answering(),
+            setup: Facts.SetupSaying("halfway-ish")));
+
+        var run = view.Offer(LauncherAction.RunSetup)!;
+        Assert.Equal(ActionAvailability.Unavailable, run.Availability);
+        Assert.Contains("does not recognise", run.Reason, StringComparison.Ordinal);
+        Assert.Contains("halfway-ish", run.Reason, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Setup_cannot_be_run_while_the_platform_is_unreachable()
     {
         var view = LauncherStateMachine.Evaluate(Facts.New(

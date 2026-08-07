@@ -35,7 +35,7 @@ public static class LauncherStateMachine
 
         var plan = PlatformStartPlanner.Plan(facts);
         var setup = SetupPresenter.Present(facts.Setup);
-        var checks = BuildChecks(facts, plan);
+        var checks = BuildChecks(facts, plan, setup);
         var phase = Phase(facts, plan);
         var banner = RunModeBanner.For(
             facts.RunMode, facts.Settings.ServiceName, facts.Endpoints.BaseUri.ToString());
@@ -54,8 +54,30 @@ public static class LauncherStateMachine
             ShowProgress: facts.ActionInProgress
                 || phase is LauncherPhase.Checking or LauncherPhase.Starting or LauncherPhase.SettingUp,
             ConsoleIsUsable: facts.Gateway.Reachable,
-            Notices: Notices(facts));
+            Notices: Notices(facts))
+        {
+            SafeToAdvanceUnattended = phase == LauncherPhase.Ready && MayAdvance(facts),
+        };
     }
+
+    /// <summary>
+    /// Whether the one unverified thing, if any, is a gap this shell
+    /// understands.
+    /// </summary>
+    private static bool MayAdvance(LauncherFacts facts) => facts.Setup.Availability switch
+    {
+        // Verified set up.
+        SetupAvailability.Available => facts.Setup.State == SetupState.Ready,
+
+        // A gateway older than this shell cannot report setup. That is a known
+        // gap with a known explanation, and it is not a reason to keep an
+        // operator on a start screen every morning.
+        SetupAvailability.NotSupportedByHost => true,
+
+        // Unreadable, unreachable or not yet asked: something is odd, and the
+        // screen that says so stays up.
+        _ => false,
+    };
 
     // ------------------------------------------------------------------ phase --
 
@@ -105,7 +127,8 @@ public static class LauncherStateMachine
 
     // ----------------------------------------------------------------- checks --
 
-    private static IReadOnlyList<LauncherCheck> BuildChecks(LauncherFacts facts, PlatformStartPlan plan)
+    private static IReadOnlyList<LauncherCheck> BuildChecks(
+        LauncherFacts facts, PlatformStartPlan plan, SetupView setup)
     {
         var address = facts.Endpoints.BaseUri.ToString();
 
@@ -115,7 +138,7 @@ public static class LauncherStateMachine
             ServiceCheck(facts),
             ExecutableCheck(facts, plan),
             BackendCheck(facts),
-            SetupCheck(facts),
+            SetupCheck(setup),
         };
     }
 
@@ -242,9 +265,8 @@ public static class LauncherStateMachine
         };
     }
 
-    private static LauncherCheck SetupCheck(LauncherFacts facts)
+    private static LauncherCheck SetupCheck(SetupView view)
     {
-        var view = SetupPresenter.Present(facts.Setup);
         return new LauncherCheck(
             LauncherCheckId.Setup,
             "First-run setup",
@@ -486,7 +508,12 @@ public static class LauncherStateMachine
         _ when facts.Setup.IsBusy =>
             "Setup is already running on the platform.",
 
-        _ => "Running setup is not available in this state.",
+        // Available, but the platform used a state word this shell does not
+        // know. Sending it a run command whose effect cannot be reasoned about
+        // is worse than saying so.
+        _ => "The platform reported a setup state this shell does not recognise"
+            + (facts.Setup.RawState is { Length: > 0 } word ? $" ('{word}')" : string.Empty)
+            + ", so the shell will not send it a setup command.",
     };
 
     private static LauncherActionOffer ConsoleOffer(

@@ -178,9 +178,14 @@ public static class SetupPresenter
             SetupStepState.Ready => CheckState.Pass,
             SetupStepState.Skipped => CheckState.NotApplicable,
             SetupStepState.Running => CheckState.Checking,
-            SetupStepState.Pending => CheckState.Pending,
+
+            // Absent is a definite "not there", which during setup is a step
+            // still to do rather than a fault. The overall state decides
+            // whether that is acceptable; the row does not editorialise.
+            SetupStepState.Absent or SetupStepState.Pending => CheckState.Pending,
+
             SetupStepState.Failed => CheckState.Fail,
-            SetupStepState.NeedsAttention => CheckState.Warn,
+            SetupStepState.Partial or SetupStepState.NeedsAttention => CheckState.Warn,
             _ => CheckState.Unknown,
         },
         string.IsNullOrWhiteSpace(step.Detail)
@@ -191,6 +196,8 @@ public static class SetupPresenter
     {
         SetupStepState.Ready => "Done. The platform did not say more.",
         SetupStepState.Pending => "Not started yet.",
+        SetupStepState.Absent => "Checked, and not there yet.",
+        SetupStepState.Partial => "Checked, and there but incomplete.",
         SetupStepState.Running => "In progress.",
         SetupStepState.Failed => "Failed. The platform did not say why — check the platform log.",
         SetupStepState.NeedsAttention =>

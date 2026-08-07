@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json;
 
 namespace Chaos.Shell.Core;
 
@@ -144,18 +145,36 @@ public sealed class PlatformProbeClient
         }
     }
 
-    /// <summary>Asks the platform to run or retry setup via <c>POST /host/setup/run</c>.</summary>
+    /// <summary>
+    /// Asks the platform to run or retry setup via <c>POST /host/setup/run</c>.
+    /// </summary>
+    /// <remarks>
+    /// The gateway answers 202 when it started a run and <b>200 when it
+    /// refused</b>, with <c>accepted:false</c> and a reason. Reading a 2xx as
+    /// success would report "setup is running" to an operator standing in front
+    /// of a platform that is doing nothing, so the body decides, not the status
+    /// code.
+    /// </remarks>
+    /// <param name="endpoints">Where the gateway is.</param>
+    /// <param name="force">
+    /// Whether to pass <c>?force=true</c>. Only ever set from the setup
+    /// report's own <c>runRequiresForce</c>.
+    /// </param>
+    /// <param name="cancellationToken">Cancellation.</param>
     public async Task<SetupRunResult> RunSetupAsync(
         HostEndpoints endpoints,
+        bool force = false,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(endpoints);
+
+        var url = endpoints.RunSetupUrl(force);
 
         try
         {
             using var content = new StringContent(string.Empty);
             using var response = await _http
-                .PostAsync(endpoints.RunSetup, content, cancellationToken)
+                .PostAsync(url, content, cancellationToken)
                 .ConfigureAwait(false);
 
             if (response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed
@@ -169,22 +188,19 @@ public sealed class PlatformProbeClient
                     HostTooOld: true);
             }
 
-            if (response.IsSuccessStatusCode)
-            {
-                return new SetupRunResult(
-                    Accepted: true,
-                    "The platform accepted the setup request. Progress is shown above as it reports it.",
-                    HostTooOld: false);
-            }
-
             var body = await response.Content
                 .ReadAsStringAsync(cancellationToken)
                 .ConfigureAwait(false);
 
+            if (response.IsSuccessStatusCode)
+            {
+                return ReadRunBody(body, (int)response.StatusCode);
+            }
+
             return new SetupRunResult(
                 Accepted: false,
                 $"The platform refused the setup request with HTTP {(int)response.StatusCode}"
-                + (string.IsNullOrWhiteSpace(body) ? "." : $": {Trim(body)}"),
+                + (string.IsNullOrWhiteSpace(body) ? "." : $": {ReasonFrom(body) ?? Trim(body)}"),
                 HostTooOld: false);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -201,6 +217,87 @@ public sealed class PlatformProbeClient
             return new SetupRunResult(Accepted: false, message, HostTooOld: false);
         }
     }
+
+    /// <summary>
+    /// Reads the run response. The <c>accepted</c> flag is the answer; a body
+    /// that does not carry one is treated as accepted only when the gateway
+    /// answered 202, which is the status it uses for "a run has started".
+    /// </summary>
+    private static SetupRunResult ReadRunBody(string body, int statusCode)
+    {
+        bool? accepted = null;
+        string? reason = null;
+
+        if (!string.IsNullOrWhiteSpace(body))
+        {
+            try
+            {
+                using var document = JsonDocument.Parse(body);
+                if (document.RootElement.ValueKind == JsonValueKind.Object)
+                {
+                    var root = document.RootElement;
+
+                    if (root.TryGetProperty("accepted", out var flag))
+                    {
+                        accepted = flag.ValueKind switch
+                        {
+                            JsonValueKind.True => true,
+                            JsonValueKind.False => false,
+                            _ => null,
+                        };
+                    }
+
+                    reason = Text(root, "detail") ?? Text(root, "reason");
+                }
+            }
+            catch (JsonException)
+            {
+                // Fall through to the status-code reading below.
+            }
+        }
+
+        var started = accepted ?? statusCode == 202;
+
+        if (started)
+        {
+            return new SetupRunResult(
+                Accepted: true,
+                reason is { Length: > 0 }
+                    ? $"The platform accepted the setup request: {reason} Progress is shown above as "
+                      + "it reports it."
+                    : "The platform accepted the setup request. Progress is shown above as it "
+                      + "reports it.",
+                HostTooOld: false);
+        }
+
+        return new SetupRunResult(
+            Accepted: false,
+            reason is { Length: > 0 }
+                ? $"The platform did not start setup: {reason}"
+                : "The platform did not start setup, and did not say why. Check the setup state "
+                  + "above and the platform log.",
+            HostTooOld: false);
+    }
+
+    private static string? ReasonFrom(string body)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(body);
+            return document.RootElement.ValueKind == JsonValueKind.Object
+                ? Text(document.RootElement, "detail") ?? Text(document.RootElement, "reason")
+                : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static string? Text(JsonElement root, string name) =>
+        root.TryGetProperty(name, out var element) && element.ValueKind == JsonValueKind.String
+            ? element.GetString()?.Trim()
+            : null;
 
     /// <summary>
     /// The innermost message of an exception chain. <c>HttpRequestException</c>

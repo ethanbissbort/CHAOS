@@ -192,6 +192,20 @@ public sealed record LauncherView(
     /// <summary>The button this screen is asking for, if any.</summary>
     public LauncherActionOffer? Primary => Actions.FirstOrDefault(a => a.IsPrimary);
 
+    /// <summary>
+    /// Whether the launcher may replace itself with the console without anyone
+    /// asking it to.
+    /// </summary>
+    /// <remarks>
+    /// Set by <see cref="LauncherStateMachine"/> only when everything that
+    /// could be verified was, or when the one thing that could not be verified
+    /// is a known, benign gap — a gateway too old to report setup state. An
+    /// anomaly the shell cannot explain keeps the operator on this screen,
+    /// where the anomaly is written down, instead of hiding it behind a console
+    /// that looks fine.
+    /// </remarks>
+    public bool SafeToAdvanceUnattended { get; init; }
+
     /// <summary>Finds an offer, for the window's click handlers.</summary>
     public LauncherActionOffer? Offer(LauncherAction action) =>
         Actions.FirstOrDefault(a => a.Action == action);
