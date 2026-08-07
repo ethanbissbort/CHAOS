@@ -453,12 +453,10 @@ class CorrelationEngine:
             )
             if len(members) <= threshold:
                 continue
+            # The earliest member anchors the flood incident. Re-parenting is done
+            # against the *live* parent_of map, so merges compose.
             ordered = sorted(members, key=lambda a: (as_utc(a.detected_at), a.id))
-            anchor = next(
-                (m for m in ordered if parent_of.get(root_of(m.id)) is None), None
-            )
-            if anchor is None:
-                continue
+            anchor = ordered[0]
             anchor_root = root_of(anchor.id)
             window = self._settings_for(anchor)["window_s"]
             for member in ordered:

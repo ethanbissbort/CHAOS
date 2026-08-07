@@ -70,6 +70,8 @@ services:
     <<: [*restart, *logging]
     environment:
       TZ: ${TZ:-America/Toronto}
+      MQTT_HEALTH_USER: ${SECONDARY_MQTT_HEALTH_USER:-}
+      MQTT_HEALTH_PASSWORD: ${SECONDARY_MQTT_HEALTH_PASSWORD:-}
     volumes:
       - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
       - secondary-mosquitto-config:/mosquitto/config/local
@@ -79,9 +81,16 @@ services:
       - "${SECONDARY_BIND_ADDRESS:-127.0.0.1}:${SECONDARY_MQTT_PORT:-1883}:1883"
       - "${SECONDARY_BIND_ADDRESS:-127.0.0.1}:${SECONDARY_MQTT_TLS_PORT:-8883}:8883"
     healthcheck:
+      # See the note in docker-compose.yml: an unauthenticated probe is refused
+      # by a correctly configured broker, so this uses the health identity when
+      # one exists and falls back to process liveness when it does not.
       test:
         - CMD-SHELL
-        - "mosquitto_sub -h 127.0.0.1 -p 1883 -t '$$SYS/broker/uptime' -C 1 -W 3 >/dev/null"
+        - >-
+          if [ -n "$${MQTT_HEALTH_USER}" ]; then
+          mosquitto_sub -h 127.0.0.1 -p 1883 -t '$$SYS/broker/uptime' -C 1 -W 3
+          -u "$${MQTT_HEALTH_USER}" -P "$${MQTT_HEALTH_PASSWORD}" >/dev/null;
+          else pidof mosquitto >/dev/null; fi
       interval: 30s
       timeout: 10s
       retries: 5
