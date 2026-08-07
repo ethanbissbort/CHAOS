@@ -65,6 +65,8 @@ internal sealed class ChaosHostOptionsValidator : IValidateOptions<ChaosHostOpti
             failures.Add($"Chaos:BackendHealthPath must be an absolute path starting with '/'; got '{options.BackendHealthPath}'.");
         }
 
+        ValidateDocs(failures, options);
+
         RequirePositive(failures, nameof(ChaosHostOptions.SetupTimeout), options.SetupTimeout);
         RequirePositive(failures, nameof(ChaosHostOptions.SetupProbeTimeout), options.SetupProbeTimeout);
         RequirePositive(failures, nameof(ChaosHostOptions.SetupCommandTimeout), options.SetupCommandTimeout);
@@ -80,6 +82,58 @@ internal sealed class ChaosHostOptionsValidator : IValidateOptions<ChaosHostOpti
         return failures.Count == 0
             ? ValidateOptionsResult.Success
             : ValidateOptionsResult.Fail(failures);
+    }
+
+    /// <summary>
+    /// The documentation listener. Its settings are validated here rather than
+    /// left to fail at bind time, because a documentation listener that silently
+    /// does not come up is a manual nobody can read during the outage it was
+    /// written for.
+    /// </summary>
+    private static void ValidateDocs(List<string> failures, ChaosHostOptions options)
+    {
+        var docs = options.Docs;
+        if (docs is null)
+        {
+            failures.Add("Chaos:Docs must not be null.");
+            return;
+        }
+
+        if (!docs.Enabled)
+        {
+            return;
+        }
+
+        if (!Uri.TryCreate(docs.ListenUrl, UriKind.Absolute, out var url))
+        {
+            failures.Add(
+                $"Chaos:Docs:ListenUrl must be an absolute URL; got '{docs.ListenUrl}'. "
+              + $"The default is '{DocumentationOptions.DefaultListenUrl}'. Set Chaos:Docs:Enabled=false to turn "
+              + "the documentation listener off instead.");
+            return;
+        }
+
+        if (url.Scheme is not ("http" or "https"))
+        {
+            failures.Add($"Chaos:Docs:ListenUrl must use http or https; got scheme '{url.Scheme}'.");
+        }
+
+        // Two listeners in one process cannot share a port, and Kestrel's error
+        // for it arrives late and reads like a machine problem rather than a
+        // configuration one. Port 0 is exempt: it means "any free port", so two
+        // of them never collide.
+        foreach (var listen in options.ListenUrl.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (Uri.TryCreate(listen, UriKind.Absolute, out var gateway)
+                && gateway.Port == url.Port
+                && url.Port != 0)
+            {
+                failures.Add(
+                    $"Chaos:Docs:ListenUrl uses port {url.Port}, which Chaos:ListenUrl ('{listen}') is already "
+                  + "bound to. The documentation is served on a SEPARATE port on purpose: it carries no API, no "
+                  + "proxy and no write endpoints, and that separation is what makes its URL safe to hand out.");
+            }
+        }
     }
 
     private static void RequirePositive(List<string> failures, string property, TimeSpan value)

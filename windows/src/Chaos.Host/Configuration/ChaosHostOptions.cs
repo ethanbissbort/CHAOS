@@ -47,6 +47,13 @@ public sealed class ChaosHostOptions
     public string? WebRootPath { get; set; }
 
     /// <summary>
+    /// The documentation listener — the offline manuals, on their own port
+    /// (8090 by default), with no API, no proxy and no write endpoints. See
+    /// <see cref="DocumentationOptions"/>.
+    /// </summary>
+    public DocumentationOptions Docs { get; set; } = new();
+
+    /// <summary>
     /// How long a single proxied request may take end to end, including
     /// response streaming. Default 100 seconds, matching
     /// <see cref="HttpClient"/>'s default so behaviour is not surprising.

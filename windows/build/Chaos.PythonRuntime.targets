@@ -1,0 +1,255 @@
+<Project>
+
+  <!--
+    ===========================================================================
+    Build the embedded Python runtime from Visual Studio.
+
+    The owner does not use a command line. Until this file existed, producing
+    the interpreter that ships inside the product meant opening PowerShell and
+    running
+
+        windows\build\build.ps1 -Task runtime
+
+    by hand. These targets do that from a build instead, so "Build" in Visual
+    Studio is the whole procedure.
+
+    THIS FILE DOES NOT REIMPLEMENT ANY OF IT. python-runtime.ps1 and
+    verify-runtime.ps1 next to this file are the implementation; they are
+    carefully written, they explain themselves, and they are the same scripts
+    the release build calls. Everything here is scheduling: when to call them,
+    how to decide they do not need calling, and how to turn a failure into an
+    error in the Error List instead of a stack trace in a console nobody has
+    open.
+
+    HOW IT STAYS OUT OF THE WAY
+    ===========================
+    Building the runtime downloads roughly 55 MB and takes two to five minutes.
+    Doing that on every F5 would be intolerable, so the target is incremental
+    against real Inputs and Outputs:
+
+        Inputs  : the scripts, the pinned download manifest, requirements.txt,
+                  pyproject.toml and the Python sources that get installed into
+                  the tree.
+        Outputs : the built interpreter itself, plus a stamp file.
+
+    If every output exists and is newer than every input, MSBuild skips the
+    target entirely and the build is instant. Delete the tree, change a
+    dependency or edit a build script and it rebuilds. The generated
+    documentation under src/chaos/web/docs is deliberately NOT an input: it is
+    written by another target in this same build, and a rebuild of the manual
+    must never trigger a rebuild of the interpreter.
+
+    HOW TO FORCE IT, WITHOUT A TERMINAL
+    ===================================
+    Right-click Chaos.Runtime in Solution Explorer and choose REBUILD. Rebuild
+    deletes the stamps (see the BeforeRebuild target at the bottom), so the
+    runtime is rebuilt from scratch — python-runtime.ps1 is always invoked with
+    -Force, which deletes the existing tree first — and verified afterwards.
+
+    Plain "Clean" deliberately leaves the runtime alone. Clean Solution is a
+    reflex for many people and it must not cost five minutes and a download.
+
+    OFF WINDOWS
+    ===========
+    Skipped entirely. The scripts run python.exe and assert Windows themselves;
+    a repository-wide `dotnet build` on Linux stays green and says plainly that
+    this step was not run.
+    ===========================================================================
+  -->
+
+  <PropertyGroup>
+    <!-- windows/build/ -> windows/ -> repository root. -->
+    <ChaosBuildDir Condition="'$(ChaosBuildDir)' == ''">$(MSBuildThisFileDirectory)</ChaosBuildDir>
+    <ChaosRepoRoot Condition="'$(ChaosRepoRoot)' == ''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..'))</ChaosRepoRoot>
+
+    <!-- Mirrors Get-ChaosPaths in Chaos.Build.psm1: everything the build
+         produces lives under windows/build/out/, which .gitignore excludes. -->
+    <ChaosBuildOutDir Condition="'$(ChaosBuildOutDir)' == ''">$(ChaosBuildDir)out\</ChaosBuildOutDir>
+    <ChaosStageDir Condition="'$(ChaosStageDir)' == ''">$(ChaosBuildOutDir)stage\</ChaosStageDir>
+
+    <!-- <install root>\python\python.exe is a contract with the supervisor;
+         see the layout block in Chaos.Build.psm1. This is the staging copy of
+         exactly that path.
+
+         Held without a trailing slash, because it is passed to PowerShell as a
+         quoted argument and a trailing backslash immediately before a closing
+         quote escapes the quote. The slashed form is derived from it. -->
+    <ChaosPythonRuntimePath Condition="'$(ChaosPythonRuntimePath)' == ''">$(ChaosStageDir)python</ChaosPythonRuntimePath>
+    <ChaosPythonRuntimeDir>$([MSBuild]::EnsureTrailingSlash('$(ChaosPythonRuntimePath)'))</ChaosPythonRuntimeDir>
+    <ChaosPythonExe Condition="'$(ChaosPythonExe)' == ''">$(ChaosPythonRuntimeDir)python.exe</ChaosPythonExe>
+
+    <ChaosPythonRuntimeStamp Condition="'$(ChaosPythonRuntimeStamp)' == ''">$(ChaosBuildOutDir)python-runtime.stamp</ChaosPythonRuntimeStamp>
+    <ChaosPythonRuntimeVerifiedStamp Condition="'$(ChaosPythonRuntimeVerifiedStamp)' == ''">$(ChaosBuildOutDir)python-runtime.verified.stamp</ChaosPythonRuntimeVerifiedStamp>
+
+    <!-- Windows PowerShell 5.1 - the shell you get by pressing Start and typing
+         "powershell", and the one every script in this folder is written
+         against. Overridable with -p:ChaosPowerShell=pwsh.exe. -->
+    <ChaosPowerShell Condition="'$(ChaosPowerShell)' == ''">powershell.exe</ChaosPowerShell>
+
+    <!--
+      The master switch. True on Windows; never on anything else.
+
+      Set it to false in Chaos.Runtime.csproj (double-click the project in
+      Solution Explorer to edit it) to work on the .NET side of the product on a
+      machine with no internet, or when you simply do not want the interpreter
+      rebuilt. Unchecking Chaos.Runtime in Build > Configuration Manager has the
+      same effect and needs no file edited at all.
+    -->
+    <ChaosBuildPythonRuntime Condition="'$(ChaosBuildPythonRuntime)' == ''">$([MSBuild]::IsOSPlatform('Windows'))</ChaosBuildPythonRuntime>
+    <ChaosVerifyPythonRuntime Condition="'$(ChaosVerifyPythonRuntime)' == ''">$(ChaosBuildPythonRuntime)</ChaosVerifyPythonRuntime>
+
+    <!-- Exec reports a failing command as MSB3073 as well as through the
+         explicit, actionable <Error> below. One error in the Error List is
+         worth more than one error and one warning that say the same thing. -->
+    <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3073</MSBuildWarningsAsMessages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      What the runtime tree is built FROM. Changing any of these means the tree
+      on disk no longer matches the sources it was built from.
+    -->
+    <ChaosPythonRuntimeInput Include="$(ChaosBuildDir)python-runtime.ps1" />
+    <ChaosPythonRuntimeInput Include="$(ChaosBuildDir)python-runtime.lock.json" />
+    <ChaosPythonRuntimeInput Include="$(ChaosBuildDir)Chaos.Build.psm1" />
+    <ChaosPythonRuntimeInput Include="$(ChaosBuildDir)relocate-launchers.py" />
+    <ChaosPythonRuntimeInput Include="$(ChaosBuildDir)verify-runtime.py" />
+    <ChaosPythonRuntimeInput Include="$(ChaosRepoRoot)requirements.txt" />
+    <ChaosPythonRuntimeInput Include="$(ChaosRepoRoot)pyproject.toml" />
+
+    <!-- The chaos package is pip-installed into the tree, and src/chaos/web is
+         copied in on top of it. The generated documentation lives under that
+         web folder and is excluded: it is an output of this same build. -->
+    <ChaosPythonRuntimeInput Include="$(ChaosRepoRoot)src\chaos\**\*.py" />
+    <ChaosPythonRuntimeInput Include="$(ChaosRepoRoot)src\chaos\web\**\*"
+                             Exclude="$(ChaosRepoRoot)src\chaos\web\docs\**\*" />
+  </ItemGroup>
+
+  <!--
+    ===========================================================================
+    Build the runtime.
+    ===========================================================================
+  -->
+  <Target Name="ChaosBuildPythonRuntime"
+          BeforeTargets="Build"
+          Condition="'$(ChaosBuildPythonRuntime)' == 'true'"
+          Inputs="@(ChaosPythonRuntimeInput)"
+          Outputs="$(ChaosPythonRuntimeStamp);$(ChaosPythonExe)">
+
+    <Message Importance="high" Text=" " />
+    <Message Importance="high" Text="Project CHAOS: building the embedded Python runtime." />
+    <Message Importance="high" Text="  This downloads about 55 MB and takes two to five minutes. It runs when the" />
+    <Message Importance="high" Text="  tree is missing or out of date, and is SKIPPED on every build after that." />
+    <Message Importance="high" Text="  destination: $(ChaosPythonRuntimeDir)" />
+    <Message Importance="high" Text="  script     : $(ChaosBuildDir)python-runtime.ps1" />
+    <Message Importance="high" Text=" " />
+
+    <MakeDir Directories="$(ChaosBuildOutDir)" />
+
+    <!--
+      -Force because the script refuses to overwrite an existing tree without
+      it, and a rebuild here always means "replace what is there". The script
+      verifies the result itself before it returns.
+    -->
+    <Exec Command="&quot;$(ChaosPowerShell)&quot; -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(ChaosBuildDir)python-runtime.ps1&quot; -Force"
+          WorkingDirectory="$(ChaosBuildDir)"
+          StandardOutputImportance="high"
+          StandardErrorImportance="high"
+          IgnoreStandardErrorWarningFormat="true"
+          ContinueOnError="true">
+      <Output TaskParameter="ExitCode" PropertyName="ChaosPythonRuntimeExitCode" />
+    </Exec>
+
+    <!--
+      File= makes this a double-clickable entry in the Error List: it opens the
+      script that failed. The output above it is the script's own diagnosis,
+      which is written to be read.
+    -->
+    <Error Condition="'$(ChaosPythonRuntimeExitCode)' != '0'"
+           Code="CHAOS0001"
+           File="$(ChaosBuildDir)python-runtime.ps1"
+           Text="The embedded Python runtime could not be built (exit code $(ChaosPythonRuntimeExitCode)). The output above this error is python-runtime.ps1's own explanation; every failure it raises names its likely cause. The usual ones are: no outbound HTTPS on this machine (the build downloads a pinned CPython and pinned wheels; the installed product never downloads anything), or a new dependency with no Windows wheel. To keep working on the .NET side without it, set ChaosBuildPythonRuntime to false in Chaos.Runtime.csproj, or uncheck Chaos.Runtime in Build &gt; Configuration Manager." />
+
+    <Touch Files="$(ChaosPythonRuntimeStamp)" AlwaysCreate="true" />
+
+    <!-- Freshly built means freshly verified: python-runtime.ps1 runs
+         verify-runtime.py itself as its last step. Record that so the
+         verification target below does not immediately repeat it. -->
+    <Touch Files="$(ChaosPythonRuntimeVerifiedStamp)" AlwaysCreate="true" />
+
+    <Message Importance="high" Text="Project CHAOS: embedded Python runtime is current at $(ChaosPythonRuntimeDir)" />
+  </Target>
+
+  <!--
+    ===========================================================================
+    Verify the runtime.
+
+    verify-runtime.ps1 is the "did it work?" command: it runs the checks with
+    the interpreter under test and names the likely cause of every failure. It
+    needs no network and no .NET build.
+
+    It runs here whenever the tree is newer than the last verification, which in
+    practice means once per runtime build and never again — so an ordinary
+    build pays nothing for it. To run it deliberately, REBUILD Chaos.Runtime:
+    that clears the stamps and rebuilds and re-verifies from scratch, which is
+    also what verify-runtime.ps1 itself recommends when a check fails ("rebuild
+    rather than repair").
+    ===========================================================================
+  -->
+  <Target Name="ChaosVerifyPythonRuntime"
+          AfterTargets="ChaosBuildPythonRuntime"
+          Condition="'$(ChaosVerifyPythonRuntime)' == 'true' AND Exists('$(ChaosPythonExe)')"
+          Inputs="$(ChaosPythonExe)"
+          Outputs="$(ChaosPythonRuntimeVerifiedStamp)">
+
+    <Message Importance="high" Text="Project CHAOS: verifying the embedded Python runtime at $(ChaosPythonRuntimeDir)" />
+
+    <Exec Command="&quot;$(ChaosPowerShell)&quot; -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(ChaosBuildDir)verify-runtime.ps1&quot; -Path &quot;$(ChaosPythonRuntimePath)&quot;"
+          WorkingDirectory="$(ChaosBuildDir)"
+          StandardOutputImportance="high"
+          StandardErrorImportance="high"
+          IgnoreStandardErrorWarningFormat="true"
+          ContinueOnError="true">
+      <Output TaskParameter="ExitCode" PropertyName="ChaosVerifyExitCode" />
+    </Exec>
+
+    <Error Condition="'$(ChaosVerifyExitCode)' != '0'"
+           Code="CHAOS0002"
+           File="$(ChaosBuildDir)verify-runtime.ps1"
+           Text="The embedded Python runtime at $(ChaosPythonRuntimeDir) failed verification (exit code $(ChaosVerifyExitCode)). The [FAIL] lines above name the likely cause of each failure. Do not package a tree that fails this: right-click Chaos.Runtime in Solution Explorer and choose Rebuild to build it again from scratch." />
+
+    <Touch Files="$(ChaosPythonRuntimeVerifiedStamp)" AlwaysCreate="true" />
+  </Target>
+
+  <!--
+    ===========================================================================
+    Rebuild = force.
+
+    BeforeRebuild is part of $(RebuildDependsOn) and runs for Rebuild only -
+    never for a plain Build and never for a plain Clean. Hooked with
+    AfterTargets rather than by defining BeforeRebuild here, because the common
+    targets define an empty BeforeRebuild of their own and whichever definition
+    is imported last would win; this way import order cannot matter.
+
+    Deleting the stamps is all it takes: the targets above then see a missing
+    output and run, and python-runtime.ps1 -Force replaces the tree.
+
+    Clean is left alone on purpose. Nothing this project produces lives in
+    bin/obj, and a Clean Solution that silently threw away a 55 MB download
+    would be a trap.
+    ===========================================================================
+  -->
+  <Target Name="ChaosForcePythonRuntimeRebuild" AfterTargets="BeforeRebuild">
+    <Message Importance="high"
+             Text="Project CHAOS: Rebuild requested - the embedded Python runtime will be built again from scratch and re-verified." />
+    <Delete Files="$(ChaosPythonRuntimeStamp);$(ChaosPythonRuntimeVerifiedStamp)" />
+  </Target>
+
+  <Target Name="ChaosPythonRuntimeNotBuiltHere"
+          BeforeTargets="Build"
+          Condition="'$(ChaosBuildPythonRuntime)' != 'true'">
+    <Message Importance="high"
+             Text="Project CHAOS: the embedded Python runtime was NOT built (ChaosBuildPythonRuntime=$(ChaosBuildPythonRuntime)). It requires Windows; on Windows it is built by building this project." />
+  </Target>
+
+</Project>

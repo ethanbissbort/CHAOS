@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "CHAOS Gateway (8080)": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "http://localhost:8080",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "CHAOS_ListenUrl": "http://0.0.0.0:8080",
+        "CHAOS_Docs__Enabled": "false"
+      }
+    },
+
+    "CHAOS Gateway + Documentation (8080 + 8090)": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "http://localhost:8080",
+      "launchUrl": "http://localhost:8090/",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "CHAOS_ListenUrl": "http://0.0.0.0:8080",
+        "CHAOS_Docs__Enabled": "true",
+        "CHAOS_Docs__ListenUrl": "http://0.0.0.0:8090"
+      }
+    },
+
+    "CHAOS Gateway + Documentation (this PC only)": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "http://localhost:8080",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "CHAOS_ListenUrl": "http://127.0.0.1:8080",
+        "CHAOS_Docs__Enabled": "true",
+        "CHAOS_Docs__ListenUrl": "http://127.0.0.1:8090"
+      }
+    },
+
+    "CHAOS Gateway, no first-run setup (8080)": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "http://localhost:8080",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "CHAOS_ListenUrl": "http://0.0.0.0:8080",
+        "CHAOS_AutoSetup": "false",
+        "CHAOS_Docs__Enabled": "false"
+      }
+    }
+  }
+}

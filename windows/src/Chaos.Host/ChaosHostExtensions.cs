@@ -1,5 +1,6 @@
 using Chaos.Host.Abstractions;
 using Chaos.Host.Configuration;
+using Chaos.Host.Docs;
 using Chaos.Host.Endpoints;
 using Chaos.Host.Health;
 using Chaos.Host.Proxy;
@@ -66,7 +67,18 @@ public static class ChaosHostExtensions
         builder.Services.AddSingleton<BackendHealthState>();
         builder.Services.AddSingleton<BackendForwarder>();
 
-        builder.Services.AddSingleton(WebRootResolver.Resolve(options, builder.Environment.ContentRootPath));
+        var webRoot = WebRootResolver.Resolve(options, builder.Environment.ContentRootPath);
+        builder.Services.AddSingleton(webRoot);
+
+        // The documentation site is resolved here, not when the listener starts,
+        // so /host/info can report where the gateway looked even in a process
+        // where the listener never runs.
+        var documentationRoot = DocumentationRootResolver.Resolve(
+            options.Docs,
+            webRoot,
+            builder.Environment.ContentRootPath);
+        builder.Services.AddSingleton(documentationRoot);
+        builder.Services.AddSingleton(new DocumentationSiteState(options.Docs, documentationRoot));
 
         builder.Services.AddHttpForwarder();
         builder.Services
@@ -96,11 +108,16 @@ public static class ChaosHostExtensions
         //     SetupHostedService - so the shell can poll /host/setup and watch;
         //  3. start the backend (if a supervisor is registered);
         //  4. start polling the backend.
+        //  5. start the documentation listener last. It is a second, read-only
+        //     listener on its own port and nothing else in this process depends
+        //     on it, so it goes at the back of the queue and cannot delay
+        //     anything that matters more.
         builder.Services.AddHostedService<RouteOwnershipStartupCheck>();
         builder.Services.AddPlatformSetup();
         builder.Services.TryAddSingleton<IBackendSupervisor, NullBackendSupervisor>();
         builder.Services.AddHostedService<Supervision.BackendSupervisorHost>();
         builder.Services.AddHostedService<BackendHealthMonitor>();
+        builder.Services.AddHostedService<DocumentationSiteHost>();
 
         WindowsServiceIntegration.AddWindowsServiceIfAvailable(builder);
 

@@ -1,5 +1,6 @@
 using Chaos.Host.Abstractions;
 using Chaos.Host.Configuration;
+using Chaos.Host.Docs;
 using Chaos.Host.Health;
 using Chaos.Host.Http;
 using Chaos.Host.Routing;
@@ -240,6 +241,7 @@ public static class HostEndpoints
         var table = services.GetRequiredService<RouteOwnershipTable>();
         var supervisor = services.GetRequiredService<IBackendSupervisor>();
         var webRoot = services.GetRequiredService<WebRootResolution>();
+        var documentation = services.GetRequiredService<DocumentationSiteState>();
         var health = services.GetRequiredService<BackendHealthState>();
         var report = BackendHealthReport.Create(health, options, DateTimeOffset.UtcNow);
         var snapshot = report.Snapshot;
@@ -280,6 +282,10 @@ public static class HostEndpoints
                 source = webRoot.Source,
                 searched = webRoot.SearchedPaths,
             },
+
+            // Where the manuals are. The shell and the console link to this, so
+            // an operator never has to remember a second port number.
+            documentation = DocumentationPayload.Create(documentation, context.Request.Host),
             windowsService = new
             {
                 running = WindowsServiceIntegration.IsRunningAsWindowsService(),
@@ -347,6 +353,8 @@ public static class HostEndpoints
             notOwnedByTheManifest = new[]
             {
                 "/ and /ui/** - the operator console, served from this host's static-file pipeline.",
+                "The documentation site - a SEPARATE listener on its own port (see documentation on /host/info). "
+              + "It is not reachable through this listener at all, so no manifest row could describe it.",
             },
         });
     }
