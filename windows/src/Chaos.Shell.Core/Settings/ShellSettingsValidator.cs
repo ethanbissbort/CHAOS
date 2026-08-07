@@ -163,7 +163,7 @@ public static class ShellSettingsValidator
             problems.Add(new SettingsProblem(
                 SettingsField.ServiceName,
                 "A Windows service name cannot contain a slash. This is the service name "
-                + "(for example ChaosPlatform), not a path."));
+                + "(for example ChaosHost), not a path."));
         }
     }
 

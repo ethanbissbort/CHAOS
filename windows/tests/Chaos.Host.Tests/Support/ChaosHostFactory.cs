@@ -56,6 +56,8 @@ internal sealed class ChaosHostFactory : WebApplicationFactory<Program>
             // database - the opposite of hermetic. Setup has its own factory
             // (SetupHostFactory) that injects a fake command runner instead.
             _settings["Chaos:AutoSetup"] = "false";
+            // Never launch a real interpreter from a test host.
+            _settings["Chaos:SuperviseBackend"] = "false";
 
             // Keep the "starting" grace window short so backend-down states are
             // reached immediately instead of after a minute.

@@ -1,4 +1,7 @@
+extern alias ChaosSupervisor;
+
 using Chaos.Host.Abstractions;
+using ChaosSupervisor::Chaos.Host.Supervisor;
 using Chaos.Host.Configuration;
 using Chaos.Host.Docs;
 using Chaos.Host.Endpoints;
@@ -114,6 +117,29 @@ public static class ChaosHostExtensions
         //     anything that matters more.
         builder.Services.AddHostedService<RouteOwnershipStartupCheck>();
         builder.Services.AddPlatformSetup();
+
+        // The real supervisor must be registered BEFORE the TryAdd below, which
+        // is a fallback and not a default: TryAdd keeps whatever is already
+        // there. Without this call the gateway would register
+        // NullBackendSupervisor, start nothing, and proxy /api/v1 to a port
+        // with no listener -- a console that loads and then answers nothing.
+        if (options.SuperviseBackend)
+        {
+            builder.Services.AddChaosBackendSupervisor(
+                builder.Configuration.GetSection(BackendSupervisorOptions.SectionName),
+                supervisor =>
+                {
+                    // The gateway owns where the backend listens, because it is
+                    // the thing that proxies to it. Two places naming that
+                    // address would eventually disagree.
+                    if (Uri.TryCreate(options.BackendUrl, UriKind.Absolute, out var backend))
+                    {
+                        supervisor.BindAddress = backend.Host;
+                        supervisor.Port = backend.Port;
+                    }
+                });
+        }
+
         builder.Services.TryAddSingleton<IBackendSupervisor, NullBackendSupervisor>();
         builder.Services.AddHostedService<Supervision.BackendSupervisorHost>();
         builder.Services.AddHostedService<BackendHealthMonitor>();

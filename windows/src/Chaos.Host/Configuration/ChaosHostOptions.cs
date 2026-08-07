@@ -158,6 +158,29 @@ public sealed class ChaosHostOptions
     public bool AutoSetup { get; set; } = true;
 
     /// <summary>
+    /// Whether the gateway launches and supervises the Python backend as a
+    /// child process. <b>On by default</b>, because the gateway proxies
+    /// <c>/api/v1</c> to that backend and without it there is nothing behind
+    /// the console: the product's whole promise is that starting the desktop
+    /// shell is sufficient.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Turn it off (<c>CHAOS_SuperviseBackend=false</c>) when the backend is
+    /// started by something else — a developer running it under a debugger, or
+    /// a node where it is managed separately. With it off the gateway keeps
+    /// proxying to <see cref="BackendUrl"/>, it simply does not start or stop
+    /// whatever is listening there, and <c>/health</c> reports the backend from
+    /// probing alone.
+    /// </para>
+    /// <para>
+    /// Tests turn it off so that constructing a host never launches a real
+    /// interpreter.
+    /// </para>
+    /// </remarks>
+    public bool SuperviseBackend { get; set; } = true;
+
+    /// <summary>
     /// The platform database, as a SQLAlchemy URL — for example
     /// <c>sqlite:///C:/ProgramData/Project CHAOS/homestead.db</c>. Empty means
     /// "whatever the platform's own default is", which the gateway then reports

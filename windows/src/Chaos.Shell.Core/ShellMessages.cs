@@ -14,7 +14,15 @@ namespace Chaos.Shell.Core;
 public static class ShellMessages
 {
     /// <summary>Default name of the supervising Windows service.</summary>
-    public const string ServiceName = "ChaosPlatform";
+    /// <remarks>
+    /// This MUST match <c>ChaosServiceName</c> in
+    /// <c>windows/installer/Chaos.Definitions.wxi</c>, which is what actually
+    /// registers the service. It previously read "ChaosPlatform" while the
+    /// installer registered "ChaosHost", so <see cref="System.ServiceProcess"/>
+    /// found nothing and the launcher reported an installed, running service as
+    /// not installed -- then offered to start the platform a second time.
+    /// </remarks>
+    public const string ServiceName = "ChaosHost";
 
     /// <summary>Balloon shown the first time the main window is closed to tray.</summary>
     public const string HiddenToTrayTitle = "Project CHAOS is still running";
