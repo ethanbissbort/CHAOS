@@ -48,7 +48,9 @@ jobs:
         run: python -m pip install -r requirements.txt
 
       - name: Validate schemas and cross-references
-        run: python tools/validate_bundle.py
+        # --no-report keeps CI read-only: the tracked report carries a
+        # timestamp, so writing it would leave every run with a dirty tree.
+        run: python tools/validate_bundle.py --no-report
 
   test:
     name: Tests (Python ${{ matrix.python-version }})

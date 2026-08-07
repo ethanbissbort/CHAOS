@@ -658,10 +658,19 @@ def cmd_validate(args: argparse.Namespace) -> int:
             ),
         )
 
+    # Validating is a read-only check, so by default it does not rewrite the
+    # tracked validation_report.json -- otherwise `make ci` and every test run
+    # would leave a dirty working tree over nothing but a changed timestamp.
+    # Pass --write-report to refresh it deliberately.
+    argv = [sys.executable, str(script)]
+    argv.append("--report" if getattr(args, "write_report", False) else "--no-report")
+    if getattr(args, "write_report", False):
+        argv.append(str(root / "validation_report.json"))
+
     # Fixed argv, no shell. check=False because the validator's non-zero exit is
     # the expected failure signal and is turned into a CommandError below.
     process = subprocess.run(
-        [sys.executable, str(script)],
+        argv,
         cwd=str(root),
         capture_output=True,
         text=True,
@@ -1216,6 +1225,14 @@ def build_parser() -> argparse.ArgumentParser:
         "validate",
         help="Validate the design package against its JSON Schemas.",
         description="Run tools/validate_bundle.py: schema checks plus cross-reference checks.",
+    )
+    validate.add_argument(
+        "--write-report",
+        action="store_true",
+        help=(
+            "Refresh the tracked validation_report.json. Off by default so that "
+            "validating never dirties the working tree."
+        ),
     )
     validate.set_defaults(func=cmd_validate)
 

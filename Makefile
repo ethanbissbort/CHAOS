@@ -63,6 +63,9 @@ format: ## Apply ruff formatting and autofixes
 	$(RUFF) format src tests
 
 validate: ## Validate the machine-readable design package against its schemas
+	$(PYTHON) tools/validate_bundle.py --no-report
+
+validate-report: ## Validate and refresh the tracked validation_report.json
 	$(PYTHON) tools/validate_bundle.py
 
 # --- Platform --------------------------------------------------------------
