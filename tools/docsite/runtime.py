@@ -105,7 +105,7 @@ SITE_JS = r"""
 
   /* Single-file build: every document is an <article> in this one page, and
      the hash is "slug" or "slug__heading-anchor". */
-  function showPage(slug, anchor, push) {
+  function showPage(slug, anchor, push, moveFocus) {
     var target = pageBySlug(slug) ? slug : (PAGES[0] ? PAGES[0].s : "");
     if (!target) { return; }
     $$(".doc-page").forEach(function (page) {
@@ -130,8 +130,16 @@ SITE_JS = r"""
     var focus = anchor ? doc.getElementById(target + "__" + anchor) : null;
     if (focus) { focus.scrollIntoView({ behavior: "auto", block: "start" }); }
     else { window.scrollTo({ top: 0, left: 0, behavior: "auto" }); }
-    var main = $("#content");
-    if (main && typeof main.focus === "function") { main.focus({ preventScroll: true }); }
+    /* Focus follows a NAVIGATION, never the initial load. Taking focus on load
+       would put the caret inside <main> before the reader has pressed anything,
+       and the first Tab would then skip straight past the skip link, the
+       document list and the search field — the opposite of what those exist
+       for. On an actual page change, moving focus is what tells a screen
+       reader the document changed. */
+    if (moveFocus) {
+      var main = $("#content");
+      if (main && typeof main.focus === "function") { main.focus({ preventScroll: true }); }
+    }
   }
 
   function routeFromHash() {
@@ -144,10 +152,10 @@ SITE_JS = r"""
 
   if (SINGLE) {
     var route = routeFromHash();
-    showPage(route.page, route.anchor, false);
+    showPage(route.page, route.anchor, false, false);
     on(window, "hashchange", function () {
       var next = routeFromHash();
-      showPage(next.page, next.anchor, false);
+      showPage(next.page, next.anchor, false, true);
     });
   } else {
     var active = doc.body.getAttribute("data-page");
@@ -345,7 +353,7 @@ SITE_JS = r"""
         if (SINGLE) {
           event.preventDefault();
           closeSearch();
-          showPage(page.s, record.a, true);
+          showPage(page.s, record.a, true, true);
         } else {
           closeSearch();
         }
