@@ -11,8 +11,12 @@ namespace Chaos.Host.Supervisor.Tests;
 /// </summary>
 public sealed class PythonRuntimeResolverTests
 {
-    private const string InstallRoot = "/opt/chaos";
-    private const string RepositoryRoot = "/home/dev/homestead-twin";
+    // Normalised through Path() like every other path here. Left unnormalised
+    // these are POSIX roots, and on Windows the resolver then joins a "/"-rooted
+    // string to "\"-separated tails: "/opt/chaos\python\bin\python3". The
+    // resolver is right and the expectation was wrong.
+    private static readonly string InstallRoot = Path("/opt/chaos");
+    private static readonly string RepositoryRoot = Path("/home/dev/homestead-twin");
 
     [Fact]
     public void The_embedded_runtime_wins_when_it_is_present()
@@ -130,7 +134,7 @@ public sealed class PythonRuntimeResolverTests
             .Resolve(new BackendSupervisorOptions
             {
                 InstallRoot = InstallRoot,
-                RepositoryRoot = "/wrong/place",
+                RepositoryRoot = Path("/wrong/place"),
             });
 
         Assert.False(resolution.Succeeded);
