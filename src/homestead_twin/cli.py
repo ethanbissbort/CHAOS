@@ -658,11 +658,14 @@ def cmd_validate(args: argparse.Namespace) -> int:
             ),
         )
 
-    process = subprocess.run(  # noqa: S603 - fixed argv, no shell
+    # Fixed argv, no shell. check=False because the validator's non-zero exit is
+    # the expected failure signal and is turned into a CommandError below.
+    process = subprocess.run(
         [sys.executable, str(script)],
         cwd=str(root),
         capture_output=True,
         text=True,
+        check=False,
     )
     if process.stdout:
         sys.stdout.write(process.stdout)
@@ -1364,7 +1367,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     except KeyboardInterrupt:  # pragma: no cover - interactive
         print(f"{PROG}: interrupted", file=sys.stderr)
         return 130
-    except Exception as exc:  # noqa: BLE001 - the CLI is the last line of defence
+    except Exception as exc:  # the CLI is the last line of defence: never a traceback
         LOG.debug("Unhandled exception in %s", getattr(args, "command", "?"), exc_info=True)
         print(f"{PROG}: error: {type(exc).__name__}: {exc}", file=sys.stderr)
         print(f"{PROG}: hint: re-run with --log-level DEBUG for a traceback.", file=sys.stderr)

@@ -323,9 +323,9 @@ the identity that owns that asset prefix.
 | 3 | Remote-access architecture: VPN product, MFA provider, offsite backup target | SDD open decision 22.9 |
 | 4 | TLS: private CA, certificate issuance and rotation for brokers and gateways | Deployment decision; broker config is ready |
 | 5 | Network AAA: TACACS+/RADIUS versus local accounts on switches and router | Not yet raised in the SDD |
-| 6 | Inverter, BMS and generator protocols and ports | SDD open decision 22.6 — the register records `modbus_tcp_or_vendor_api_TBD` |
+| 6 | Inverter, BMS and generator protocols and ports | SDD open decision 22.6 — the register records `modbus_tcp_or_vendor_api_TBD`. Related: `docs/design-decisions/DD-004-controller-family.md` |
 | 7 | Voice signalling: SCCP versus SIP | Register records `SCCP_or_SIP_TBD` |
-| 8 | Whether the secondary control node should be in `SERVERS` at all | SDD open decision 22.13 |
+| 8 | Whether the secondary control node should be in `SERVERS` at all | SDD open decision 22.13; `docs/design-decisions/DD-003-secondary-control-node-placement.md` (status *proposed*) |
 | 9 | Intra-zone isolation within `AUTOMATION` | Depends on switch capability and port assignment |
 | 10 | DNS policy per zone (`open_fields` on every VLAN asset) | Pi-hole deployment |
 

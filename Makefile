@@ -138,5 +138,9 @@ distclean: clean ## Also remove the local database and exports under var/
 	rm -rf var/homestead.db var/homestead.db-wal var/homestead.db-shm var/export.json
 
 # --- CI --------------------------------------------------------------------
-ci: validate lint test ## Everything CI runs, minus the image build
-	@echo "CI checks passed."
+# The gating checks, matching .github/workflows/ci.yml. Lint is deliberately not
+# here: it is advisory in CI while subsystems land in parallel, and a target that
+# claims to mirror CI while failing on a formatting nit would be a lie. Run
+# `make lint` separately.
+ci: validate test ## Run the checks that gate CI (validate + tests)
+	@echo "CI checks passed. Run 'make lint' separately -- lint is advisory in CI."

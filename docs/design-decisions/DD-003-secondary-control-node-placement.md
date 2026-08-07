@@ -227,6 +227,9 @@ does not select a computer.
 
 ## Related records
 
+- [`docs/secondary-control-node.md`](../secondary-control-node.md) — what the node runs, what it can and cannot do
+  during a container loss, and how its read-only role is enforced. That document specifies the node's *behaviour*;
+  this record decides its *location*, which §6 of that document lists as its first open decision.
 - [DD-001](DD-001-energy-capacity-revision.md) — battery capacity determines how severe the common-mode risk is.
 - [DD-004](DD-004-controller-family.md) — local controllers are the other half of the §16.1 mitigation, and they
   matter more than the node when the container is lost.

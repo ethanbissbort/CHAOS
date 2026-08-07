@@ -41,7 +41,13 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from homestead_twin.alarms.definitions import definition_meta
-from homestead_twin.alarms.evaluator import ACTIVE_STATES, as_utc, elapsed_s, severity_rank
+from homestead_twin.alarms.evaluator import (
+    ACTIVE_STATES,
+    SuppressionReason,
+    as_utc,
+    elapsed_s,
+    severity_rank,
+)
 from homestead_twin.config import Settings, get_settings
 from homestead_twin.models.alarms import Alarm, AlarmDefinition, Incident, NotificationLog
 from homestead_twin.models.base import utcnow
@@ -390,10 +396,9 @@ class Notifier:
         if root is None:
             return result
 
-        # An incident whose alarms are all suppressed for maintenance stays silent,
-        # but the alarms and this decision are still recorded.
-        from homestead_twin.alarms.evaluator import SuppressionReason
-
+        # An incident whose alarms are *all* suppressed by maintenance mode or a
+        # declared suppression condition stays silent. The alarms and the reason
+        # are still recorded; only the message is withheld (SDD 11).
         if all(
             SuppressionReason.kind(m.suppression_reason)
             in (SuppressionReason.MAINTENANCE, SuppressionReason.CONDITION)
@@ -405,6 +410,7 @@ class Notifier:
         definition = self.definitions.get(root.alarm_key)
         anchor = root.activated_at or root.detected_at
         acknowledged = any(m.state in ("acknowledged", "mitigated") for m in members)
+        before = result.dispatches
         self._notify_target(
             subject=f"[{incident.severity.upper()}] {incident.title}",
             body=self._incident_body(incident, root, members, definition),
@@ -424,8 +430,8 @@ class Notifier:
                 "procedure_ref": definition.procedure_ref if definition else None,
             },
         )
-        for member in members:
-            if not member.notified:
+        if result.dispatches > before:
+            for member in members:
                 member.notified = True
         return result
 
@@ -439,6 +445,7 @@ class Notifier:
             return result
         definition = self.definitions.get(alarm.alarm_key)
         anchor = alarm.activated_at or alarm.detected_at
+        before = result.dispatches
         self._notify_target(
             subject=f"[{alarm.severity.upper()}] {alarm.message or alarm.alarm_key}",
             body=self._alarm_body(alarm, definition),
@@ -457,7 +464,8 @@ class Notifier:
                 "procedure_ref": definition.procedure_ref if definition else None,
             },
         )
-        alarm.notified = True
+        if result.dispatches > before:
+            alarm.notified = True
         return result
 
     def _notify_target(

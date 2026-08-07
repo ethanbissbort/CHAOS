@@ -13,6 +13,7 @@ from pathlib import Path
 
 import pytest
 
+from homestead_twin.envelope import CommandEnvelope
 from simulator.clock import (
     DEFAULT_START,
     RealTimePacer,
@@ -37,16 +38,13 @@ from simulator.components.generator import (
 )
 from simulator.components.inverter import InverterConfig, InverterFarm
 from simulator.components.loads import CONNECTED, LOCKED_OUT, SHED, LoadBank
-from simulator.components.rack import RackConfig, ServerRack
+from simulator.components.rack import ServerRack
 from simulator.components.solar import (
     SolarArray,
-    SolarConfig,
     clear_sky_poa_w_m2,
     cloud_attenuation,
 )
 from simulator.components.weather import Weather, WeatherConfig
-
-from homestead_twin.envelope import CommandEnvelope
 
 UTC = dt.timezone.utc
 
@@ -1009,6 +1007,52 @@ class TestRack:
         assert values["it.rack.power_container.01/smoke_active"] is True
         assert values["it.rack.power_container.01/alarm_summary"] == "critical"
         assert values["safety.alarm_output.rack_01.beacon_01/state_operating"] == "active"
+
+    def test_network_devices_report_reachability_and_health(self, catalog):
+        rack = ServerRack(catalog)
+        context = SiteContext()
+        values = self._run(rack, context, 300)
+        rack.validate(values)
+        assert values["it.switch.rack_01.catalyst_2960x_01/availability_state"] == "online"
+        assert values["it.switch.rack_01.catalyst_2960x_01/port_up_count"] > 0
+        assert values["it.switch.rack_01.arista_7050qx_01/temperature_c"] > 0
+        assert values["it.router.rack_01.isr4321_01/wan_state"] == "up"
+        assert values["it.wireless_controller.rack_01.wlc5508_01/ap_online_count"] == 5
+
+    def test_losing_the_wan_leaves_voice_internal_only(self, catalog):
+        """SDD 39 EMS-T001: the internet is not part of local control."""
+        rack = ServerRack(catalog)
+        context = SiteContext()
+        rack.set_wan(False)
+        values = self._run(rack, context, 120)
+        assert values["it.router.rack_01.isr4321_01/wan_state"] == "down"
+        assert values["it.router.rack_01.isr4321_01/vpn_state"] == "down"
+        assert values["it.router.rack_01.isr4321_01/voice_gateway_state"] == (
+            "degraded_internal_only"
+        )
+        # Everything else on the rack carries on exactly as before.
+        assert values["it.switch.rack_01.catalyst_2960x_01/availability_state"] == "online"
+        assert values["energy.ups.rack_01.01/on_battery"] is False
+        assert context.rack_it_kw > 0
+
+    def test_hot_rack_shows_up_as_switch_packet_errors(self, catalog):
+        rack = ServerRack(catalog)
+        context = SiteContext(ambient_temperature_c=35.0, rack_cooling_available=True)
+        cool = self._run(rack, context, 600)
+        assert cool["it.switch.rack_01.catalyst_2960x_01/packet_error_rate"] == 0.0
+        rack.fail_cooling(True)
+        hot = self._run(rack, context, 14400)
+        assert hot["it.switch.rack_01.catalyst_2960x_01/packet_error_rate"] > 0.0
+
+    def test_reserve_pdu_is_metered_at_208_v(self, catalog):
+        rack = ServerRack(catalog)
+        context = SiteContext()
+        values = self._run(rack, context, 120)
+        power = values["energy.pdu.rack_01.ap9570_01/power_total_kw"]
+        current = values["energy.pdu.rack_01.ap9570_01/current_total_a"]
+        assert power > 0
+        assert current == pytest.approx(power * 1000.0 / 208.0, rel=0.01)
+        assert values["energy.pdu.rack_01.ap9570_01/overload_active"] is False
 
     def test_netbotz_reports_container_and_rack_air(self, catalog):
         rack = ServerRack(catalog)

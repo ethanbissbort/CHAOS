@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import tarfile
 from pathlib import Path
+from typing import ClassVar
 
 import pytest
 import yaml
@@ -503,7 +504,7 @@ def test_result_payload_reads_a_dataclass_result():
 
 def test_result_payload_prefers_a_counts_method():
     class Result:
-        warnings = ["w"]
+        warnings: ClassVar[list[str]] = ["w"]
 
         def counts(self):
             return {"assets": 90, "points": 701}

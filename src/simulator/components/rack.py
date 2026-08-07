@@ -50,6 +50,11 @@ SENSOR_TEMP = "safety.safety_sensor.rack_01.ap9512tblk_01"
 SENSOR_SMOKE = "safety.safety_sensor.rack_01.nbes0307_01"
 SENSOR_FLUID = "safety.safety_sensor.power_container.nbes0308_01"
 BEACON = "safety.alarm_output.rack_01.beacon_01"
+PDU_RESERVE = "energy.pdu.rack_01.ap9570_01"
+SWITCH_ACCESS = "it.switch.rack_01.catalyst_2960x_01"
+SWITCH_CORE = "it.switch.rack_01.arista_7050qx_01"
+ROUTER = "it.router.rack_01.isr4321_01"
+WLC = "it.wireless_controller.rack_01.wlc5508_01"
 
 
 @dataclass
@@ -101,6 +106,17 @@ class RackConfig:
     initial_container_temperature_c: float = 22.0
     outlet_count_switched: int = 10
     outlet_count_basic: int = 8
+    #: 4 x C19 at 208 V (register); the reserve feed carries a light standing load.
+    outlet_count_reserve: int = 4
+    reserve_pdu_kw: float = 0.35
+
+    #: Network gear. The ``switch`` and ``router`` classes carry no power point,
+    #: so their draw stays inside ``network_load_w``; what they publish is
+    #: reachability and health, which is what the EMS data-quality state and the
+    #: SDD 39 case EMS-T001 ("lose internet") depend on.
+    access_switch_ports: int = 44
+    core_switch_ports: int = 28
+    planned_ap_count: int = 5  # register: ``planned_ap_count``
     seed: int = 0
 
 
@@ -135,6 +151,14 @@ class ServerRack(Component):
         }
         self._outlets_switched = [True] * cfg.outlet_count_switched
         self._outlets_basic = [True] * cfg.outlet_count_basic
+        self._outlets_reserve = [True] * cfg.outlet_count_reserve
+        # Network state. ``wan_up`` is the site's internet link -- dropping it is
+        # SDD 39 case EMS-T001, which must change nothing about local control.
+        self.wan_up = True
+        self.vpn_up = True
+        self.ap_online_count = cfg.planned_ap_count
+        self.client_count = 8
+        self.router_cpu_pct = 18.0
 
         for spec in cfg.servers:
             points = ["power_w", "cpu_utilization_pct", "memory_used_pct", "temperature_cpu_c",
@@ -176,6 +200,20 @@ class ServerRack(Component):
              "availability_state"],
         )
         self.declare(
+            PDU_RESERVE,
+            ["power_total_kw", "current_total_a", "outlet_state", "overload_active",
+             "availability_state"],
+        )
+        for switch in (SWITCH_ACCESS, SWITCH_CORE):
+            self.declare(
+                switch,
+                ["availability_state", "port_up_count", "temperature_c", "packet_error_rate"],
+            )
+        self.declare(
+            ROUTER, ["wan_state", "vpn_state", "cpu_utilization_pct", "voice_gateway_state"]
+        )
+        self.declare(WLC, ["ap_online_count", "client_count", "alarm_summary"])
+        self.declare(
             RACK_ASSET,
             [
                 "temperature_inlet_c",
@@ -215,6 +253,16 @@ class ServerRack(Component):
 
     def set_door(self, open_: bool) -> None:
         self.door_open = open_
+
+    def set_wan(self, up: bool) -> None:
+        """Drop or restore the internet link (SDD 39 case EMS-T001).
+
+        Local control must be entirely unaffected; only the router's reported
+        state and the VPN change.
+        """
+        self.wan_up = up
+        if not up:
+            self.vpn_up = False
 
     def set_outlet(self, index: int, on: bool) -> None:
         self._outlets_switched[index] = on
@@ -384,9 +432,11 @@ class ServerRack(Component):
         # -- PDUs ---------------------------------------------------------------------
         switched_kw = self.it_load_kw * 0.65
         basic_kw = self.it_load_kw * 0.35
-        for asset, kw, outlets, voltage in (
-            (PDU_SWITCHED, switched_kw, self._outlets_switched, 120.0),
-            (PDU_BASIC, basic_kw, self._outlets_basic, 120.0),
+        for asset, kw, outlets, voltage, limit_a in (
+            (PDU_SWITCHED, switched_kw, self._outlets_switched, 120.0, 15.0),
+            (PDU_BASIC, basic_kw, self._outlets_basic, 120.0, 15.0),
+            # The AP9570 is a 208 V 30 A reserve feed carrying a standing load.
+            (PDU_RESERVE, cfg.reserve_pdu_kw, self._outlets_reserve, 208.0, 24.0),
         ):
             on_count = sum(1 for state in outlets if state)
             scale = on_count / len(outlets) if outlets else 0.0
@@ -399,11 +449,58 @@ class ServerRack(Component):
                 "outlet_state",
                 {f"outlet_{i + 1}": ("on" if state else "off") for i, state in enumerate(outlets)},
             )
-            self.emit(out, asset, "overload_active", actual_kw * 1000.0 / voltage > 15.0)
+            self.emit(out, asset, "overload_active", actual_kw * 1000.0 / voltage > limit_a)
             self.emit(out, asset, "availability_state", "online")
             if asset == PDU_SWITCHED:
                 self.emit(out, asset, "state_operating", "distributing")
                 self.emit(out, asset, "alarm_summary", "none")
+
+        # -- network gear --------------------------------------------------------------
+        # Switch health tracks rack air: a hot rack shows up first as rising
+        # optics temperature and packet errors, well before anything trips.
+        switch_temp = self.rack_inlet_c + 8.0
+        error_rate = 0.0 if switch_temp < 45.0 else min(0.02, (switch_temp - 45.0) * 0.001)
+        powered = context.critical_bus_energized or self.ups_charge_pct > 0
+        for switch, ports in (
+            (SWITCH_ACCESS, cfg.access_switch_ports),
+            (SWITCH_CORE, cfg.core_switch_ports),
+        ):
+            self.emit(out, switch, "availability_state", "online" if powered else "offline")
+            self.emit(out, switch, "port_up_count", ports if powered else 0)
+            self.emit(out, switch, "temperature_c", round(switch_temp, 1))
+            self.emit(out, switch, "packet_error_rate", round(error_rate, 5))
+
+        self.router_cpu_pct = clamp(
+            approach(self.router_cpu_pct, 18.0 + 4.0 * len(server_powers), dt_s, 600.0)
+            + self.random.gauss(0.0, 0.5),
+            2.0,
+            99.0,
+        )
+        self.emit(out, ROUTER, "wan_state", "up" if (self.wan_up and powered) else "down")
+        self.emit(out, ROUTER, "vpn_state", "up" if (self.vpn_up and powered) else "down")
+        self.emit(out, ROUTER, "cpu_utilization_pct", round(self.router_cpu_pct, 1))
+        # Voice keeps working without the WAN: internal calls are switched by the
+        # on-site CUCM, only DID termination is lost (SDD 3.3, EMS-T001).
+        if not powered:
+            voice_state = "down"
+        elif self.wan_up:
+            voice_state = "registered"
+        else:
+            voice_state = "degraded_internal_only"
+        self.emit(out, ROUTER, "voice_gateway_state", voice_state)
+
+        # Wireless clients follow the working day; APs stay up while powered.
+        self.ap_online_count = cfg.planned_ap_count if powered else 0
+        target_clients = 4 + 8 * max(0.0, math.sin(math.pi * (now.hour + now.minute / 60.0 - 6) / 16))
+        self.client_count = int(round(approach(self.client_count, target_clients, dt_s, 900.0)))
+        self.emit(out, WLC, "ap_online_count", self.ap_online_count)
+        self.emit(out, WLC, "client_count", max(0, self.client_count) if powered else 0)
+        self.emit(
+            out,
+            WLC,
+            "alarm_summary",
+            "none" if self.ap_online_count == cfg.planned_ap_count else "warning",
+        )
 
         # -- rack enclosure and environmental monitors ------------------------------
         if self.smoke_active:

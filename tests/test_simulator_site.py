@@ -11,6 +11,7 @@ import datetime as dt
 import json
 
 import pytest
+import yaml
 
 from homestead_twin import topics
 from homestead_twin.envelope import (
@@ -20,13 +21,10 @@ from homestead_twin.envelope import (
     parse_telemetry,
 )
 from homestead_twin.mqtt import InMemoryBus
-
 from simulator.clock import RealTimePacer, SteppedPacer
 from simulator.components.base import load_catalog
 from simulator.components.battery import BatteryConfig
 from simulator.components.generator import GeneratorConfig
-from simulator.components.inverter import InverterConfig
-from simulator.components.solar import SolarConfig
 from simulator.components.weather import WeatherConfig
 from simulator.site import SimulatedSite, SiteConfig
 
@@ -118,6 +116,15 @@ class TestConstruction:
         site = build_site(bus, settings)
         assert len(site.point_ids()) > 245
 
+    def test_every_bound_point_is_simulated(self, bus, settings):
+        """``point_bindings.yaml`` is the agreed target set: cover all of it."""
+        bindings = yaml.safe_load(
+            (settings.data_dir / "point_bindings.yaml").read_text()
+        )["bindings"]
+        bound = {binding["point_id"] for binding in bindings}
+        site = build_site(bus, settings)
+        assert bound <= set(site.point_ids())
+
 
 # ------------------------------------------------------------------ publishing
 
@@ -204,7 +211,7 @@ class TestEnergyBalance:
         peak_kw, peak_hour = 0.0, None
         readings = []
         for _ in range(288):  # 24 h at 5 min
-            balance = site.step(300.0)
+            site.step(300.0)
             bus.clear()
             hour = site.clock.hour_of_day()
             readings.append((hour, site.context.pv_available_dc_kw))

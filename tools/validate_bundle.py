@@ -73,6 +73,7 @@ def configure_root(root: Path) -> None:
     SCHEMA_DIR = ROOT / "schemas"
     REPORT_PATH = ROOT / "validation_report.json"
 
+
 #: Documents whose schema file is not named after the data file.
 SCHEMA_STEM_ALIASES = {"homestead_asset_register": "asset_register"}
 

@@ -175,9 +175,11 @@ deliberate grant rather than a default.
 
 ### 8.5 Time-series database — partial
 
-SDD open decision 22.3 (InfluxDB versus TimescaleDB) is **unresolved**, so
-neither is deployed. The platform writes a relational historian instead:
-`telemetry_samples` in PostgreSQL, selected by `HOMESTEAD_HISTORIAN_BACKEND=sql`.
+SDD open decision 22.3 (InfluxDB versus TimescaleDB) is **unresolved** — see
+`docs/design-decisions/DD-002-historian-selection.md`, which is still *proposed,
+awaiting owner ratification* — so neither is deployed. The platform writes a
+relational historian instead: `telemetry_samples` in PostgreSQL, selected by
+`HOMESTEAD_HISTORIAN_BACKEND=sql`.
 
 This is a real limitation, not a finished choice. It is adequate for
 commissioning and for the secondary node; it is not adequate for years of
@@ -269,8 +271,10 @@ simulated MQTT telemetry before enabling physical control, and that is where thi
 is. `HOMESTEAD_ALLOW_PHYSICAL_CONTROL` defaults to `false`.
 
 The authoritative energy design is still an open conflict (SDD 30.2, open
-decision 22.1): 12 kW / 40 kWh baseline versus 45 kWdc / 800 kWh revision. The
-register preserves both. No threshold in the EMS assumes either is correct.
+decision 22.1; analysis in
+`docs/design-decisions/DD-001-energy-capacity-revision.md`, status *proposed*):
+12 kW / 40 kWh baseline versus 45 kWdc / 800 kWh revision. The register preserves
+both. No threshold in the EMS assumes either is correct.
 
 ### Alarms (`homestead_twin/alarms/`)
 

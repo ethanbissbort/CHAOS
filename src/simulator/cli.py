@@ -109,9 +109,10 @@ def _list_scenarios() -> str:
     return "\n".join(lines)
 
 
-def build_site(args: argparse.Namespace) -> tuple[SimulatedSite, Any, TopicCollector | None]:
-    """Construct the bus, the site and (offline) the message collector."""
-    scenario = get_scenario(args.scenario)
+def build_site(
+    args: argparse.Namespace, scenario
+) -> tuple[SimulatedSite, Any, TopicCollector | None]:
+    """Construct the bus and the site for ``scenario`` (plus an offline collector)."""
     settings_kwargs: dict[str, Any] = {}
     if args.broker:
         settings_kwargs["mqtt_host"] = args.broker
@@ -141,7 +142,7 @@ def build_site(args: argparse.Namespace) -> tuple[SimulatedSite, Any, TopicColle
 def run(args: argparse.Namespace) -> dict[str, Any]:
     """Run one scenario and return the summary dictionary."""
     scenario = get_scenario(args.scenario)
-    site, bus, collector = build_site(args)
+    site, bus, collector = build_site(args, scenario)
     runner = ScenarioRunner(site, scenario)
 
     duration_s = parse_duration(args.duration) if args.duration else scenario.duration_s

@@ -629,7 +629,6 @@ class SimulatedSite:
             balance.ac_bus_energized = False
             balance.unserved_kw = load_kw
             self._settle(balance, dt_s, 0.0, pv_ac_kw=0.0, pv_ac_potential=pv_ac_potential)
-            balance.unserved_kw = load_kw
             return balance
 
         generator_kw = self._generator_dispatch(load_kw - pv_ac_possible)

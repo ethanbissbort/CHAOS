@@ -240,6 +240,11 @@ The design package leaves these unresolved. They are recorded in the register as
 `host_structure`, `hardware`, `independent_power`, `replication_method`,
 `services`.
 
+The trade-off analysis for placement lives in
+`docs/design-decisions/DD-003-secondary-control-node-placement.md`. Its status is
+*proposed — awaiting owner ratification*, so it is a position to argue with, not
+a decision. Nothing in this document assumes its recommendation.
+
 | # | Decision | SDD reference | Why it matters |
 |---:|---|---|---|
 | 1 | **Which structure** — residence, workshop, or a dedicated enclosure | Open decision 22.13 | Determines the network path, the power source, and whether "physically separate" means 30 m or 300 m. Everything else waits on this |

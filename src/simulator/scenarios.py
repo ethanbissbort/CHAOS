@@ -188,6 +188,13 @@ def _do_black_start() -> EventFn:
     return apply
 
 
+def _do_wan(up: bool) -> EventFn:
+    def apply(site: SimulatedSite) -> None:
+        site.rack.set_wan(up)
+
+    return apply
+
+
 def _do_cell_temperature(value: float) -> EventFn:
     def apply(site: SimulatedSite) -> None:
         site.battery.set_cell_temperature(value)
@@ -591,14 +598,19 @@ def _scenario_comms_loss() -> Scenario:
     return Scenario(
         name="comms_loss",
         description=(
-            "The power-container gateway stops publishing for 20 minutes. Every "
-            "battery, BMS, inverter, generator and ATS point goes stale; the "
-            "retained availability turns offline once the will delay elapses. "
-            "The EMS must enter a conservative data-quality state, not assume a "
+            "First the internet link drops while the site is otherwise normal "
+            "(EMS-T001): local control must be unaffected and only wan_state, "
+            "vpn_state and DID termination change. Then the power-container "
+            "gateway stops publishing for 20 minutes: every battery, BMS, "
+            "inverter, generator and ATS point goes stale and the retained "
+            "availability turns offline once the will delay elapses, so the EMS "
+            "must enter a conservative data-quality state rather than assume a "
             "healthy reserve."
         ),
         config=config,
         events=(
+            ScenarioEvent(parse_duration("10m"), "internet link drops", _do_wan(False)),
+            ScenarioEvent(parse_duration("25m"), "internet link returns", _do_wan(True)),
             ScenarioEvent(parse_duration("30m"), "power gateway drops", _do_comms_loss("power")),
             ScenarioEvent(parse_duration("50m"), "power gateway returns", _do_comms_restore("power")),
             ScenarioEvent(parse_duration("70m"), "rack gateway drops", _do_comms_loss("rack")),
