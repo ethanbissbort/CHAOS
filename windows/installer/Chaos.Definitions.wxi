@@ -43,4 +43,10 @@
        no firewall rule at all. -->
   <?define ChaosLanPort = "8080" ?>
 
+  <!-- The offline manual, on its own listener. Opened alongside the gateway
+       port because the whole point of serving it separately is that a phone can
+       read the troubleshooting page while the control plane is down; a rule that
+       only covers 8080 would leave it readable from this machine only. -->
+  <?define ChaosDocsPort = "8090" ?>
+
 </Include>

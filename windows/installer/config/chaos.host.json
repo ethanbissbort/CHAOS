@@ -5,6 +5,13 @@
     "Written once by the installer and NEVER overwritten by an upgrade, and",
     "never removed by an uninstall. Edit it freely; it is yours.",
     "",
+    "EVERY KEY BELOW IS ONE THE HOST ACTUALLY BINDS. An earlier version of this",
+    "file used a nested shape (Chaos:Lan:Port, Chaos:Backend:Port) that the host",
+    "never read, so editing it changed nothing and the service came back on the",
+    "old port with no error. If you add a key, check it against",
+    "Chaos.Host/Configuration/ChaosHostOptions.cs first: an unbound key is",
+    "silently ignored, which is the worst way for configuration to fail.",
+    "",
     "Paths are deliberately absent. The host reads them from the registry key",
     "HKLM\\SOFTWARE\\Project CHAOS (InstallDir, DataDir, PythonExe, AppDir,",
     "WebRoot, ConfigDir, LogDir), which the installer keeps current across",
@@ -12,32 +19,49 @@
     "moved it, and a supervisor pointing at a python.exe that is no longer",
     "there is a service that does not start.",
     "",
-    "Restart the service after editing:  Restart-Service ChaosHost"
+    "Every key can also be set as an environment variable by joining the path",
+    "with a double underscore: Chaos:Docs:ListenUrl is CHAOS_Docs__ListenUrl.",
+    "",
+    "After editing, restart the platform from the desktop shell (Settings ->",
+    "Restart platform). Restarting the ChaosHost service by any other means",
+    "works too, but the shell reports whether it actually came back."
   ],
 
   "Chaos": {
-    "Lan": {
-      "_comment": "The gateway's LAN listener. The installer's firewall rule opens exactly this port, inbound, private profile only. Changing it here means the firewall rule no longer matches -- see docs/windows-deployment.md before you do.",
-      "Port": 8080,
-      "BindAddress": "0.0.0.0"
-    },
+    "_listen_comment": "The gateway's LAN listener, as a complete URL. The installer's firewall rule opens exactly this port, inbound, private profile only. Changing the port here means the firewall rule no longer matches -- see the Windows deployment page in the manual before you do.",
+    "ListenUrl": "http://0.0.0.0:8080",
 
-    "Backend": {
-      "_comment": "The supervised Python child. Loopback only, always: it is an unauthenticated control API and it is reached through the gateway, never directly from the LAN.",
-      "BindAddress": "127.0.0.1",
-      "Port": 8081,
-      "StartupTimeoutSeconds": 120,
-      "HealthPath": "/health",
+    "_backend_comment": "The supervised Python child. Loopback only, always: it is an unauthenticated control API, and it is reached through the gateway and never directly from the LAN. AllowNonLoopbackBackend exists to make that a deliberate act rather than a typo.",
+    "BackendUrl": "http://127.0.0.1:8081",
+    "AllowNonLoopbackBackend": false,
+    "BackendHealthPath": "/health",
+    "BackendStartTimeout": "00:02:00",
 
-      "_restart_comment": "How hard to try when the backend dies. A homestead does not have someone watching the console; the supervisor keeps restarting, and the alarm for 'the backend is crash-looping' is the operator's signal, not a give-up counter.",
-      "RestartDelaySeconds": 5,
-      "MaxRestartDelaySeconds": 60
-    },
+    "_health_comment": "How the gateway watches the backend. A homestead has nobody watching the console, so the supervisor keeps restarting and the crash-loop alarm is the operator's signal rather than a give-up counter. The quiet period stops a long outage filling the log with identical lines.",
+    "BackendHealthInterval": "00:00:10",
+    "BackendHealthTimeout": "00:00:05",
+    "BackendHealthMaxBackoff": "00:00:30",
+    "BackendHealthLogQuietPeriod": "00:05:00",
 
-    "Logging": {
-      "_comment": "Files land in %ProgramData%\\Project CHAOS\\logs. Service lifecycle events also go to the Windows Application event log under the source 'ChaosHost' -- that is where to look when the service will not start at all.",
-      "Level": "Information",
-      "RetainDays": 30
+    "_setup_comment": "First-run setup. The gateway creates the database and loads the design package itself, so no command line is needed. It only ever writes to a database that is completely empty; anything else is reported for a human to look at. Set AutoSetup false on a node whose database you manage by hand.",
+    "AutoSetup": true,
+
+    "_shutdown_comment": "How long in-flight requests get when the service stops.",
+    "ShutdownTimeout": "00:00:30",
+
+    "Docs": {
+      "_comment": "The offline manual, served on its own port by its own listener with no API and no proxy attached to it. It is separate so the manual stays readable when the control plane is not, which is exactly when somebody needs the troubleshooting page. The installer must open this port too, or it will only be reachable from this machine.",
+      "Enabled": true,
+      "ListenUrl": "http://0.0.0.0:8090"
+    }
+  },
+
+  "Logging": {
+    "_comment": "Files land in %ProgramData%\\Project CHAOS\\logs. Service lifecycle events also go to the Windows Application event log under the source 'ChaosHost' -- that is where to look when the service will not start at all.",
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning",
+      "Chaos.Host": "Information"
     }
   }
 }

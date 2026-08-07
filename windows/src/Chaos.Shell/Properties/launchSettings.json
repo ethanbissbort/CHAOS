@@ -1,0 +1,34 @@
+{
+  "//": [
+    "Debug targets for the desktop shell, shown in the Visual Studio toolbar",
+    "dropdown once Chaos.Shell is the startup project.",
+    "",
+    "The shell starts the platform itself, so the plain profile is the real",
+    "first-run path: launcher -> start -> first-run setup -> console, with no",
+    "terminal at any point. If a gateway is already running under the debugger,",
+    "the launcher finds it and connects instead of starting a second one.",
+    "",
+    "Only switches the shell actually parses appear here (see",
+    "Chaos.Shell.Core/ShellCommandLine.cs): --host and --monitor. A profile",
+    "carrying a switch the shell ignores would look like a control and do",
+    "nothing."
+  ],
+
+  "profiles": {
+    "CHAOS Shell": {
+      "commandName": "Project"
+    },
+
+    "CHAOS Shell (connect to another node)": {
+      "//": "Point the shell at a gateway on a different machine, for example the primary node while debugging from a laptop. Change the address to suit; the shell never assumes a remote host is startable and will offer to connect rather than to start.",
+      "commandName": "Project",
+      "commandLineArgs": "--host http://127.0.0.1:8080"
+    },
+
+    "CHAOS Shell (annunciator on the second display)": {
+      "//": "Opens the annunciator on display 2. Monitor numbers are 1-based and match the numbering in Settings.",
+      "commandName": "Project",
+      "commandLineArgs": "--monitor 2"
+    }
+  }
+}
