@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="Chaos.Shell.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls"
+    >
+
+    <Grid Background="{StaticResource ChaosShellBackground}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Command strip. Deliberately thin: the console inside the WebView2
+             is the operator surface, and a second navigation chrome competing
+             with it would be noise. -->
+        <Grid x:Name="CommandStrip" Grid.Row="0" Padding="8,6" ColumnSpacing="6"
+              Background="{StaticResource ChaosShellBackground}"
+              BorderBrush="{StaticResource ChaosShellStroke}" BorderThickness="0,0,0,1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6">
+                <Button x:Name="ReloadButton" Content="Reload" Click="OnReload" />
+                <Button x:Name="AnnunciatorButton" Content="Annunciator" Click="OnOpenAnnunciator" />
+                <Button x:Name="BrowserButton" Content="Open in browser" Click="OnOpenInBrowser" />
+            </StackPanel>
+
+            <TextBlock x:Name="LinkText" Grid.Column="1"
+                       VerticalAlignment="Center" HorizontalAlignment="Center"
+                       Foreground="{StaticResource ChaosShellMuted}"
+                       FontFamily="Consolas" FontSize="12"
+                       Text="connecting…" />
+
+            <TextBlock x:Name="HostText" Grid.Column="2"
+                       VerticalAlignment="Center"
+                       Foreground="{StaticResource ChaosShellMuted}"
+                       FontFamily="Consolas" FontSize="12" />
+        </Grid>
+
+        <!-- The console itself. Collapsed until the gateway answers, so an
+             operator never stares at a blank white WebView2 wondering whether
+             the platform is dead or the shell is. -->
+        <controls:WebView2 x:Name="ConsoleView" Grid.Row="1" Visibility="Collapsed" />
+
+        <!-- Startup / diagnostic panel. Occupies the same cell as the console
+             and is the ONLY thing shown until there is something real to show. -->
+        <Border x:Name="GatePanel" Grid.Row="1" Padding="28"
+                Background="{StaticResource ChaosShellBackground}">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                        MaxWidth="640" Spacing="14">
+                <TextBlock x:Name="GateTitle" FontSize="20" FontWeight="SemiBold"
+                           Foreground="{StaticResource ChaosShellText}"
+                           Text="Starting Project CHAOS" />
+                <TextBlock x:Name="GateSummary" TextWrapping="Wrap"
+                           Foreground="{StaticResource ChaosShellMuted}"
+                           Text="Waiting for the platform gateway to answer." />
+                <ProgressBar x:Name="GateProgress" Maximum="1" Value="0"
+                             Foreground="{StaticResource ChaosShellAccent}" />
+                <TextBlock x:Name="GateProgressText" FontFamily="Consolas" FontSize="12"
+                           Foreground="{StaticResource ChaosShellMuted}" />
+
+                <ItemsControl x:Name="GateFacts" Margin="0,6,0,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock FontFamily="Consolas" FontSize="12"
+                                       Foreground="{StaticResource ChaosShellMuted}"
+                                       Text="{Binding}" TextWrapping="Wrap" Margin="0,1" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <ItemsControl x:Name="GateSteps">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Foreground="{StaticResource ChaosShellText}"
+                                       Text="{Binding}" TextWrapping="Wrap" Margin="0,2" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+                    <Button x:Name="RetryButton" Content="Retry" Click="OnRetry"
+                            Visibility="Collapsed" />
+                    <Button x:Name="LogsButton" Content="Open logs folder" Click="OnOpenLogs"
+                            Visibility="Collapsed" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

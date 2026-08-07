@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Application
+    x:Class="Chaos.Shell.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- The shell chrome stays dark regardless of the Windows theme.
+                 It frames a console that is dark by default and often lives on
+                 a wall display in a container; a light frame around a dark
+                 console reads as a rendering fault. -->
+            <SolidColorBrush x:Key="ChaosShellBackground" Color="#0B0D12" />
+            <SolidColorBrush x:Key="ChaosShellText" Color="#E6E9F0" />
+            <SolidColorBrush x:Key="ChaosShellMuted" Color="#AAB2C5" />
+            <SolidColorBrush x:Key="ChaosShellStroke" Color="#232936" />
+            <SolidColorBrush x:Key="ChaosShellAccent" Color="#5B8CFF" />
+            <SolidColorBrush x:Key="ChaosShellWarn" Color="#F5C144" />
+            <SolidColorBrush x:Key="ChaosShellError" Color="#E5484D" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

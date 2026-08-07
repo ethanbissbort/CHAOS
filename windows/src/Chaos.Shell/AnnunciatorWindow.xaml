@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="Chaos.Shell.AnnunciatorWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls">
+
+    <Grid Background="#0A0C0B">
+        <controls:WebView2 x:Name="Panel" />
+
+        <!-- Shown only while the panel is loading. The annunciator is the
+             screen an operator looks at to decide whether anything is wrong,
+             so it must never present as "nothing wrong" before it has data. -->
+        <Border x:Name="LoadingPanel" Background="#0A0C0B">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10">
+                <TextBlock Text="ANNUNCIATOR" FontFamily="Consolas" FontSize="18"
+                           Foreground="#E8EEF2" HorizontalAlignment="Center" />
+                <TextBlock x:Name="LoadingText" Text="Loading panel…"
+                           FontFamily="Consolas" FontSize="12"
+                           Foreground="#93A1AA" HorizontalAlignment="Center" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
