@@ -1,0 +1,439 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://homestead.local/schemas/asset-lifecycle.schema.json",
+  "title": "Homestead Asset Lifecycle and CAPEX Extension",
+  "description": "Commercial and lifecycle fields keyed by asset_id. The schema enforces that an unimported record cannot carry a monetary value or a date: those fields are null until a human supplies a real record.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "document_type",
+    "document_status",
+    "generated_at",
+    "extends",
+    "import_instructions",
+    "ownership_derivation",
+    "records",
+    "notes"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "document_type": {
+      "const": "asset_lifecycle_extension"
+    },
+    "document_status": {
+      "enum": [
+        "structure_defined_no_data_imported",
+        "partially_imported",
+        "imported"
+      ]
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "extends": {
+      "type": "string"
+    },
+    "merge_target": {
+      "type": "string"
+    },
+    "source_document": {
+      "type": "string"
+    },
+    "work_queue_item": {
+      "type": "string"
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1
+    },
+    "import_instructions": {
+      "type": "object",
+      "required": [
+        "summary",
+        "required_from_the_owner",
+        "import_rules"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "required_from_the_owner": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "import_rules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "known_blockers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ownership_derivation": {
+      "type": "object",
+      "required": [
+        "rule",
+        "status_to_ownership"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "rule": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status_to_ownership": {
+          "type": "object",
+          "additionalProperties": {
+            "enum": [
+              "owned",
+              "planned",
+              "leased",
+              "unknown"
+            ]
+          }
+        },
+        "observed_result": {
+          "type": "string"
+        },
+        "counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "field_semantics": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "coverage": {
+      "type": "object"
+    },
+    "records": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+){3}$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "asset_name",
+          "domain",
+          "asset_class",
+          "register_status",
+          "criticality",
+          "ownership_state",
+          "ownership_basis",
+          "acquisition_status",
+          "capex_reference",
+          "acquisition_cost",
+          "purchase_date",
+          "warranty_status",
+          "warranty_expires",
+          "replacement_cost",
+          "replacement_cost_status",
+          "expected_service_life_years",
+          "spare_parts",
+          "spare_parts_status",
+          "end_of_life_status",
+          "data_status",
+          "open_fields",
+          "notes"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "asset_name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "domain": {
+            "type": "string"
+          },
+          "asset_class": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "register_status": {
+            "type": "string"
+          },
+          "criticality": {
+            "enum": [
+              "life_safety",
+              "critical",
+              "important",
+              "discretionary"
+            ]
+          },
+          "ownership_state": {
+            "enum": [
+              "owned",
+              "planned",
+              "leased",
+              "unknown"
+            ]
+          },
+          "ownership_basis": {
+            "enum": [
+              "derived_from_register_status",
+              "owner_supplied",
+              "invoice",
+              "unknown"
+            ]
+          },
+          "acquisition_status": {
+            "enum": [
+              "not_yet_imported",
+              "concept_only_not_specified",
+              "ordered",
+              "received",
+              "imported"
+            ]
+          },
+          "capex_reference": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "acquisition_cost": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "acquisition_currency": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "purchase_date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "in_service_date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "warranty_status": {
+            "enum": [
+              "not_yet_imported",
+              "active",
+              "expired",
+              "void",
+              "not_applicable"
+            ]
+          },
+          "warranty_expires": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "replacement_cost": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "replacement_cost_status": {
+            "enum": [
+              "not_yet_imported",
+              "estimated",
+              "quoted",
+              "not_applicable"
+            ]
+          },
+          "expected_service_life_years": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "service_life_basis": {
+            "enum": [
+              "not_yet_imported",
+              "manufacturer_statement",
+              "insurer_requirement",
+              "owner_policy"
+            ]
+          },
+          "spare_parts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "part_identity",
+                "quantity_on_hand",
+                "location",
+                "reorder_point"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "part_identity": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "quantity_on_hand": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0
+                },
+                "location": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "reorder_point": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0
+                },
+                "notes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "spare_parts_status": {
+            "enum": [
+              "not_yet_imported",
+              "none_held",
+              "imported"
+            ]
+          },
+          "spares_policy_required": {
+            "type": "boolean"
+          },
+          "end_of_life_status": {
+            "enum": [
+              "not_yet_imported",
+              "not_applicable_not_yet_in_service",
+              "planned_replacement",
+              "retired"
+            ]
+          },
+          "disposal_plan_status": {
+            "enum": [
+              "not_yet_imported",
+              "defined",
+              "not_applicable"
+            ]
+          },
+          "data_status": {
+            "enum": [
+              "not_yet_imported",
+              "partially_imported",
+              "imported"
+            ]
+          },
+          "open_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "allOf": [
+          {
+            "description": "An unimported record may not carry money or dates. This is the schema-level guard against invented CAPEX.",
+            "if": {
+              "properties": {
+                "data_status": {
+                  "const": "not_yet_imported"
+                }
+              },
+              "required": [
+                "data_status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "capex_reference": {
+                  "type": "null"
+                },
+                "acquisition_cost": {
+                  "type": "null"
+                },
+                "acquisition_currency": {
+                  "type": "null"
+                },
+                "purchase_date": {
+                  "type": "null"
+                },
+                "in_service_date": {
+                  "type": "null"
+                },
+                "warranty_expires": {
+                  "type": "null"
+                },
+                "replacement_cost": {
+                  "type": "null"
+                },
+                "expected_service_life_years": {
+                  "type": "null"
+                },
+                "spare_parts": {
+                  "maxItems": 0
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    }
+  }
+}

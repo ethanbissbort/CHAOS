@@ -1,0 +1,1153 @@
+schema_version: 0.3.0
+document_type: asset_class_dictionary
+generated_at: '2026-08-06T18:51:57Z'
+source_document: Homestead_Digital_Twin_Software_Design_Document_v0.2.md
+domains:
+  site: Property-wide objects, geographic sectors, weather and shared state.
+  structure: Buildings, containers, rooms, enclosures, roof areas and service spaces.
+  energy: Generation, storage, conversion, distribution, metering and loads.
+  water: Well, potable water, rainwater, graywater, irrigation and process water.
+  agriculture: Orchard, food forest, greenhouse, compost, crops, soil and biological assets.
+  storage: Food storage, nitrogen displacement, dry storage, cold storage and inventory.
+  spa: Hydrothermal pavilion water, thermal, sanitation and humidity systems.
+  it: Servers, storage, network, telephony, applications and platform services.
+  security: Cameras, access control, gates, doors, perimeter and alarm devices.
+  workshop: Tools, machinery, fabrication equipment, consumables and shop utilities.
+  fuel: Generator fuel, synthetic fuel, gas storage and future Aircela integration.
+  safety: Fire, smoke, leak, emergency-stop, hazardous-atmosphere and emergency systems.
+lifecycle_statuses:
+- concept
+- planned
+- procured
+- installed
+- commissioned
+- active
+- degraded
+- failed
+- maintenance
+- reserve
+- retired
+criticality_levels:
+- life_safety
+- critical
+- important
+- discretionary
+control_authorities:
+- none
+- manual
+- local_only
+- vendor_native
+- supervisory
+- local_controller_with_supervisory_setpoints
+- safety_interlock
+relationship_types:
+  contains: Physical or logical containment.
+  located_in: Geographic or structural location.
+  feeds: Supplies energy, water, data or material.
+  returns_to: Return path.
+  controls: Controller owns a process output.
+  monitors: Sensor or service observes an asset.
+  protects: Protection device acts on equipment.
+  depends_on: Operational dependency.
+  backs_up: Redundant or alternate resource.
+  measures: Meter or sensor association.
+  serves: Utility or service supports an end-use system.
+  part_of: Functional grouping.
+  associated_with: Non-flow contextual link.
+  replaces: Asset lifecycle succession.
+  connected_to: Physical or logical connectivity where a directional flow is not asserted.
+  hosts: Compute or enclosure asset hosts a software service or virtualized asset.
+  managed_by: Device is managed by a controller or management service.
+asset_classes:
+  site:
+    purpose: Entire property.
+    allowed_domains:
+    - site
+    required_properties:
+    - timezone
+    - boundary_status
+    default_points:
+    - mode_actual
+    - alarm_summary
+    - occupancy_state
+    source_section: '27.1'
+    dictionary_status: baseline_v0_2
+  geographic_zone:
+    purpose: Managed land area.
+    allowed_domains:
+    - site
+    - agriculture
+    required_properties:
+    - land_use
+    - geometry_status
+    default_points:
+    - status_condition
+    - accessibility_state
+    source_section: '27.1'
+    dictionary_status: baseline_v0_2
+  structure:
+    purpose: Building or container.
+    allowed_domains:
+    - structure
+    required_properties:
+    - structure_type
+    - envelope_status
+    default_points:
+    - temperature_air_c
+    - humidity_relative_pct
+    - door_state
+    - leak_active
+    source_section: '27.1'
+    dictionary_status: baseline_v0_2
+  room:
+    purpose: Interior operational space.
+    allowed_domains:
+    - structure
+    required_properties:
+    - environmental_class
+    default_points:
+    - temperature_air_c
+    - humidity_relative_pct
+    - occupancy_state
+    source_section: '27.1'
+    dictionary_status: baseline_v0_2
+  enclosure:
+    purpose: Cabinet, rack, battery bay, or control panel.
+    allowed_domains:
+    - structure
+    - energy
+    - it
+    required_properties:
+    - ingress_rating_status
+    - access_method
+    default_points:
+    - temperature_air_c
+    - door_state
+    - smoke_active
+    source_section: '27.1'
+    dictionary_status: baseline_v0_2
+  pv_array:
+    purpose: Group of photovoltaic rows or strings.
+    allowed_domains:
+    - energy
+    required_properties:
+    - rated_kwdc
+    - orientation
+    - tilt_deg
+    default_points:
+    - power_dc_kw
+    - energy_today_kwh
+    - solar_irradiance_w_m2
+    - availability_state
+    source_section: '27.2'
+    dictionary_status: baseline_v0_2
+  pv_row:
+    purpose: Physical agrivoltaic canopy row.
+    allowed_domains:
+    - energy
+    required_properties:
+    - module_count
+    - module_rating_w
+    - orientation
+    - tilt_deg
+    default_points:
+    - power_dc_kw
+    - availability_state
+    source_section: Agrivoltaic diagram
+    dictionary_status: reconciled_v0_3
+    notes: Physical row identity; electrical string topology remains a separate design field.
+  pv_string:
+    purpose: Electrical PV string.
+    allowed_domains:
+    - energy
+    required_properties:
+    - module_count
+    - voc_design_v
+    - isc_design_a
+    default_points:
+    - voltage_dc_v
+    - current_dc_a
+    - power_dc_kw
+    - fault_active
+    source_section: '27.2'
+    dictionary_status: baseline_v0_2
+  combiner:
+    purpose: PV or AC collection and protection assembly.
+    allowed_domains:
+    - energy
+    required_properties:
+    - combiner_type
+    - input_count
+    default_points:
+    - current_total_a
+    - door_state
+    - temperature_air_c
+    - fault_active
+    source_section: '27.2'
+    dictionary_status: baseline_v0_2
+  disconnect:
+    purpose: Electrical isolation device.
+    allowed_domains:
+    - energy
+    required_properties:
+    - disconnect_type
+    - rated_voltage_v
+    - rated_current_a
+    default_points:
+    - state_operating
+    - open_state
+    - fault_active
+    source_section: system diagrams
+    dictionary_status: reconciled_v0_3
+  inverter:
+    purpose: DC/AC conversion and charging.
+    allowed_domains:
+    - energy
+    required_properties:
+    - rated_power_kw
+    - topology
+    default_points:
+    - power_ac_output_kw
+    - power_dc_input_kw
+    - voltage_ac_v
+    - frequency_hz
+    - state_operating
+    - fault_code
+    source_section: '27.2'
+    dictionary_status: baseline_v0_2
+  battery_bank:
+    purpose: Site energy storage.
+    allowed_domains:
+    - energy
+    required_properties:
+    - nominal_capacity_kwh
+    - usable_capacity_kwh
+    - chemistry
+    default_points:
+    - soc_pct
+    - soh_pct
+    - power_kw
+    - energy_available_kwh
+    - temperature_cell_max_c
+    - charge_limit_kw
+    - discharge_limit_kw
+    source_section: '27.2'
+    dictionary_status: baseline_v0_2
+  battery_module:
+    purpose: Serviceable battery unit.
+    allowed_domains:
+    - energy
+    required_properties:
+    - chemistry
+    - capacity_kwh
+    default_points:
+    - voltage_v
+    - temperature_cell_max_c
+    - soc_pct
+    - fault_code
+    source_section: '27.2'
+    dictionary_status: baseline_v0_2
+  bms:
+    purpose: Battery-management controller.
+    allowed_domains:
+    - energy
+    required_properties:
+    - protected_asset_ids
+    default_points:
+    - state_operating
+    - charge_permissive
+    - discharge_permissive
+    - contactor_state
+    source_section: '27.2'
+    dictionary_status: baseline_v0_2
+  generator:
+    purpose: Backup generation.
+    allowed_domains:
+    - energy
+    - fuel
+    required_properties:
+    - fuel_type
+    - rated_power_kw
+    default_points:
+    - state_operating
+    - power_output_kw
+    - fuel_level_pct
+    - runtime_total_h
+    - start_failure_active
+    source_section: '27.2'
+    dictionary_status: baseline_v0_2
+  ats:
+    purpose: Automatic transfer switch.
+    allowed_domains:
+    - energy
+    required_properties:
+    - source_a_id
+    - source_b_id
+    default_points:
+    - source_selected
+    - source_a_available
+    - source_b_available
+    - transfer_total
+    source_section: '27.2'
+    dictionary_status: baseline_v0_2
+  panel:
+    purpose: Electrical distribution board.
+    allowed_domains:
+    - energy
+    required_properties:
+    - nominal_voltage_v
+    - phase_configuration
+    default_points:
+    - power_total_kw
+    - energy_total_kwh
+    - breaker_trip_active
+    source_section: '27.2'
+    dictionary_status: baseline_v0_2
+  circuit:
+    purpose: Monitored branch circuit.
+    allowed_domains:
+    - energy
+    required_properties:
+    - panel_id
+    - breaker_rating_a
+    default_points:
+    - power_kw
+    - current_a
+    - energy_total_kwh
+    - energized_state
+    source_section: '27.2'
+    dictionary_status: baseline_v0_2
+  load:
+    purpose: Controllable or modeled end use.
+    allowed_domains:
+    - energy
+    required_properties:
+    - load_tier
+    - restoration_policy
+    default_points:
+    - power_kw
+    - enabled_actual
+    - enabled_requested
+    - shed_state
+    - priority_effective
+    source_section: '27.2'
+    dictionary_status: baseline_v0_2
+  meter:
+    purpose: Revenue or process electrical meter.
+    allowed_domains:
+    - energy
+    required_properties:
+    - direction_convention
+    default_points:
+    - power_import_kw
+    - power_export_kw
+    - energy_import_total_kwh
+    - energy_export_total_kwh
+    source_section: '27.2'
+    dictionary_status: baseline_v0_2
+  ups:
+    purpose: Short-duration conditioned power.
+    allowed_domains:
+    - energy
+    - it
+    required_properties:
+    - rated_va
+    - rated_w
+    default_points:
+    - load_pct
+    - runtime_remaining_min
+    - input_available
+    - on_battery
+    - battery_replace_due
+    source_section: '27.2'
+    dictionary_status: baseline_v0_2
+  pdu:
+    purpose: Rack power distribution.
+    allowed_domains:
+    - energy
+    - it
+    required_properties:
+    - feed_asset_id
+    - outlet_count
+    default_points:
+    - power_total_kw
+    - current_total_a
+    - outlet_state
+    - overload_active
+    source_section: '27.2'
+    dictionary_status: baseline_v0_2
+  thermal_storage:
+    purpose: Deferrable heat or cold store.
+    allowed_domains:
+    - energy
+    required_properties:
+    - capacity_basis
+    - temperature_range_c
+    default_points:
+    - temperature_mean_c
+    - energy_estimated_kwh
+    - charge_requested
+    source_section: '27.2'
+    dictionary_status: baseline_v0_2
+  well:
+    purpose: Groundwater source.
+    allowed_domains:
+    - water
+    required_properties:
+    - depth_status
+    - pump_association_status
+    default_points:
+    - water_level_m
+    - water_temperature_c
+    - quality_status
+    source_section: '27.3'
+    dictionary_status: baseline_v0_2
+  pump:
+    purpose: Liquid movement.
+    allowed_domains:
+    - water
+    - spa
+    required_properties:
+    - motor_rating_status
+    - source_asset_id
+    - destination_asset_id
+    default_points:
+    - state_operating
+    - flow_instant_lpm
+    - pressure_discharge_kpa
+    - current_a
+    - dry_run_active
+    source_section: '27.3'
+    dictionary_status: baseline_v0_2
+  tank:
+    purpose: Water or nutrient storage.
+    allowed_domains:
+    - water
+    - agriculture
+    required_properties:
+    - gross_volume_l
+    - material_status
+    default_points:
+    - level_pct
+    - volume_estimated_l
+    - temperature_liquid_c
+    - high_level_active
+    - low_level_active
+    source_section: '27.3'
+    dictionary_status: baseline_v0_2
+  valve:
+    purpose: Isolation or modulation.
+    allowed_domains:
+    - water
+    - spa
+    required_properties:
+    - valve_type
+    - fail_position
+    default_points:
+    - position_actual_pct
+    - position_requested_pct
+    - open_limit
+    - closed_limit
+    - fault_active
+    source_section: '27.3'
+    dictionary_status: baseline_v0_2
+  flow_meter:
+    purpose: Water accounting.
+    allowed_domains:
+    - water
+    - spa
+    required_properties:
+    - pipe_size_status
+    - direction
+    default_points:
+    - flow_instant_lpm
+    - flow_total_m3
+    - reverse_flow_active
+    source_section: '27.3'
+    dictionary_status: baseline_v0_2
+  pressure_sensor:
+    purpose: Pressure monitoring.
+    allowed_domains:
+    - water
+    - spa
+    required_properties:
+    - range_status
+    - calibration_status
+    default_points:
+    - pressure_discharge_kpa
+    - calibration_due
+    source_section: '27.3'
+    dictionary_status: baseline_v0_2
+  filter:
+    purpose: Particulate or media treatment.
+    allowed_domains:
+    - water
+    - spa
+    required_properties:
+    - media_type
+    - nominal_flow_status
+    default_points:
+    - pressure_differential_kpa
+    - throughput_total_m3
+    - service_due
+    source_section: '27.3'
+    dictionary_status: baseline_v0_2
+  treatment_stage:
+    purpose: UV, RO, chemical, aeration, or other treatment.
+    allowed_domains:
+    - water
+    - spa
+    required_properties:
+    - process_type
+    - design_capacity_status
+    default_points:
+    - state_operating
+    - quality_in
+    - quality_out
+    - service_due
+    source_section: '27.3'
+    dictionary_status: baseline_v0_2
+  irrigation_zone:
+    purpose: Managed irrigation area.
+    allowed_domains:
+    - water
+    - agriculture
+    required_properties:
+    - geometry_status
+    - crop_or_guild_status
+    default_points:
+    - soil_moisture_pct
+    - irrigation_requested
+    - irrigation_active
+    - volume_today_l
+    source_section: '27.3'
+    dictionary_status: baseline_v0_2
+  graywater_branch:
+    purpose: Graywater reuse path.
+    allowed_domains:
+    - water
+    required_properties:
+    - source_fixture_status
+    - destination_status
+    default_points:
+    - flow_instant_lpm
+    - diverter_position
+    - quality_status
+    source_section: '27.3'
+    dictionary_status: baseline_v0_2
+  weather_station:
+    purpose: Local weather station.
+    allowed_domains:
+    - agriculture
+    - site
+    required_properties:
+    - elevation_status
+    - exposure_status
+    default_points:
+    - temperature_air_c
+    - humidity_relative_pct
+    - rain_today_mm
+    - wind_speed_m_s
+    - solar_irradiance_w_m2
+    source_section: '27.4'
+    dictionary_status: baseline_v0_2
+  soil_sensor_node:
+    purpose: Distributed soil monitoring.
+    allowed_domains:
+    - agriculture
+    required_properties:
+    - coordinates_status
+    - depth_status
+    - soil_type_status
+    default_points:
+    - soil_moisture_vwc_pct
+    - soil_temperature_c
+    - battery_pct
+    - rssi_dbm
+    source_section: '27.4'
+    dictionary_status: baseline_v0_2
+  tree:
+    purpose: Individual perennial.
+    allowed_domains:
+    - agriculture
+    required_properties:
+    - species
+    - cultivar_status
+    - planting_date_status
+    default_points:
+    - phenology_stage
+    - health_status
+    - yield_season_kg
+    - irrigation_zone_id
+    source_section: '27.4'
+    dictionary_status: baseline_v0_2
+  planting_block:
+    purpose: Group of trees, shrubs, or crops.
+    allowed_domains:
+    - agriculture
+    required_properties:
+    - geometry_status
+    - species_mix_status
+    default_points:
+    - health_status
+    - yield_season_kg
+    - irrigation_demand_mm
+    source_section: '27.4'
+    dictionary_status: baseline_v0_2
+  guild:
+    purpose: Food-forest association.
+    allowed_domains:
+    - agriculture
+    required_properties:
+    - canopy_status
+    - understory_status
+    default_points:
+    - establishment_stage
+    - health_status
+    source_section: '27.4'
+    dictionary_status: baseline_v0_2
+  greenhouse_zone:
+    purpose: Controlled grow area.
+    allowed_domains:
+    - agriculture
+    required_properties:
+    - volume_status
+    - crop_class_status
+    default_points:
+    - temperature_air_c
+    - humidity_relative_pct
+    - co2_ppm
+    - light_ppfd_umol_m2_s
+    source_section: '27.4'
+    dictionary_status: baseline_v0_2
+  nutrient_reservoir:
+    purpose: Fertigation solution reservoir.
+    allowed_domains:
+    - agriculture
+    required_properties:
+    - volume_l
+    - recipe_status
+    default_points:
+    - level_pct
+    - temperature_liquid_c
+    - ph
+    - ec_ms_cm
+    source_section: '27.4'
+    dictionary_status: baseline_v0_2
+  crop_batch:
+    purpose: Traceable production cohort.
+    allowed_domains:
+    - agriculture
+    required_properties:
+    - crop
+    - cultivar_status
+    - start_date_status
+    default_points:
+    - stage
+    - plants_active
+    - yield_total_kg
+    - quality_grade
+    source_section: '27.4'
+    dictionary_status: baseline_v0_2
+  hydrogel_batch:
+    purpose: Experimental substrate batch.
+    allowed_domains:
+    - agriculture
+    required_properties:
+    - formula_status
+    - production_date_status
+    default_points:
+    - reuse_cycles
+    - degradation_status
+    - ph
+    - associated_crop_performance
+    source_section: '27.4'
+    dictionary_status: baseline_v0_2
+  compost_batch:
+    purpose: Compost process lot.
+    allowed_domains:
+    - agriculture
+    required_properties:
+    - input_status
+    - start_date_status
+    default_points:
+    - temperature_core_c
+    - temperature_mean_c
+    - aeration_state
+    - maturity_status
+    source_section: '27.4'
+    dictionary_status: baseline_v0_2
+  mower_robot:
+    purpose: Autonomous mowing equipment.
+    allowed_domains:
+    - agriculture
+    required_properties:
+    - boundary_map_status
+    - dock_status
+    default_points:
+    - state_operating
+    - battery_pct
+    - position
+    - fault_code
+    - area_today_m2
+    source_section: '27.4'
+    dictionary_status: baseline_v0_2
+  rack:
+    purpose: Equipment enclosure.
+    allowed_domains:
+    - it
+    - structure
+    required_properties:
+    - u_height
+    - power_feed_status
+    default_points:
+    - temperature_inlet_c
+    - temperature_exhaust_c
+    - humidity_relative_pct
+    - door_state
+    source_section: '27.5'
+    dictionary_status: baseline_v0_2
+  server:
+    purpose: Compute host.
+    allowed_domains:
+    - it
+    required_properties:
+    - model
+    - cpu_configuration
+    - memory_gb
+    default_points:
+    - power_w
+    - cpu_utilization_pct
+    - memory_used_pct
+    - temperature_cpu_c
+    - availability_state
+    source_section: '27.5'
+    dictionary_status: baseline_v0_2
+  storage_array:
+    purpose: Bulk storage.
+    allowed_domains:
+    - it
+    required_properties:
+    - model
+    - bay_count
+    - topology_status
+    default_points:
+    - capacity_used_pct
+    - disk_fault_count
+    - pool_state
+    - scrub_age_d
+    source_section: '27.5'
+    dictionary_status: baseline_v0_2
+  switch:
+    purpose: Network switch.
+    allowed_domains:
+    - it
+    required_properties:
+    - model
+    - vlan_role
+    default_points:
+    - availability_state
+    - port_up_count
+    - temperature_c
+    - packet_error_rate
+    source_section: '27.5'
+    dictionary_status: baseline_v0_2
+  router:
+    purpose: WAN, routing, or voice gateway.
+    allowed_domains:
+    - it
+    required_properties:
+    - model
+    - routing_role
+    default_points:
+    - wan_state
+    - vpn_state
+    - cpu_utilization_pct
+    - voice_gateway_state
+    source_section: '27.5'
+    dictionary_status: baseline_v0_2
+  wireless_controller:
+    purpose: Wireless AP management.
+    allowed_domains:
+    - it
+    required_properties:
+    - model
+    - managed_ap_capacity
+    default_points:
+    - ap_online_count
+    - client_count
+    - alarm_summary
+    source_section: '27.5'
+    dictionary_status: baseline_v0_2
+  access_point:
+    purpose: Wireless coverage.
+    allowed_domains:
+    - it
+    required_properties:
+    - model
+    - controller_id
+    default_points:
+    - client_count
+    - channel
+    - rssi_health
+    - availability_state
+    source_section: '27.5'
+    dictionary_status: baseline_v0_2
+  application_service:
+    purpose: Digital-twin or infrastructure software service.
+    allowed_domains:
+    - it
+    required_properties:
+    - service_role
+    - host_status
+    default_points:
+    - availability_state
+    - response_time_ms
+    - error_rate
+    - backup_age_h
+    source_section: '27.5'
+    dictionary_status: baseline_v0_2
+  gateway:
+    purpose: Protocol or field bridge.
+    allowed_domains:
+    - it
+    required_properties:
+    - protocols
+    - served_device_status
+    default_points:
+    - availability_state
+    - message_rate_s
+    - queue_depth
+    - clock_offset_ms
+    source_section: '27.5'
+    dictionary_status: baseline_v0_2
+  voice_endpoint:
+    purpose: Desk, rugged phone, or alert endpoint.
+    allowed_domains:
+    - it
+    required_properties:
+    - model
+    - extension_status
+    default_points:
+    - registration_state
+    - availability_state
+    source_section: '27.5'
+    dictionary_status: baseline_v0_2
+  network_segment:
+    purpose: VLAN or routed network zone.
+    allowed_domains:
+    - it
+    required_properties:
+    - vlan_id
+    - subnet
+    - purpose
+    default_points:
+    - availability_state
+    - packet_loss_pct
+    source_section: '3.3'
+    dictionary_status: reconciled_v0_3
+  environmental_monitor:
+    purpose: Environmental-monitoring appliance.
+    allowed_domains:
+    - it
+    - safety
+    required_properties:
+    - model
+    - managed_sensor_status
+    default_points:
+    - availability_state
+    - alarm_summary
+    - temperature_air_c
+    - humidity_relative_pct
+    source_section: rack plan
+    dictionary_status: reconciled_v0_3
+  nitrogen_generator:
+    purpose: PSA nitrogen generation.
+    allowed_domains:
+    - storage
+    required_properties:
+    - process_type
+    - capacity_status
+    default_points:
+    - state_operating
+    - nitrogen_purity_pct
+    - flow_instant_lpm
+    - pressure_discharge_kpa
+    - runtime_total_h
+    source_section: '27.6'
+    dictionary_status: baseline_v0_2
+  controlled_atmosphere_container:
+    purpose: Low-oxygen food storage.
+    allowed_domains:
+    - storage
+    required_properties:
+    - gross_volume_status
+    - entry_procedure_status
+    default_points:
+    - oxygen_pct
+    - temperature_air_c
+    - humidity_relative_pct
+    - door_state
+    - safe_entry_state
+    source_section: '27.6'
+    dictionary_status: baseline_v0_2
+  storage_lot:
+    purpose: Traceable food or material lot.
+    allowed_domains:
+    - storage
+    required_properties:
+    - quantity_unit
+    - date_stored_status
+    default_points:
+    - quantity_current
+    - location_bin
+    - date_stored
+    - inspection_due
+    source_section: '27.6'
+    dictionary_status: baseline_v0_2
+  spa_reservoir:
+    purpose: Hydrotherapy recirculation storage.
+    allowed_domains:
+    - spa
+    required_properties:
+    - gross_volume_l
+    - working_volume_status
+    default_points:
+    - level_pct
+    - temperature_liquid_c
+    - sanitation_valid
+    - volume_estimated_l
+    source_section: '27.6'
+    dictionary_status: baseline_v0_2
+  spa_pump:
+    purpose: Hydrotherapy or atmospheric circuit pump.
+    allowed_domains:
+    - spa
+    required_properties:
+    - circuit_role
+    - motor_rating_status
+    default_points:
+    - flow_instant_lpm
+    - pressure_discharge_kpa
+    - current_a
+    - state_operating
+    source_section: '27.6'
+    dictionary_status: baseline_v0_2
+  spa_heater:
+    purpose: Water or surface heating.
+    allowed_domains:
+    - spa
+    required_properties:
+    - heater_role
+    - rated_power_status
+    default_points:
+    - power_kw
+    - temperature_outlet_c
+    - flow_proven
+    - high_limit_active
+    source_section: '27.6'
+    dictionary_status: baseline_v0_2
+  dehumidifier:
+    purpose: Post-use drying.
+    allowed_domains:
+    - spa
+    - structure
+    required_properties:
+    - rated_capacity_status
+    default_points:
+    - state_operating
+    - humidity_in_pct
+    - humidity_out_pct
+    - condensate_total_l
+    source_section: '27.6'
+    dictionary_status: baseline_v0_2
+  camera:
+    purpose: Video monitoring.
+    allowed_domains:
+    - security
+    required_properties:
+    - model_status
+    - recording_destination_status
+    default_points:
+    - availability_state
+    - recording_state
+    - tamper_active
+    - motion_event
+    source_section: '27.6'
+    dictionary_status: baseline_v0_2
+  door:
+    purpose: Access boundary.
+    allowed_domains:
+    - security
+    - structure
+    required_properties:
+    - door_type
+    - lock_status
+    default_points:
+    - open_state
+    - locked_state
+    - forced_open_active
+    - access_last_identity
+    source_section: '27.6'
+    dictionary_status: baseline_v0_2
+  gate:
+    purpose: Property access.
+    allowed_domains:
+    - security
+    required_properties:
+    - gate_type
+    - actuator_status
+    default_points:
+    - position_actual_pct
+    - locked_state
+    - obstruction_active
+    source_section: '27.6'
+    dictionary_status: baseline_v0_2
+  access_controller:
+    purpose: Credential management.
+    allowed_domains:
+    - security
+    required_properties:
+    - model
+    - credential_type_status
+    default_points:
+    - availability_state
+    - denied_event
+    - tamper_active
+    source_section: '27.6'
+    dictionary_status: baseline_v0_2
+  safety_sensor:
+    purpose: Smoke, leak, gas, heat, vibration, or atmospheric safety sensor.
+    allowed_domains:
+    - safety
+    required_properties:
+    - sensor_type
+    - range_status
+    default_points:
+    - alarm_active
+    - value
+    - self_test_due
+    - battery_pct
+    source_section: '27.6'
+    dictionary_status: baseline_v0_2
+  alarm_output:
+    purpose: Beacon, siren, or annunciator.
+    allowed_domains:
+    - safety
+    required_properties:
+    - output_type
+    - activation_method
+    default_points:
+    - state_operating
+    - enabled_requested
+    - fault_active
+    source_section: rack plan
+    dictionary_status: reconciled_v0_3
+  controller:
+    purpose: PLC, microcontroller, or subsystem coordinator.
+    allowed_domains:
+    - it
+    - energy
+    - water
+    - agriculture
+    - spa
+    - storage
+    - safety
+    required_properties:
+    - controller_role
+    - platform_status
+    default_points:
+    - availability_state
+    - mode_actual
+    - control_owner
+    - fault_active
+    source_section: '9.2'
+    dictionary_status: reconciled_v0_3
+  sensor:
+    purpose: Generic non-safety process sensor.
+    allowed_domains:
+    - energy
+    - water
+    - agriculture
+    - spa
+    - storage
+    - it
+    required_properties:
+    - sensor_type
+    - range_status
+    default_points:
+    - availability_state
+    - value
+    - calibration_due
+    source_section: '9.2'
+    dictionary_status: reconciled_v0_3
+  tool:
+    purpose: Workshop or maintenance tool.
+    allowed_domains:
+    - workshop
+    required_properties:
+    - tool_type
+    - ownership_status
+    default_points:
+    - service_due
+    - inspection_due
+    - availability_state
+    source_section: '9.2'
+    dictionary_status: reconciled_v0_3
+point_profiles:
+  common_commandable:
+  - availability_state
+  - state_operating
+  - mode_actual
+  - mode_requested
+  - control_owner
+  - manual_override_active
+  - interlock_permissive
+  - interlock_block_reason
+  - fault_active
+  - fault_code
+  - alarm_summary
+  - command_last_id
+  - command_last_result
+  - runtime_total_h
+  - starts_total
+  common_monitored:
+  - availability_state
+  - fault_active
+  - fault_code
+  - alarm_summary
+  - heartbeat_age_s
+  - firmware_version
+  ems_load:
+  - power_kw
+  - enabled_actual
+  - enabled_requested
+  - load_tier
+  - priority_effective
+  - shed_state
+  - shed_reason
+  - restart_delay_s
+  - minimum_on_time_s
+  - minimum_off_time_s
+  - power_budget_kw
+  - power_request_kw
+  rack_environment:
+  - temperature_inlet_c
+  - temperature_exhaust_c
+  - humidity_relative_pct
+  - door_state
+  - smoke_active
+  - leak_active
+  - alarm_summary
+  network_device:
+  - availability_state
+  - response_time_ms
+  - packet_loss_pct
+  - cpu_utilization_pct
+  - temperature_c
+  - configuration_age_d
+notes:
+- Entries marked baseline_v0_2 are direct machine-readable translations of the v0.2 design document.
+- Entries marked reconciled_v0_3 close internal references or represent source-supported equipment categories that were not
+  formalized as classes in v0.2.
+- Vendor identifiers, network addresses, and protocol registers are not canonical asset identities.

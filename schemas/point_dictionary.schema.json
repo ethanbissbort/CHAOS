@@ -1,0 +1,205 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://homestead.local/schemas/point-dictionary.schema.json",
+  "title": "Homestead Point Dictionary",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "document_type",
+    "point_classes",
+    "quality_codes",
+    "canonical_units",
+    "point_name_pattern",
+    "point_path_format",
+    "points"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "document_type": {
+      "const": "point_dictionary"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source_document": {
+      "type": "string"
+    },
+    "point_classes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "name",
+          "read_write",
+          "description"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "read_write": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "quality_codes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "canonical_units": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "point_name_pattern": {
+      "type": "string"
+    },
+    "point_path_format": {
+      "type": "string"
+    },
+    "points": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_]*$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "default_class",
+          "allowed_classes",
+          "data_type",
+          "unit",
+          "description",
+          "control_capable",
+          "automatic_control_default",
+          "applicable_asset_classes",
+          "source_section",
+          "dictionary_status"
+        ],
+        "properties": {
+          "default_class": {
+            "enum": [
+              "AI",
+              "DI",
+              "AO",
+              "DO",
+              "CALC",
+              "CFG",
+              "EVENT",
+              "ALARM",
+              "COUNTER",
+              "TEXT"
+            ]
+          },
+          "allowed_classes": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "AI",
+                "DI",
+                "AO",
+                "DO",
+                "CALC",
+                "CFG",
+                "EVENT",
+                "ALARM",
+                "COUNTER",
+                "TEXT"
+              ]
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "data_type": {
+            "enum": [
+              "float",
+              "integer",
+              "boolean",
+              "string",
+              "enum",
+              "object"
+            ]
+          },
+          "unit": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "control_capable": {
+            "type": "boolean"
+          },
+          "automatic_control_default": {
+            "type": "boolean"
+          },
+          "applicable_asset_classes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "source_section": {
+            "type": "string"
+          },
+          "dictionary_status": {
+            "enum": [
+              "baseline_v0_2",
+              "reconciled_v0_3"
+            ]
+          },
+          "enum_values": {
+            "type": "array",
+            "items": {
+              "type": [
+                "string",
+                "number",
+                "boolean"
+              ]
+            },
+            "uniqueItems": true
+          },
+          "physical_range": {
+            "type": "object",
+            "properties": {
+              "minimum": {
+                "type": "number"
+              },
+              "maximum": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,418 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://homestead.local/schemas/alarm-definitions.schema.json",
+  "title": "Homestead Alarm Definitions",
+  "description": "Alarm definition set for the Homestead Digital Twin. Every entry carries the ten fields SDD section 14.3 requires of an alarm definition plus the correlation and threshold-provenance metadata the platform needs to avoid alarm floods and to avoid presenting invented setpoints as decided values.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "document_type",
+    "severities",
+    "lifecycle_states",
+    "maintenance_mode_behaviours",
+    "threshold_statuses",
+    "trigger_operators",
+    "notification_channels",
+    "correlation_defaults",
+    "open_items",
+    "alarms"
+  ],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "document_type": { "const": "alarm_definitions" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "source_document": { "type": "string" },
+    "registry_basis": { "type": "string" },
+    "severities": {
+      "type": "object",
+      "required": ["info", "warning", "major", "critical", "emergency"],
+      "additionalProperties": { "type": "string" }
+    },
+    "lifecycle_states": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/lifecycleState" },
+      "minItems": 6,
+      "uniqueItems": true
+    },
+    "maintenance_mode_behaviours": {
+      "type": "object",
+      "required": ["suppress", "downgrade", "notify_only", "normal"],
+      "additionalProperties": { "type": "string" }
+    },
+    "threshold_statuses": {
+      "type": "object",
+      "required": ["derived_from_design_document", "commissioning_default", "not_applicable"],
+      "additionalProperties": { "type": "string" }
+    },
+    "trigger_operators": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "notification_channels": {
+      "type": "object",
+      "required": ["log"],
+      "propertyNames": { "$ref": "#/$defs/channel" },
+      "additionalProperties": { "type": "string" }
+    },
+    "parent_scopes": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/parentScope" },
+      "additionalProperties": { "type": "string" }
+    },
+    "correlation_defaults": {
+      "type": "object",
+      "required": ["window_s", "flood_threshold", "downstream_edge_types"],
+      "properties": {
+        "window_s": { "type": "integer", "minimum": 1 },
+        "flood_threshold": { "type": "integer", "minimum": 2 },
+        "max_graph_depth": { "type": "integer", "minimum": 1, "maximum": 32 },
+        "downstream_edge_types": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
+          "additionalProperties": { "enum": ["forward", "reverse"] }
+        },
+        "notes": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "open_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "description", "affects"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "description": { "type": "string", "minLength": 1 },
+          "affects": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/alarmKey" },
+            "uniqueItems": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "alarms": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/alarmDefinition" }
+    },
+    "notes": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": false,
+
+  "$defs": {
+    "alarmKey": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "maxLength": 120
+    },
+    "assetId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9][a-z0-9_]*){3}$",
+      "maxLength": 160
+    },
+    "pointName": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "maxLength": 120
+    },
+    "severity": { "enum": ["info", "warning", "major", "critical", "emergency"] },
+    "lifecycleState": {
+      "enum": ["detected", "active", "acknowledged", "mitigated", "cleared", "reviewed"]
+    },
+    "channel": { "enum": ["log", "email", "push", "voice"] },
+    "parentScope": { "enum": ["same_asset", "related", "any"] },
+    "operator": {
+      "enum": ["lt", "le", "gt", "ge", "eq", "ne", "in", "not_in", "quality_in"]
+    },
+    "scalar": { "type": ["string", "number", "boolean"] },
+
+    "condition": {
+      "description": "One comparison. Exactly one of `value` or `values` must be present; `values` is required for the set operators.",
+      "type": "object",
+      "required": ["operator"],
+      "properties": {
+        "operator": { "$ref": "#/$defs/operator" },
+        "value": { "$ref": "#/$defs/scalar" },
+        "values": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/scalar" },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "guards": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/guard" }
+        }
+      },
+      "additionalProperties": false,
+      "oneOf": [
+        { "required": ["value"], "not": { "required": ["values"] } },
+        { "required": ["values"], "not": { "required": ["value"] } }
+      ],
+      "allOf": [
+        {
+          "if": { "properties": { "operator": { "enum": ["in", "not_in", "quality_in"] } }, "required": ["operator"] },
+          "then": { "required": ["values"] }
+        },
+        {
+          "if": { "properties": { "operator": { "enum": ["lt", "le", "gt", "ge"] } }, "required": ["operator"] },
+          "then": { "properties": { "value": { "type": "number" } }, "required": ["value"] }
+        }
+      ]
+    },
+
+    "guard": {
+      "description": "Additional condition that must hold before the trigger is evaluated. Lets a definition require live load, usable irradiance and so on without inventing a rule engine.",
+      "type": "object",
+      "required": ["asset_id", "point_name", "operator"],
+      "properties": {
+        "asset_id": { "$ref": "#/$defs/assetId" },
+        "point_name": { "$ref": "#/$defs/pointName" },
+        "operator": { "$ref": "#/$defs/operator" },
+        "value": { "$ref": "#/$defs/scalar" },
+        "values": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/scalar" },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "description": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+
+    "escalationStage": {
+      "description": "SDD 14.3 escalation path and SDD FR-007 channel routing.",
+      "type": "object",
+      "required": ["stage", "after_s", "channels"],
+      "properties": {
+        "stage": { "type": "integer", "minimum": 1 },
+        "after_s": { "type": "integer", "minimum": 0 },
+        "channels": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/channel" },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "role": { "enum": ["viewer", "operator", "maintainer", "administrator", "on_call"] },
+        "description": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+
+    "suppressionCondition": {
+      "description": "SDD 14.3 suppression conditions. `manual` entries are documentation only and are never evaluated automatically.",
+      "type": "object",
+      "required": ["type", "description"],
+      "properties": {
+        "type": { "enum": ["operating_mode", "point_state", "parent_alarm_active", "manual"] },
+        "description": { "type": "string", "minLength": 1 },
+        "scope": { "enum": ["asset", "domain", "site"] },
+        "modes": {
+          "type": "array",
+          "items": {
+            "enum": ["off", "manual", "automatic", "scheduled", "maintenance", "degraded", "emergency"]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "asset_id": { "$ref": "#/$defs/assetId" },
+        "point_name": { "$ref": "#/$defs/pointName" },
+        "operator": { "$ref": "#/$defs/operator" },
+        "value": { "$ref": "#/$defs/scalar" },
+        "values": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/scalar" },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "alarm_key": { "$ref": "#/$defs/alarmKey" }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "operating_mode" } }, "required": ["type"] },
+          "then": { "required": ["modes", "scope"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "point_state" } }, "required": ["type"] },
+          "then": { "required": ["asset_id", "point_name", "operator"] }
+        }
+      ]
+    },
+
+    "correlationOverride": {
+      "type": "object",
+      "properties": {
+        "window_s": { "type": "integer", "minimum": 1 },
+        "flood_threshold": { "type": "integer", "minimum": 2 },
+        "is_root_candidate": {
+          "type": "boolean",
+          "description": "Marks an alarm that is expected to be the root of an incident rather than a member of someone else's."
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "alarmDefinition": {
+      "type": "object",
+      "required": [
+        "alarm_key",
+        "name",
+        "severity",
+        "domain",
+        "trigger",
+        "reset",
+        "on_delay_s",
+        "off_delay_s",
+        "threshold_status",
+        "threshold_basis",
+        "requires_manual_reset",
+        "maintenance_mode_behaviour",
+        "affected_assets",
+        "probable_causes",
+        "automatic_action",
+        "operator_action",
+        "procedure_ref",
+        "procedure_status",
+        "escalation_path",
+        "suppression_conditions",
+        "source_sections",
+        "enabled"
+      ],
+      "properties": {
+        "alarm_key": { "$ref": "#/$defs/alarmKey" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 240 },
+        "severity": { "$ref": "#/$defs/severity" },
+        "domain": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+
+        "asset_id": {
+          "description": "Scope this definition to one registry asset. Mutually exclusive with asset_class. Both null means the alarm is instantiated dynamically (data-quality alarms).",
+          "oneOf": [{ "$ref": "#/$defs/assetId" }, { "type": "null" }]
+        },
+        "asset_class": {
+          "description": "Scope this definition to every asset of a class in `domain`.",
+          "oneOf": [{ "type": "string", "pattern": "^[a-z][a-z0-9_]*$" }, { "type": "null" }]
+        },
+        "point_name": {
+          "oneOf": [{ "$ref": "#/$defs/pointName" }, { "type": "null" }]
+        },
+
+        "trigger": { "$ref": "#/$defs/condition" },
+        "reset": { "$ref": "#/$defs/condition" },
+        "hysteresis": {
+          "description": "Explicit deadband. When reset is omitted the evaluator derives the reset condition from trigger +/- hysteresis, so the deadband is always real.",
+          "type": ["number", "null"]
+        },
+        "on_delay_s": {
+          "description": "SDD 14.3 delay. The trigger must hold this long before the alarm leaves `detected` for `active`.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "off_delay_s": {
+          "description": "The reset condition must hold this long before the alarm clears.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "trigger_expression": { "type": "string" },
+
+        "threshold_status": { "enum": ["derived_from_design_document", "commissioning_default", "not_applicable"] },
+        "threshold_basis": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Where the number came from and what still has to be decided. Required so no threshold reads as a settled design value."
+        },
+
+        "requires_manual_reset": { "type": "boolean" },
+        "maintenance_mode_behaviour": { "enum": ["suppress", "downgrade", "notify_only", "normal"] },
+
+        "parent_alarm_key": {
+          "oneOf": [{ "$ref": "#/$defs/alarmKey" }, { "type": "null" }],
+          "description": "When this parent alarm is open, this alarm is a symptom: it joins the parent's incident and is not notified separately (SDD 14.2)."
+        },
+        "parent_scope": { "$ref": "#/$defs/parentScope" },
+        "data_quality_alarm_key": {
+          "oneOf": [{ "$ref": "#/$defs/alarmKey" }, { "type": "null" }],
+          "description": "Alarm raised instead of this one when the trigger input is bad or stale (SDD 26.6)."
+        },
+
+        "affected_assets": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/assetId" },
+          "uniqueItems": true
+        },
+        "probable_causes": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "automatic_action": { "type": "string", "minLength": 1 },
+        "operator_action": { "type": "string", "minLength": 1 },
+        "procedure_ref": { "type": "string", "minLength": 1 },
+        "procedure_status": { "enum": ["not_yet_written", "draft", "approved"] },
+
+        "escalation_path": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/escalationStage" },
+          "minItems": 1
+        },
+        "renotify_after_s": {
+          "description": "Re-notify an unacknowledged alarm after this many seconds. 0 disables re-notification.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "suppression_conditions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/suppressionCondition" }
+        },
+        "correlation": { "$ref": "#/$defs/correlationOverride" },
+
+        "source_sections": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1,
+          "description": "SDD sections this alarm is grounded in."
+        },
+        "enabled": { "type": "boolean" },
+        "notes": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "description": "An emergency alarm must never be silenced by maintenance mode: SDD 14.1 makes it a life-safety class where local protection acts independently and the platform's only job is to report.",
+          "if": { "properties": { "severity": { "const": "emergency" } }, "required": ["severity"] },
+          "then": {
+            "properties": {
+              "maintenance_mode_behaviour": { "enum": ["notify_only", "normal"] },
+              "requires_manual_reset": { "const": true }
+            }
+          }
+        },
+        {
+          "description": "A numeric threshold has to declare where it came from.",
+          "if": {
+            "properties": { "trigger": { "properties": { "operator": { "enum": ["lt", "le", "gt", "ge"] } }, "required": ["operator"] } },
+            "required": ["trigger"]
+          },
+          "then": {
+            "properties": {
+              "threshold_status": { "enum": ["derived_from_design_document", "commissioning_default"] }
+            }
+          }
+        },
+        {
+          "description": "asset_id and asset_class are mutually exclusive scopes.",
+          "not": {
+            "allOf": [
+              { "required": ["asset_id"], "properties": { "asset_id": { "type": "string" } } },
+              { "required": ["asset_class"], "properties": { "asset_class": { "type": "string" } } }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

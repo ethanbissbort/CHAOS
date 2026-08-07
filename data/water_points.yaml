@@ -1,0 +1,745 @@
+schema_version: 0.4.0
+document_type: point_dictionary_extension
+document_status: extension_for_review
+generated_at: '2026-08-07T00:00:00Z'
+extends: data/point_dictionary.yaml
+merge_target: data/point_dictionary.yaml
+source_document: Homestead_Digital_Twin_Software_Design_Document_v0.3.md
+work_queue_item: '49.5'
+control_narrative: docs/water-control-narrative.md
+purpose: Water points required by SDD section 12.3 (FR-200 to FR-205) and the water control narrative that the v0.3 point
+  dictionary does not already define. Existing point names are reused wherever one fits.
+provenance:
+  dictionary_status: reconciled_v0_4
+  convention: 'Extends the SDD section 45 provenance ladder: baseline_v0_2 is a direct v0.2 translation, reconciled_v0_3 closed
+    internal references during the v0.3 pass, and reconciled_v0_4 is a new formal definition added by the water pass. Nothing
+    marked reconciled_v0_4 is a previously settled decision.'
+point_name_pattern: ^[a-z][a-z0-9_]*$
+point_path_format: <asset_id>/<point_name>
+canonical_units_added:
+  kPa/min: kilopascals per minute
+  '%/h': percent per hour
+  count/h: counts per hour
+  L/d: litres per day
+reused_existing_points:
+  description: Points the water systems need that the v0.3 dictionary already defines. Listed so a reviewer can see that this
+    extension adds only what is genuinely missing.
+  points:
+  - alarm_summary
+  - availability_state
+  - calibration_due
+  - closed_limit
+  - control_owner
+  - current_a
+  - diverter_position
+  - dry_run_active
+  - ec_ms_cm
+  - fault_active
+  - fault_code
+  - flow_instant_lpm
+  - flow_proven
+  - flow_total_m3
+  - freeze_lockout_active
+  - high_level_active
+  - interlock_block_reason
+  - interlock_permissive
+  - irrigation_active
+  - irrigation_demand_mm
+  - irrigation_requested
+  - leak_active
+  - level_pct
+  - low_level_active
+  - manual_override_active
+  - mode_actual
+  - mode_requested
+  - open_limit
+  - ph
+  - position_actual_pct
+  - position_requested_pct
+  - pressure_differential_kpa
+  - pressure_discharge_kpa
+  - pressure_suction_kpa
+  - pump_run_request
+  - pump_speed_requested_pct
+  - quality_in
+  - quality_out
+  - reverse_flow_active
+  - runtime_total_h
+  - service_due
+  - soil_moisture_vwc_pct
+  - starts_total
+  - state_operating
+  - temperature_liquid_c
+  - throughput_total_m3
+  - turbidity_ntu
+  - volume_estimated_l
+  - volume_today_l
+  - water_level_m
+  - water_quality_status
+  - water_temperature_c
+points:
+  pressure_line_kpa:
+    default_class: AI
+    allowed_classes:
+    - AI
+    data_type: float
+    unit: kPa
+    description: Static or working pressure in a distribution line at a monitored point, independent of any pump.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - pressure_sensor
+    - valve
+    - filter
+    - treatment_stage
+    source_section: 12.3 FR-200
+    dictionary_status: reconciled_v0_4
+    notes: The v0.3 dictionary defines suction, discharge and differential pressure but no line pressure. Leak detection needs
+      a pressure that is not tied to a running pump.
+  temperature_line_c:
+    default_class: AI
+    allowed_classes:
+    - AI
+    data_type: float
+    unit: °C
+    description: Pipe surface or in-line temperature used for freeze exposure assessment.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - sensor
+    - valve
+    - pump
+    source_section: 12.3 FR-204
+    dictionary_status: reconciled_v0_4
+    notes: temperature_liquid_c describes stored liquid; this point describes an exposed line.
+  water_source_selected:
+    default_class: DI
+    allowed_classes:
+    - DI
+    data_type: enum
+    unit: null
+    description: Water source currently supplying the served system.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - controller
+    - tank
+    - pump
+    source_section: 12.3 FR-201
+    dictionary_status: reconciled_v0_4
+    enum_values:
+    - well
+    - rainwater
+    - potable_storage
+    - graywater_reuse
+    - external_delivery
+    - none
+    - unknown
+    notes: Distinct from source_selected, which the v0.3 dictionary defines for electrical ATS and inverter sources.
+  volume_source_today_m3:
+    default_class: CALC
+    allowed_classes:
+    - CALC
+    - COUNTER
+    data_type: float
+    unit: m³
+    description: Volume delivered from a source since local midnight.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - flow_meter
+    - well
+    - tank
+    - controller
+    source_section: 12.3 FR-201
+    dictionary_status: reconciled_v0_4
+  volume_use_today_m3:
+    default_class: CALC
+    allowed_classes:
+    - CALC
+    - COUNTER
+    data_type: float
+    unit: m³
+    description: Volume consumed by a use since local midnight.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - flow_meter
+    - irrigation_zone
+    - graywater_branch
+    - controller
+    source_section: 12.3 FR-201
+    dictionary_status: reconciled_v0_4
+  volume_unaccounted_today_m3:
+    default_class: CALC
+    allowed_classes:
+    - CALC
+    data_type: float
+    unit: m³
+    description: Metered source volume minus metered use volume minus storage change, since local midnight.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - controller
+    source_section: 12.3 FR-201, FR-202
+    dictionary_status: reconciled_v0_4
+    notes: Unaccounted volume is the balance residual. It is evidence for a leak, not proof of one.
+  volume_balance_error_pct:
+    default_class: CALC
+    allowed_classes:
+    - CALC
+    data_type: float
+    unit: '%'
+    description: Unaccounted volume expressed as a percentage of metered source volume over the accounting window.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - controller
+    source_section: 12.3 FR-201
+    dictionary_status: reconciled_v0_4
+  water_balance_state:
+    default_class: CALC
+    allowed_classes:
+    - CALC
+    - DI
+    data_type: enum
+    unit: null
+    description: Quality of the source-to-use balance over the accounting window.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - controller
+    source_section: 12.3 FR-201
+    dictionary_status: reconciled_v0_4
+    enum_values:
+    - balanced
+    - drifting
+    - unbalanced
+    - insufficient_metering
+    - unknown
+    notes: insufficient_metering is the honest state when a source or use has no meter, and must not read as balanced.
+  flow_unexpected_active:
+    default_class: DI
+    allowed_classes:
+    - DI
+    - ALARM
+    - CALC
+    data_type: boolean
+    unit: null
+    description: Flow is present while no scheduled or acknowledged demand explains it.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - flow_meter
+    - controller
+    source_section: 12.3 FR-202
+    dictionary_status: reconciled_v0_4
+  flow_continuous_duration_min:
+    default_class: CALC
+    allowed_classes:
+    - CALC
+    data_type: float
+    unit: min
+    description: Elapsed time for which flow has remained continuously above the no-flow threshold.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - flow_meter
+    - controller
+    source_section: 12.3 FR-202
+    dictionary_status: reconciled_v0_4
+  pressure_decay_rate_kpa_min:
+    default_class: CALC
+    allowed_classes:
+    - CALC
+    - AI
+    data_type: float
+    unit: kPa/min
+    description: Rate of pressure loss in an isolated or quiescent line, used as leak evidence.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - pressure_sensor
+    - controller
+    source_section: 12.3 FR-202
+    dictionary_status: reconciled_v0_4
+  level_loss_rate_pct_h:
+    default_class: CALC
+    allowed_classes:
+    - CALC
+    data_type: float
+    unit: '%/h'
+    description: Rate of vessel level loss with no metered draw, corrected for known usage.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - tank
+    - spa_reservoir
+    - nutrient_reservoir
+    source_section: 12.3 FR-202
+    dictionary_status: reconciled_v0_4
+    notes: Evaporation and thermal contraction must be accounted for before this value is treated as a leak.
+  leak_detection_state:
+    default_class: CALC
+    allowed_classes:
+    - CALC
+    - DI
+    data_type: enum
+    unit: null
+    description: Aggregate leak assessment for a monitored water subsystem.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - controller
+    - flow_meter
+    - graywater_branch
+    source_section: 12.3 FR-202
+    dictionary_status: reconciled_v0_4
+    enum_values:
+    - normal
+    - suspected
+    - confirmed
+    - isolated
+    - suppressed
+    - unknown
+    notes: leak_active in the v0.3 dictionary is a physical detector state. This point is the inference model's conclusion,
+      which may be true when no detector has wetted.
+  leak_evidence_summary:
+    default_class: TEXT
+    allowed_classes:
+    - TEXT
+    data_type: string
+    unit: null
+    description: Human-readable list of the evidence that produced the current leak_detection_state.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - controller
+    source_section: 12.3 FR-202
+    dictionary_status: reconciled_v0_4
+    notes: An operator must be able to see why the platform believes there is a leak before acting on it.
+  leak_isolation_requested:
+    default_class: DO
+    allowed_classes:
+    - DO
+    data_type: boolean
+    unit: null
+    description: Supervisory request to close the isolation valve serving a suspected leak.
+    control_capable: true
+    automatic_control_default: false
+    applicable_asset_classes:
+    - valve
+    - controller
+    source_section: 12.3 FR-202
+    dictionary_status: reconciled_v0_4
+    notes: automatic_control_default is false on purpose. Automatically removing water from the residence is an owner policy
+      decision made at commissioning, not a platform default.
+  demand_scheduled_active:
+    default_class: DI
+    allowed_classes:
+    - DI
+    - CALC
+    data_type: boolean
+    unit: null
+    description: A scheduled or operator-acknowledged water demand is currently expected.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - controller
+    - irrigation_zone
+    source_section: 12.3 FR-202
+    dictionary_status: reconciled_v0_4
+    notes: Context input that stops irrigation and laundry from being reported as leaks.
+  suction_source_available:
+    default_class: DI
+    allowed_classes:
+    - DI
+    - CALC
+    data_type: boolean
+    unit: null
+    description: Source level or suction pressure is valid and above the configured minimum for pump start.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes: &id001
+    - pump
+    - spa_pump
+    source_section: 12.3 FR-203
+    dictionary_status: reconciled_v0_4
+    notes: Must evaluate false on missing or stale source data; a permissive may not default permissive.
+  discharge_path_available:
+    default_class: DI
+    allowed_classes:
+    - DI
+    - CALC
+    data_type: boolean
+    unit: null
+    description: At least one downstream path is open so the pump has somewhere to deliver.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes: *id001
+    source_section: 12.3 FR-203
+    dictionary_status: reconciled_v0_4
+  overcurrent_active:
+    default_class: DI
+    allowed_classes:
+    - DI
+    - ALARM
+    data_type: boolean
+    unit: null
+    description: Motor current has exceeded the configured limit for the configured time.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - pump
+    - spa_pump
+    - mower_robot
+    source_section: 12.3 FR-203
+    dictionary_status: reconciled_v0_4
+  starts_per_hour:
+    default_class: CALC
+    allowed_classes:
+    - CALC
+    data_type: float
+    unit: count/h
+    description: Rolling start rate used to detect short cycling.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes: *id001
+    source_section: 12.3 FR-203
+    dictionary_status: reconciled_v0_4
+  pump_lockout_active:
+    default_class: DI
+    allowed_classes:
+    - DI
+    - ALARM
+    data_type: boolean
+    unit: null
+    description: Latched lockout preventing pump operation until an explicit reset.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes: *id001
+    source_section: 12.3 FR-203
+    dictionary_status: reconciled_v0_4
+    notes: A lockout is latched by design. Self-clearing protection hides the fault that caused it.
+  pump_lockout_reason:
+    default_class: TEXT
+    allowed_classes:
+    - TEXT
+    data_type: string
+    unit: null
+    description: Primary cause of the active pump lockout.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes: *id001
+    source_section: 12.3 FR-203
+    dictionary_status: reconciled_v0_4
+  pump_lockout_reset_request:
+    default_class: DO
+    allowed_classes:
+    - DO
+    data_type: boolean
+    unit: null
+    description: Operator or supervisory request to clear a latched pump lockout.
+    control_capable: true
+    automatic_control_default: false
+    applicable_asset_classes: *id001
+    source_section: 12.3 FR-203
+    dictionary_status: reconciled_v0_4
+  minimum_source_level_pct:
+    default_class: CFG
+    allowed_classes:
+    - CFG
+    data_type: float
+    unit: '%'
+    description: Configured minimum source level below which pump start is inhibited.
+    control_capable: true
+    automatic_control_default: false
+    applicable_asset_classes:
+    - pump
+    - spa_pump
+    - tank
+    - spa_reservoir
+    - nutrient_reservoir
+    source_section: 12.3 FR-203
+    dictionary_status: reconciled_v0_4
+    physical_range:
+      minimum: 0
+      maximum: 100
+    notes: Commissioning parameter. No value is proposed by the design package.
+  maximum_runtime_min:
+    default_class: CFG
+    allowed_classes:
+    - CFG
+    data_type: float
+    unit: min
+    description: Configured maximum continuous run time before the equipment is stopped and flagged.
+    control_capable: true
+    automatic_control_default: false
+    applicable_asset_classes:
+    - pump
+    - spa_pump
+    - irrigation_zone
+    - valve
+    source_section: 12.4 FR-302
+    dictionary_status: reconciled_v0_4
+    notes: Commissioning parameter. Protects against a stuck-open zone emptying the storage.
+  winterization_state:
+    default_class: DI
+    allowed_classes:
+    - DI
+    - CALC
+    data_type: enum
+    unit: null
+    description: Seasonal protection state of an outdoor line or piece of equipment.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - controller
+    - valve
+    - irrigation_zone
+    - pump
+    - tank
+    source_section: 12.3 FR-204
+    dictionary_status: reconciled_v0_4
+    enum_values:
+    - summer
+    - transition_to_winter
+    - draining
+    - winterized
+    - refilling
+    - unknown
+  winterization_requested:
+    default_class: DO
+    allowed_classes:
+    - DO
+    data_type: enum
+    unit: null
+    description: Supervisory or operator request to move an outdoor subsystem between seasonal states.
+    control_capable: true
+    automatic_control_default: false
+    applicable_asset_classes:
+    - controller
+    - valve
+    - irrigation_zone
+    source_section: 12.3 FR-204
+    dictionary_status: reconciled_v0_4
+    enum_values:
+    - summer
+    - winterize
+    - refill
+    - hold
+  drain_complete:
+    default_class: DI
+    allowed_classes:
+    - DI
+    - CALC
+    data_type: boolean
+    unit: null
+    description: Drain-down of the served line has been proven, not merely commanded.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - valve
+    - controller
+    - irrigation_zone
+    source_section: 12.3 FR-204
+    dictionary_status: reconciled_v0_4
+    notes: 'Proof method is undecided: pressure at atmospheric, zero flow on refill test, or manual confirmation.'
+  heat_trace_active:
+    default_class: DI
+    allowed_classes:
+    - DI
+    data_type: boolean
+    unit: null
+    description: Freeze-protection heating is energized on the served line.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - controller
+    - valve
+    - pump
+    - load
+    source_section: 12.3 FR-204
+    dictionary_status: reconciled_v0_4
+    notes: The heat-trace circuit itself is an electrical load and belongs to the energy domain and load schedule.
+  freeze_risk_state:
+    default_class: CALC
+    allowed_classes:
+    - CALC
+    - DI
+    data_type: enum
+    unit: null
+    description: Assessed freeze risk for an outdoor line, derived from line and ambient temperature and forecast.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - controller
+    - sensor
+    - valve
+    source_section: 12.3 FR-204
+    dictionary_status: reconciled_v0_4
+    enum_values:
+    - none
+    - watch
+    - protect
+    - lockout
+    - unknown
+    notes: lockout is the state in which freeze_lockout_active inhibits pump and valve operation.
+  reserve_volume_l:
+    default_class: CALC
+    allowed_classes:
+    - CALC
+    data_type: float
+    unit: L
+    description: Potable volume currently available above the configured emergency reserve floor.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - tank
+    - controller
+    source_section: 12.3 FR-205
+    dictionary_status: reconciled_v0_4
+    notes: 'Mirrors energy_available_kwh: what is usable, not what is stored.'
+  reserve_floor_l:
+    default_class: CFG
+    allowed_classes:
+    - CFG
+    data_type: float
+    unit: L
+    description: Configured emergency potable reserve that discretionary demand may not consume.
+    control_capable: true
+    automatic_control_default: false
+    applicable_asset_classes:
+    - tank
+    - controller
+    source_section: 12.3 FR-205
+    dictionary_status: reconciled_v0_4
+    notes: Commissioning parameter. Depends on household size and resupply time, neither of which is known.
+  reserve_autonomy_d:
+    default_class: CALC
+    allowed_classes:
+    - CALC
+    data_type: float
+    unit: d
+    description: Estimated days of essential potable supply at the current or configured essential demand rate.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - tank
+    - controller
+    source_section: 12.3 FR-205
+    dictionary_status: reconciled_v0_4
+  essential_demand_l_d:
+    default_class: CFG
+    allowed_classes:
+    - CFG
+    - CALC
+    data_type: float
+    unit: L/d
+    description: Essential potable demand rate used to compute reserve autonomy.
+    control_capable: true
+    automatic_control_default: false
+    applicable_asset_classes:
+    - controller
+    source_section: 12.3 FR-205
+    dictionary_status: reconciled_v0_4
+  reserve_protection_active:
+    default_class: DI
+    allowed_classes:
+    - DI
+    - CALC
+    data_type: boolean
+    unit: null
+    description: Reserve protection is engaged and discretionary water use is being restricted.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - tank
+    - valve
+    - controller
+    source_section: 12.3 FR-205
+    dictionary_status: reconciled_v0_4
+  water_state_site:
+    default_class: CALC
+    allowed_classes:
+    - CALC
+    - DI
+    data_type: enum
+    unit: null
+    description: Published site water state, the water analogue of the EMS energy state.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - controller
+    - site
+    source_section: 12.3 FR-205
+    dictionary_status: reconciled_v0_4
+    enum_values:
+    - COMMISSIONING
+    - MAINTENANCE
+    - SURPLUS
+    - NORMAL
+    - CONSERVE
+    - CRITICAL_RESERVE
+    - WINTERIZED
+    - EMERGENCY
+    - DEGRADED_SENSOR
+    notes: Subsystems translate this single state into their own bounded profiles, as the EMS does in section 30.7.
+  disinfection_valid:
+    default_class: DI
+    allowed_classes:
+    - DI
+    - CALC
+    data_type: boolean
+    unit: null
+    description: Disinfection is proven effective for the water currently being delivered.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - treatment_stage
+    - controller
+    source_section: 12.3 FR-200
+    dictionary_status: reconciled_v0_4
+    notes: Technology-agnostic. The proof is a UV dose, a contact time, a residual or a laboratory result depending on the
+      technology chosen, which is undecided.
+  treatment_bypass_active:
+    default_class: DI
+    allowed_classes:
+    - DI
+    data_type: boolean
+    unit: null
+    description: A treatment stage is being bypassed, deliberately or through a stuck bypass valve.
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - treatment_stage
+    - filter
+    - valve
+    source_section: 12.3 FR-200
+    dictionary_status: reconciled_v0_4
+  potable_dispense_permitted:
+    default_class: CALC
+    allowed_classes:
+    - CALC
+    - DI
+    data_type: boolean
+    unit: null
+    description: 'Combined potability permissive: treatment proven, quality valid and no unresolved contamination event.'
+    control_capable: false
+    automatic_control_default: false
+    applicable_asset_classes:
+    - controller
+    - treatment_stage
+    - valve
+    source_section: 12.3 FR-200, FR-205
+    dictionary_status: reconciled_v0_4
+    notes: Evaluates false on stale or bad quality data. Absence of evidence is not evidence of potability.
+notes:
+- Every CFG point in this extension is a named commissioning parameter with no value. Defining where a threshold lives is
+  not the same as deciding what it should be.
+- Boolean permissives must evaluate false on stale, bad or missing data. SDD section 26.6 forbids a safety-critical permissive
+  from defaulting permissive.
+- leak_detection_state is the inference model's conclusion and is deliberately separate from leak_active, which is a physical
+  detector.
+- No point in this extension has an alarm limit, a physical range that encodes a site fact, or a default value derived from
+  equipment that has not been selected.

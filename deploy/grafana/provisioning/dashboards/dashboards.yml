@@ -1,0 +1,22 @@
+# Grafana dashboard provisioning.
+#
+# Dashboards are files in the repository, reviewed and tagged in Git like any
+# other configuration (SDD section 8.8). `allowUiUpdates: false` means the
+# on-disk file wins: an edit made in the browser is lost on the next reload,
+# which is the correct trade for a control-plane dashboard. Edit the JSON,
+# commit it, redeploy.
+
+apiVersion: 1
+
+providers:
+  - name: homestead
+    orgId: 1
+    folder: Homestead
+    folderUid: homestead
+    type: file
+    disableDeletion: false
+    allowUiUpdates: false
+    updateIntervalSeconds: 30
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false

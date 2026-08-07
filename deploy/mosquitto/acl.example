@@ -1,0 +1,245 @@
+# Mosquitto ACL -- topic-prefix least privilege (SDD section 8.2).
+#
+# COPY, DO NOT MOUNT. This file is an example. The live ACL is generated on the
+# property into /mosquitto/config/local/acl and is never committed, because it
+# names real device identities (SDD 15.2).
+#
+# ---------------------------------------------------------------------------
+# The rule this file exists to enforce
+# ---------------------------------------------------------------------------
+# A field gateway may publish ONLY under its own assets' topic prefixes, and it
+# may never publish a command to any asset -- including itself.
+#
+# Topic grammar (src/homestead_twin/topics.py, SDD 10.1 / 26.2):
+#
+#   homestead/<domain>/<location>/<class>_<instance>/<point_name>      telemetry
+#   homestead/<domain>/<location>/<class>_<instance>/availability      last will
+#   homestead/<domain>/<location>/<class>_<instance>/event/<name>      event
+#   homestead/<domain>/<location>/<class>_<instance>/alarm/<name>      alarm
+#   homestead/<domain>/<location>/<class>_<instance>/setpoint/<name>   setpoint
+#   homestead/<domain>/<location>/<class>_<instance>/cmd/<name>        command
+#   homestead/<domain>/<location>/<class>_<instance>/cmd/<name>/ack    acknowledgement
+#
+# The grammar does the security work. Telemetry and availability sit at ONE
+# level below the asset prefix; commands and setpoints sit at TWO. So
+#
+#   topic write homestead/energy/power_container/inverter_01/+
+#
+# grants every telemetry point of that inverter and cannot reach
+# .../cmd/<name>. Writing `.../inverter_01/#` instead would hand the device
+# authority to command itself -- that single character is the whole difference.
+#
+# ---------------------------------------------------------------------------
+# Mosquitto ACL semantics worth remembering
+# ---------------------------------------------------------------------------
+#   * Rules are an allow-list. Anything not granted is denied.
+#   * `topic deny <t>` denies BOTH read and write on <t> and beats any allow.
+#     There is no write-only deny, so do not use `deny` on a topic an identity
+#     must still be able to read.
+#   * `pattern` rules substitute %u (username) and %c (client id).
+#   * The default (no `user` block) section applies to anonymous clients.
+#     allow_anonymous is false in mosquitto.conf, so it is belt and braces.
+#   * Reload after editing:  docker compose kill -s HUP mosquitto
+#
+# Asset IDs below are real entries from data/homestead_asset_register.yaml.
+
+# ===========================================================================
+# 0. Anonymous / unmatched clients
+# ===========================================================================
+# Reached only if allow_anonymous were ever flipped to true by accident.
+topic deny homestead/#
+topic deny $SYS/#
+
+# ===========================================================================
+# 1. Platform services
+# ===========================================================================
+
+# --- Digital twin core, primary node -------------------------------------
+# it.application_service.rack_01.digital_twin_api_01
+# The only identity on the property permitted to publish commands. Every
+# command it publishes has already been written to the audit log (SDD 5.7).
+user svc-twin-primary
+topic read  homestead/#
+topic write homestead/+/+/+/cmd/+
+topic write homestead/+/+/+/setpoint/+
+topic write homestead/+/+/+/alarm/+
+topic write homestead/it/rack_01/application_service_digital_twin_api_01/+
+# Note what is absent: no write on homestead/+/+/+/+ . The twin must not be
+# able to fabricate a telemetry value on behalf of a device. If the twin could
+# write telemetry, a compromised twin could hide a real alarm condition.
+topic read  $SYS/broker/#
+
+# --- Digital twin core, secondary control node ---------------------------
+# it.server.secondary_control_node.01 (SDD 16.1 mitigations 2, 4, 6)
+# Observes everything, alerts on everything, commands nothing. This asymmetry
+# is the design: a second commanding node would be split-brain, not redundancy.
+user svc-twin-secondary
+topic read  homestead/#
+topic write homestead/it/secondary_control_node/server_01/+
+topic write homestead/it/secondary_control_node/server_01/alarm/+
+topic read  $SYS/broker/#
+# Deliberately NOT granted: write on cmd/ or setpoint/ anywhere.
+
+# --- MQTT bridge identity used by the secondary node ---------------------
+# Pulls telemetry inward. Nothing flows back out.
+user svc-bridge-secondary
+topic read  homestead/#
+topic write homestead/bridge/secondary/availability
+
+# --- Node-RED supervisory rules ------------------------------------------
+# it.application_service.rack_01.node_red_01
+# Node-RED orchestrates, but process-critical commands go through the twin's
+# audited command path. Give it command rights only for the domains it actually
+# owns, and add them one domain at a time as flows pass commissioning.
+user svc-node-red
+topic read  homestead/#
+topic write homestead/it/rack_01/application_service_node_red_01/+
+topic write homestead/it/rack_01/application_service_node_red_01/event/+
+# Example of a delegated domain, commented until a flow is commissioned:
+# topic write homestead/water/+/+/cmd/+
+
+# --- Home Assistant -------------------------------------------------------
+# it.application_service.rack_01.home_assistant_01
+# Not the authoritative asset database (SDD 8.3) and not a holder of hard
+# safety logic. Read-only on the bus until specific controls are commissioned.
+user svc-home-assistant
+topic read  homestead/#
+topic write homestead/it/rack_01/application_service_home_assistant_01/+
+
+# --- Historian and dashboards --------------------------------------------
+user svc-historian
+topic read  homestead/#
+topic read  $SYS/broker/#
+
+user svc-grafana
+topic read  homestead/#
+
+# --- Broker healthcheck ---------------------------------------------------
+# Used by the compose healthcheck. Sees broker liveness and nothing else.
+user svc-healthcheck
+topic read $SYS/broker/uptime
+
+# ===========================================================================
+# 2. Field gateways and devices
+#
+# One identity per gateway. The pattern below repeats verbatim for every new
+# gateway: telemetry + event + availability WRITE at one level, cmd/setpoint
+# READ, cmd ack WRITE. Nothing else.
+# ===========================================================================
+
+# --- Power-container energy gateway --------------------------------------
+# Fronts energy.inverter.power_container.01-04 and energy.bms.power_container.01
+# (Modbus/vendor API -> MQTT). These assets sit on VLAN 30 in the register.
+user gw-power-container
+# Own availability / last will.
+topic write homestead/energy/power_container/inverter_01/availability
+topic write homestead/energy/power_container/inverter_02/availability
+topic write homestead/energy/power_container/inverter_03/availability
+topic write homestead/energy/power_container/inverter_04/availability
+topic write homestead/energy/power_container/bms_01/availability
+topic write homestead/energy/power_container/battery_bank_01/availability
+# Telemetry: single level, so cmd/ and setpoint/ are unreachable.
+topic write homestead/energy/power_container/inverter_01/+
+topic write homestead/energy/power_container/inverter_02/+
+topic write homestead/energy/power_container/inverter_03/+
+topic write homestead/energy/power_container/inverter_04/+
+topic write homestead/energy/power_container/bms_01/+
+topic write homestead/energy/power_container/battery_bank_01/+
+# Events (local trips, mode changes reported by the equipment).
+topic write homestead/energy/power_container/inverter_01/event/+
+topic write homestead/energy/power_container/inverter_02/event/+
+topic write homestead/energy/power_container/inverter_03/event/+
+topic write homestead/energy/power_container/inverter_04/event/+
+topic write homestead/energy/power_container/bms_01/event/+
+topic write homestead/energy/power_container/battery_bank_01/event/+
+# Receive commands and setpoints for its own assets only.
+topic read  homestead/energy/power_container/inverter_01/cmd/+
+topic read  homestead/energy/power_container/inverter_02/cmd/+
+topic read  homestead/energy/power_container/inverter_03/cmd/+
+topic read  homestead/energy/power_container/inverter_04/cmd/+
+topic read  homestead/energy/power_container/bms_01/cmd/+
+topic read  homestead/energy/power_container/inverter_01/setpoint/+
+topic read  homestead/energy/power_container/inverter_02/setpoint/+
+topic read  homestead/energy/power_container/inverter_03/setpoint/+
+topic read  homestead/energy/power_container/inverter_04/setpoint/+
+# Acknowledge what it executed (SDD 10.3, FR-004).
+topic write homestead/energy/power_container/inverter_01/cmd/+/ack
+topic write homestead/energy/power_container/inverter_02/cmd/+/ack
+topic write homestead/energy/power_container/inverter_03/cmd/+/ack
+topic write homestead/energy/power_container/inverter_04/cmd/+/ack
+topic write homestead/energy/power_container/bms_01/cmd/+/ack
+# What this identity CANNOT do, by construction:
+#   - publish telemetry for the generator, panels, UPS, PDUs or any water,
+#     greenhouse or security asset;
+#   - publish a command to anything, including its own inverters;
+#   - publish an alarm (alarms are raised by the platform from telemetry, so a
+#     compromised gateway cannot manufacture an alarm flood).
+
+# --- Rack power and environment (APC/NetBotz over SNMP -> MQTT) ----------
+# energy.ups.rack_01.01, energy.pdu.rack_01.switched_01,
+# it.environmental_monitor.rack_01.nbrk0550_01
+user gw-rack-power
+topic write homestead/energy/rack_01/ups_01/+
+topic write homestead/energy/rack_01/ups_01/availability
+topic write homestead/energy/rack_01/ups_01/event/+
+topic write homestead/energy/rack_01/pdu_switched_01/+
+topic write homestead/energy/rack_01/pdu_switched_01/availability
+topic write homestead/it/rack_01/environmental_monitor_nbrk0550_01/+
+topic write homestead/it/rack_01/environmental_monitor_nbrk0550_01/availability
+topic read  homestead/energy/rack_01/pdu_switched_01/cmd/+
+topic write homestead/energy/rack_01/pdu_switched_01/cmd/+/ack
+
+# --- Container safety sensors --------------------------------------------
+# safety.safety_sensor.power_container.nbes0308_01 (fluid detection)
+# A sensor identity. Write-only on its own points, no command path at all.
+user dev-container-leak-sensor
+topic write homestead/safety/power_container/safety_sensor_nbes0308_01/+
+topic write homestead/safety/power_container/safety_sensor_nbes0308_01/availability
+
+# ===========================================================================
+# 3. Pattern rules (optional, for fleets)
+#
+# Once device identities follow a strict naming convention, a single pattern
+# rule can replace per-device blocks. Example for LoRaWAN soil nodes whose MQTT
+# client id equals their asset segment:
+#
+#   pattern write homestead/agriculture/+/%c/+
+#   pattern write homestead/agriculture/+/%c/availability
+#   pattern read  homestead/agriculture/+/%c/cmd/+
+#   pattern write homestead/agriculture/+/%c/cmd/+/ack
+#
+# Explicit per-device blocks remain the baseline for anything that can move
+# physical plant: a pattern rule is only as trustworthy as the client-id
+# uniqueness the broker enforces.
+# ===========================================================================
+
+# ===========================================================================
+# 4. Verification (SDD 19 step 12 -- documentation and baseline capture)
+#
+# These commands MUST fail. Run them after every ACL change and record the
+# result in the commissioning record.
+#
+#   # A gateway must not command another asset:
+#   mosquitto_pub -h BROKER -u gw-power-container -P '...' \
+#     -t homestead/water/well_house/pump_01/cmd/start -m '{}'          # -> denied
+#
+#   # A gateway must not command its OWN asset:
+#   mosquitto_pub -h BROKER -u gw-power-container -P '...' \
+#     -t homestead/energy/power_container/inverter_01/cmd/stop -m '{}' # -> denied
+#
+#   # A gateway must not publish another asset's telemetry:
+#   mosquitto_pub -h BROKER -u gw-power-container -P '...' \
+#     -t homestead/energy/rack_01/ups_01/battery_soc_pct -m '100'      # -> denied
+#
+#   # The secondary node must not command anything:
+#   mosquitto_pub -h BROKER -u svc-twin-secondary -P '...' \
+#     -t homestead/energy/power_container/inverter_01/cmd/stop -m '{}' # -> denied
+#
+# And this one MUST succeed:
+#   mosquitto_pub -h BROKER -u gw-power-container -P '...' \
+#     -t homestead/energy/power_container/inverter_01/ac_output_kw -m '3.2'
+#
+# Note: mosquitto silently drops denied publishes for MQTT 3.1.1 clients. Check
+# the broker log for "Denied PUBLISH" rather than trusting the publisher's exit
+# code, or test with -V mqttv5, which returns a reason code.
+# ===========================================================================

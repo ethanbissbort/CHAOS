@@ -1,0 +1,2495 @@
+schema_version: 0.4.0
+document_type: water_asset_extension
+document_status: concept_extension_for_review
+generated_at: '2026-08-07T00:00:00Z'
+extends: homestead.primary.v0_3
+merge_target: data/homestead_asset_register.yaml
+site_id: site.site.primary.01
+source_document: Homestead_Digital_Twin_Software_Design_Document_v0.3.md
+work_queue_item: '49.5'
+control_narrative: docs/water-control-narrative.md
+purpose: 'The v0.3 asset register contains no water assets. This extension models the SDD section 3.4 water systems using
+  the asset and relationship record shape of the base register so that merging it is a list concatenation. Every asset is
+  status concept: nothing here has been sited, sized, specified or procured.'
+merge_rules:
+- Asset records use the identical field set and ordering as data/homestead_asset_register.yaml.
+- Relationship IDs start at rel.1001 so they cannot collide with the base register's rel.0001-rel.0099.
+- Parent and relationship endpoints may reference base-register assets; the reverse is not true until merge.
+- Asset classes are used only where data/asset_class_dictionary.yaml already defines them. No class was invented.
+asset_class_gaps:
+- needed_for: Rainwater catchment surface (roof or other collection area)
+  missing_class: catchment_surface
+  workaround: The collection subsystem is modelled by its diverter, screen, inflow meter and cisterns only.
+- needed_for: Pipe or line segments for routing, freeze exposure and leak localisation
+  missing_class: pipe_segment
+  workaround: Line identity is carried in each valve's served_line property; there is no routable pipe graph.
+- needed_for: Distribution manifold or header as a physical object
+  missing_class: manifold
+  workaround: Modelled as the irrigation main valve plus its downstream zone valves.
+- needed_for: Freeze-protection heat-trace circuit
+  missing_class: heat_trace_circuit
+  workaround: Heat trace is an electrical load; it belongs in the energy domain as an energy.load asset and in the load schedule,
+    not in this water extension.
+- needed_for: A generic non-well water source such as a spring, surface intake or delivered water
+  missing_class: water_source
+  workaround: Only the well class exists; rainwater is represented by its storage and inflow metering.
+design_basis:
+  authoritative_design_document: Homestead_Digital_Twin_Software_Design_Document_v0.3.md
+  design_stage: concept_only_no_water_infrastructure_exists
+  requirements_covered:
+  - FR-200
+  - FR-201
+  - FR-202
+  - FR-203
+  - FR-204
+  - FR-205
+  unresolved:
+  - Property location, terrain, aquifer and climate, which govern every water decision.
+  - Well depth, static level, drawdown behaviour and sustainable yield.
+  - Roof and catchment areas, rainfall record and therefore cistern sizing.
+  - Raw-water chemistry, and therefore the required treatment train.
+  - Pipe routing, burial depth, frost depth and line slope for winter drainage.
+  - Household and irrigation demand, and therefore the emergency potable reserve volume.
+  - Graywater reuse permissions in the final jurisdiction.
+asset_class_usage:
+  controller: 3
+  filter: 5
+  flow_meter: 5
+  graywater_branch: 1
+  irrigation_zone: 2
+  pressure_sensor: 3
+  pump: 5
+  safety_sensor: 2
+  sensor: 3
+  tank: 6
+  treatment_stage: 2
+  valve: 9
+  well: 1
+assets:
+- asset_id: water.well.site.01
+  domain: water
+  asset_class: well
+  name: Homestead Water Well
+  status: concept
+  criticality: critical
+  control_authority: none
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    depth_status: TBD
+    pump_association_status: water.pump.well.01
+    static_level_status: TBD
+    sustainable_yield_status: TBD
+    casing_status: TBD
+    water_quality_baseline_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: &id003
+  - common_monitored
+  source_refs:
+  - &id001
+    document: Homestead_Digital_Twin_Software_Design_Document_v0.3.md
+    section: 3.4, 12.3, 27.3
+  - &id002
+    document: docs/water-control-narrative.md
+    section: Water control narrative v0.4
+  notes:
+  - No well exists and none has been drilled. Depth, yield and water chemistry are unknown and must come from a driller's
+    log and a laboratory analysis, not from this document.
+  open_fields:
+  - well_depth_m
+  - static_water_level_m
+  - drawdown_behaviour
+  - sustainable_yield_lpm
+  - casing_diameter_and_material
+  - wellhead_location
+  - baseline_water_quality_analysis
+  - regulatory_permit_status
+  tags:
+  - water_source
+  - potable_chain
+- asset_id: water.pump.well.01
+  domain: water
+  asset_class: pump
+  name: Well Pump
+  status: concept
+  criticality: critical
+  control_authority: local_controller_with_supervisory_setpoints
+  functional_position: true
+  parent_id: water.well.site.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    motor_rating_status: TBD
+    source_asset_id: water.well.site.01
+    destination_asset_id: water.tank.potable.storage_01
+    pump_type_status: TBD_submersible_or_jet
+    curve_status: TBD
+    variable_speed_status: TBD
+    interlocks:
+    - dry_run
+    - low_source_level
+    - freeze_lockout
+    - overcurrent
+    - unavailable_discharge_path
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: &id004
+  - common_commandable
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - FR-203 interlocks are listed as a requirement, not as commissioned values. Every threshold is a commissioning parameter
+    set during the water commissioning cases.
+  - Electrical demand belongs to energy.load.site.water_pumping_01, which already exists in the register.
+  open_fields:
+  - motor_rated_kw
+  - pump_curve
+  - setting_depth_m
+  - variable_speed_or_fixed
+  - minimum_source_level_threshold
+  - overcurrent_threshold
+  - minimum_off_time_s
+  - branch_circuit
+  tags:
+  - pump
+  - potable_chain
+  - fr_203
+- asset_id: water.sensor.well.level_01
+  domain: water
+  asset_class: sensor
+  name: Well Water-Level Sensor
+  status: concept
+  criticality: critical
+  control_authority: none
+  functional_position: true
+  parent_id: water.well.site.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    sensor_type: submersible_level_or_pressure_transducer
+    range_status: TBD
+    calibration_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Provides the low-source-level permissive that FR-203 requires for the well pump.
+  open_fields:
+  - sensor_technology
+  - measurement_range
+  - installation_depth
+  - calibration_method
+  tags:
+  - instrument
+  - fr_203
+- asset_id: water.flow_meter.well.01
+  domain: water
+  asset_class: flow_meter
+  name: Well Discharge Flow Meter
+  status: concept
+  criticality: important
+  control_authority: none
+  functional_position: true
+  parent_id: water.well.site.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    pipe_size_status: TBD
+    direction: source_to_storage
+    meter_technology_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Source leg of the FR-201 source-to-use water balance.
+  open_fields:
+  - pipe_size
+  - meter_technology
+  - k_factor
+  - calibration_certificate
+  tags:
+  - accounting
+  - fr_201
+- asset_id: water.pressure_sensor.well.discharge_01
+  domain: water
+  asset_class: pressure_sensor
+  name: Well Discharge Pressure Sensor
+  status: concept
+  criticality: important
+  control_authority: none
+  functional_position: true
+  parent_id: water.pump.well.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    range_status: TBD
+    calibration_status: TBD
+    measurement_point: pump_discharge
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Supports dry-run detection and the discharge-path-available permissive.
+  open_fields:
+  - measurement_range
+  - process_connection
+  - calibration_method
+  tags:
+  - instrument
+  - fr_203
+- asset_id: water.tank.well.pressure_01
+  domain: water
+  asset_class: tank
+  name: Well Pressure Tank
+  status: concept
+  criticality: important
+  control_authority: none
+  functional_position: true
+  parent_id: water.pump.well.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    gross_volume_l: TBD
+    material_status: TBD
+    vessel_type: bladder_pressure_tank
+    precharge_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Anti-short-cycle buffer for the well pump. Size follows from the pump duty, which is undecided.
+  open_fields:
+  - gross_volume_l
+  - drawdown_volume_l
+  - precharge_pressure
+  - vessel_material
+  tags:
+  - buffer
+- asset_id: water.valve.rainwater.first_flush_01
+  domain: water
+  asset_class: valve
+  name: Rainwater First-Flush Diverter
+  status: concept
+  criticality: important
+  control_authority: local_only
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    valve_type: first_flush_diverter
+    fail_position: divert_to_waste
+    actuation_status: TBD_passive_or_actuated
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id004
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - The catchment surface itself has no asset class in the v0.3 dictionary; only the diverter, screen, meter and cisterns
+    are modelled.
+  open_fields:
+  - catchment_area_served
+  - diverter_volume
+  - actuated_or_passive
+  - waste_discharge_point
+  tags:
+  - rainwater
+- asset_id: water.filter.rainwater.inlet_screen_01
+  domain: water
+  asset_class: filter
+  name: Rainwater Inlet Screen and Leaf Filter
+  status: concept
+  criticality: important
+  control_authority: none
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    media_type: mechanical_screen
+    nominal_flow_status: TBD
+    service_access_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes: []
+  open_fields:
+  - screen_mesh_size
+  - nominal_flow
+  - service_interval
+  - mounting_location
+  tags:
+  - rainwater
+- asset_id: water.flow_meter.rainwater.inlet_01
+  domain: water
+  asset_class: flow_meter
+  name: Rainwater Collection Inflow Meter
+  status: concept
+  criticality: important
+  control_authority: none
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    pipe_size_status: TBD
+    direction: catchment_to_cistern
+    meter_technology_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Second source leg of the FR-201 water balance.
+  open_fields:
+  - pipe_size
+  - meter_technology
+  - low_flow_cutoff
+  - freeze_exposure
+  tags:
+  - accounting
+  - rainwater
+  - fr_201
+- asset_id: water.tank.rainwater.cistern_01
+  domain: water
+  asset_class: tank
+  name: Rainwater Cistern 1
+  status: concept
+  criticality: important
+  control_authority: none
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    gross_volume_l: TBD
+    material_status: TBD
+    vessel_type: cistern
+    buried_or_above_grade_status: TBD
+    freeze_exposure_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Cistern count and volume are placeholders for structure only. The real count follows from the roof catchment area and
+    the rainfall record for the final property, neither of which is known.
+  open_fields:
+  - gross_volume_l
+  - working_volume_l
+  - geometry_for_level_to_volume_curve
+  - vessel_material
+  - buried_or_above_grade
+  - overflow_route
+  - freeze_protection_method
+  tags:
+  - rainwater
+  - storage
+- asset_id: water.tank.rainwater.cistern_02
+  domain: water
+  asset_class: tank
+  name: Rainwater Cistern 2
+  status: concept
+  criticality: important
+  control_authority: none
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    gross_volume_l: TBD
+    material_status: TBD
+    vessel_type: cistern
+    buried_or_above_grade_status: TBD
+    freeze_exposure_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Cistern count and volume are placeholders for structure only. The real count follows from the roof catchment area and
+    the rainfall record for the final property, neither of which is known.
+  open_fields:
+  - gross_volume_l
+  - working_volume_l
+  - geometry_for_level_to_volume_curve
+  - vessel_material
+  - buried_or_above_grade
+  - overflow_route
+  - freeze_protection_method
+  tags:
+  - rainwater
+  - storage
+- asset_id: water.pump.rainwater.transfer_01
+  domain: water
+  asset_class: pump
+  name: Rainwater Transfer Pump
+  status: concept
+  criticality: important
+  control_authority: local_controller_with_supervisory_setpoints
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    motor_rating_status: TBD
+    source_asset_id: water.tank.rainwater.cistern_01
+    destination_asset_id: water.tank.irrigation.buffer_01
+    curve_status: TBD
+    interlocks:
+    - dry_run
+    - low_source_level
+    - freeze_lockout
+    - overcurrent
+    - unavailable_discharge_path
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id004
+  source_refs:
+  - *id001
+  - *id002
+  notes: []
+  open_fields:
+  - motor_rated_kw
+  - pump_curve
+  - minimum_source_level_threshold
+  - overcurrent_threshold
+  - branch_circuit
+  tags:
+  - pump
+  - rainwater
+  - fr_203
+- asset_id: water.tank.potable.storage_01
+  domain: water
+  asset_class: tank
+  name: Potable Water Storage Tank
+  status: concept
+  criticality: critical
+  control_authority: none
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    gross_volume_l: TBD
+    material_status: TBD_potable_rated
+    vessel_type: potable_storage
+    reserve_policy: configurable_emergency_reserve_per_FR_205
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - FR-205 requires a configurable emergency potable reserve. The reserve floor is a commissioning parameter and cannot be
+    set before the tank volume and household demand are known.
+  open_fields:
+  - gross_volume_l
+  - working_volume_l
+  - emergency_reserve_volume_l
+  - geometry_for_level_to_volume_curve
+  - vessel_material_and_potable_certification
+  - thermal_and_freeze_protection
+  tags:
+  - potable_chain
+  - storage
+  - fr_205
+- asset_id: water.filter.potable.sediment_01
+  domain: water
+  asset_class: filter
+  name: Potable Sediment Prefilter
+  status: concept
+  criticality: critical
+  control_authority: none
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    media_type: sediment_cartridge_or_backwash_TBD
+    nominal_flow_status: TBD
+    replacement_policy_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes: []
+  open_fields:
+  - media_type
+  - micron_rating
+  - nominal_flow
+  - differential_pressure_service_threshold
+  - replacement_interval
+  tags:
+  - potable_chain
+  - treatment
+- asset_id: water.filter.potable.carbon_01
+  domain: water
+  asset_class: filter
+  name: Potable Carbon Filter
+  status: concept
+  criticality: important
+  control_authority: none
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    media_type: activated_carbon
+    nominal_flow_status: TBD
+    replacement_policy_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Included only if the raw-water analysis shows it is needed; the analysis does not exist yet.
+  open_fields:
+  - media_volume
+  - nominal_flow
+  - throughput_service_threshold
+  - replacement_interval
+  tags:
+  - potable_chain
+  - treatment
+- asset_id: water.treatment_stage.potable.uv_01
+  domain: water
+  asset_class: treatment_stage
+  name: Potable Disinfection Stage
+  status: concept
+  criticality: critical
+  control_authority: local_controller_with_supervisory_setpoints
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    process_type: disinfection_technology_TBD
+    design_capacity_status: TBD
+    proof_of_treatment_required: true
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id004
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Named 'uv_01' only because UV is the common choice for a well-fed homestead. The technology is undecided; the asset ID
+    records the functional position, and replacing UV with another technology does not change it.
+  - Distribution must be inhibited when disinfection cannot be proven valid.
+  open_fields:
+  - disinfection_technology
+  - design_flow_capacity
+  - lamp_or_dose_monitoring_method
+  - minimum_contact_or_dose_requirement
+  - bypass_arrangement
+  tags:
+  - potable_chain
+  - treatment
+  - fr_200
+- asset_id: water.treatment_stage.potable.polish_01
+  domain: water
+  asset_class: treatment_stage
+  name: Potable Polishing Stage
+  status: concept
+  criticality: important
+  control_authority: local_only
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    process_type: polishing_technology_TBD
+    design_capacity_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Reverse osmosis, softening, iron removal or nothing at all. The choice depends on a raw-water analysis that has not been
+    performed, so the stage is a placeholder position.
+  open_fields:
+  - polishing_technology
+  - whether_this_stage_is_required_at_all
+  - reject_or_waste_handling
+  - design_flow_capacity
+  tags:
+  - potable_chain
+  - treatment
+- asset_id: water.sensor.potable.quality_01
+  domain: water
+  asset_class: sensor
+  name: Potable Water-Quality Monitoring Node
+  status: concept
+  criticality: critical
+  control_authority: none
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    sensor_type: multi_parameter_water_quality
+    range_status: TBD
+    parameters_status: TBD_subset_of_turbidity_ph_ec_temperature
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Continuous instrumentation supplements but does not replace periodic laboratory potability testing.
+  open_fields:
+  - measured_parameters
+  - sensor_technology
+  - measurement_ranges
+  - calibration_interval
+  - sample_point_location
+  tags:
+  - potable_chain
+  - instrument
+  - fr_200
+- asset_id: water.pump.potable.pressure_01
+  domain: water
+  asset_class: pump
+  name: Potable Pressure Pump
+  status: concept
+  criticality: critical
+  control_authority: local_controller_with_supervisory_setpoints
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    motor_rating_status: TBD
+    source_asset_id: water.tank.potable.storage_01
+    destination_asset_id: water.flow_meter.potable.service_01
+    curve_status: TBD
+    interlocks:
+    - dry_run
+    - low_source_level
+    - freeze_lockout
+    - overcurrent
+    - unavailable_discharge_path
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id004
+  source_refs:
+  - *id001
+  - *id002
+  notes: []
+  open_fields:
+  - motor_rated_kw
+  - pump_curve
+  - pressure_setpoint_band
+  - minimum_source_level_threshold
+  - overcurrent_threshold
+  - minimum_off_time_s
+  - branch_circuit
+  tags:
+  - pump
+  - potable_chain
+  - fr_203
+- asset_id: water.flow_meter.potable.service_01
+  domain: water
+  asset_class: flow_meter
+  name: Potable Service Flow Meter
+  status: concept
+  criticality: critical
+  control_authority: none
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    pipe_size_status: TBD
+    direction: storage_to_use
+    meter_technology_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Use leg of the FR-201 balance and the primary continuous-flow input for FR-202 leak detection. Low-flow resolution decides
+    how small a leak the platform can see, so it is a specification decision, not a detail.
+  open_fields:
+  - pipe_size
+  - meter_technology
+  - low_flow_resolution
+  - minimum_detectable_continuous_flow
+  tags:
+  - accounting
+  - potable_chain
+  - fr_201
+  - fr_202
+- asset_id: water.pressure_sensor.potable.service_01
+  domain: water
+  asset_class: pressure_sensor
+  name: Potable Service Pressure Sensor
+  status: concept
+  criticality: critical
+  control_authority: none
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    range_status: TBD
+    calibration_status: TBD
+    measurement_point: potable_distribution_header
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Pressure-decay input for FR-202.
+  open_fields:
+  - measurement_range
+  - sample_rate_for_decay_test
+  - process_connection
+  tags:
+  - instrument
+  - fr_202
+- asset_id: water.valve.potable.service_isolation_01
+  domain: water
+  asset_class: valve
+  name: Potable Service Isolation Valve
+  status: concept
+  criticality: critical
+  control_authority: supervisory
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    valve_type: motorized_isolation
+    fail_position: fail_last_position
+    served_line: potable_distribution
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id004
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Automatic isolation on a confirmed leak is a policy decision, not a default. Closing the potable service removes water
+    from the residence, so the narrative treats automatic closure as opt-in per FR-202.
+  open_fields:
+  - valve_size
+  - actuator_type
+  - fail_position_decision
+  - manual_bypass_arrangement
+  - close_time_s
+  tags:
+  - potable_chain
+  - fr_202
+- asset_id: water.valve.potable.emergency_reserve_01
+  domain: water
+  asset_class: valve
+  name: Emergency Potable Reserve Isolation Valve
+  status: concept
+  criticality: critical
+  control_authority: supervisory
+  functional_position: true
+  parent_id: water.tank.potable.storage_01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    valve_type: motorized_isolation
+    fail_position: fail_closed_protect_reserve
+    served_line: reserve_draw
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id004
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - 'FR-205: protects a configurable emergency reserve by isolating discretionary draw, not by stopping all supply. The reserve
+    volume itself is a commissioning parameter.'
+  open_fields:
+  - valve_size
+  - actuator_type
+  - reserve_draw_point_elevation
+  - manual_release_method
+  tags:
+  - potable_chain
+  - fr_205
+- asset_id: water.tank.irrigation.buffer_01
+  domain: water
+  asset_class: tank
+  name: Irrigation Buffer Tank
+  status: concept
+  criticality: important
+  control_authority: none
+  functional_position: true
+  parent_id: site.geographic_zone.orchard.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    gross_volume_l: TBD
+    material_status: TBD
+    vessel_type: irrigation_buffer
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Decouples irrigation demand from the well so irrigation never competes with the potable reserve.
+  open_fields:
+  - gross_volume_l
+  - working_volume_l
+  - geometry_for_level_to_volume_curve
+  - winter_drain_arrangement
+  tags:
+  - irrigation
+  - storage
+- asset_id: water.pump.irrigation.01
+  domain: water
+  asset_class: pump
+  name: Irrigation Pump
+  status: concept
+  criticality: important
+  control_authority: local_controller_with_supervisory_setpoints
+  functional_position: true
+  parent_id: site.geographic_zone.orchard.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    motor_rating_status: TBD
+    source_asset_id: water.tank.irrigation.buffer_01
+    destination_asset_id: water.valve.irrigation.main_01
+    curve_status: TBD
+    interlocks:
+    - dry_run
+    - low_source_level
+    - freeze_lockout
+    - overcurrent
+    - unavailable_discharge_path
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id004
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Asset ID follows the SDD section 25.2 worked example water.pump.irrigation.01.
+  - No zone valve may be commanded open unless this pump has a valid discharge path, and the pump must not run against a fully
+    closed manifold.
+  open_fields:
+  - motor_rated_kw
+  - pump_curve
+  - design_zone_flow
+  - minimum_source_level_threshold
+  - overcurrent_threshold
+  - minimum_off_time_s
+  - branch_circuit
+  tags:
+  - pump
+  - irrigation
+  - fr_203
+- asset_id: water.filter.irrigation.disc_01
+  domain: water
+  asset_class: filter
+  name: Irrigation Disc Filter
+  status: concept
+  criticality: important
+  control_authority: none
+  functional_position: true
+  parent_id: site.geographic_zone.orchard.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    media_type: disc_or_screen
+    nominal_flow_status: TBD
+    service_access_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes: []
+  open_fields:
+  - filtration_rating
+  - nominal_flow
+  - differential_pressure_service_threshold
+  - flush_arrangement
+  tags:
+  - irrigation
+- asset_id: water.valve.irrigation.main_01
+  domain: water
+  asset_class: valve
+  name: Irrigation Main Isolation Valve
+  status: concept
+  criticality: important
+  control_authority: supervisory
+  functional_position: true
+  parent_id: site.geographic_zone.orchard.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    valve_type: motorized_isolation
+    fail_position: fail_closed
+    served_line: irrigation_main
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id004
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Single point at which all irrigation can be stopped, including during a leak or freeze event.
+  open_fields:
+  - valve_size
+  - actuator_type
+  - close_time_s
+  - manual_bypass_arrangement
+  tags:
+  - irrigation
+  - fr_202
+  - fr_204
+- asset_id: water.flow_meter.irrigation.main_01
+  domain: water
+  asset_class: flow_meter
+  name: Irrigation Main Flow Meter
+  status: concept
+  criticality: important
+  control_authority: none
+  functional_position: true
+  parent_id: site.geographic_zone.orchard.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    pipe_size_status: TBD
+    direction: buffer_to_zones
+    meter_technology_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Per-zone low-flow and high-flow fault detection under FR-302 uses this meter with the zone valve state.
+  open_fields:
+  - pipe_size
+  - meter_technology
+  - expected_zone_flow_signature
+  tags:
+  - accounting
+  - irrigation
+  - fr_201
+- asset_id: water.pressure_sensor.irrigation.main_01
+  domain: water
+  asset_class: pressure_sensor
+  name: Irrigation Main Pressure Sensor
+  status: concept
+  criticality: important
+  control_authority: none
+  functional_position: true
+  parent_id: site.geographic_zone.orchard.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    range_status: TBD
+    calibration_status: TBD
+    measurement_point: irrigation_manifold
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes: []
+  open_fields:
+  - measurement_range
+  - process_connection
+  tags:
+  - instrument
+  - irrigation
+- asset_id: agriculture.irrigation_zone.orchard.01
+  domain: agriculture
+  asset_class: irrigation_zone
+  name: Orchard Irrigation Zone 1
+  status: concept
+  criticality: important
+  control_authority: supervisory
+  functional_position: true
+  parent_id: site.geographic_zone.orchard.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    geometry_status: TBD
+    crop_or_guild_status: TBD
+    emitter_type_status: TBD
+    design_flow_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Placeholder zone. The orchard layout does not exist, so the zone count, polygons and design flows are unknown. These two
+    records establish the pattern that real zones are instantiated from.
+  open_fields:
+  - zone_polygon
+  - final_zone_count_for_the_property
+  - planted_species_or_guild
+  - emitter_type_and_spacing
+  - design_flow_lpm
+  - maximum_runtime_min
+  - minimum_rest_period_min
+  tags:
+  - irrigation
+  - zone
+  - fr_300
+- asset_id: water.valve.orchard.zone_01
+  domain: water
+  asset_class: valve
+  name: Orchard Zone 1 Valve
+  status: concept
+  criticality: important
+  control_authority: supervisory
+  functional_position: true
+  parent_id: agriculture.irrigation_zone.orchard.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    valve_type: solenoid_or_motorized_TBD
+    fail_position: fail_closed
+    served_line: orchard_zone_01
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id004
+  source_refs:
+  - *id001
+  - *id002
+  notes: []
+  open_fields:
+  - valve_size
+  - actuator_type_and_voltage
+  - wiring_or_radio_path
+  - freeze_drain_arrangement
+  tags:
+  - irrigation
+  - zone
+- asset_id: agriculture.irrigation_zone.orchard.02
+  domain: agriculture
+  asset_class: irrigation_zone
+  name: Orchard Irrigation Zone 2
+  status: concept
+  criticality: important
+  control_authority: supervisory
+  functional_position: true
+  parent_id: site.geographic_zone.orchard.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    geometry_status: TBD
+    crop_or_guild_status: TBD
+    emitter_type_status: TBD
+    design_flow_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: []
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Placeholder zone. The orchard layout does not exist, so the zone count, polygons and design flows are unknown. These two
+    records establish the pattern that real zones are instantiated from.
+  open_fields:
+  - zone_polygon
+  - final_zone_count_for_the_property
+  - planted_species_or_guild
+  - emitter_type_and_spacing
+  - design_flow_lpm
+  - maximum_runtime_min
+  - minimum_rest_period_min
+  tags:
+  - irrigation
+  - zone
+  - fr_300
+- asset_id: water.valve.orchard.zone_02
+  domain: water
+  asset_class: valve
+  name: Orchard Zone 2 Valve
+  status: concept
+  criticality: important
+  control_authority: supervisory
+  functional_position: true
+  parent_id: agriculture.irrigation_zone.orchard.02
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    valve_type: solenoid_or_motorized_TBD
+    fail_position: fail_closed
+    served_line: orchard_zone_02
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id004
+  source_refs:
+  - *id001
+  - *id002
+  notes: []
+  open_fields:
+  - valve_size
+  - actuator_type_and_voltage
+  - wiring_or_radio_path
+  - freeze_drain_arrangement
+  tags:
+  - irrigation
+  - zone
+- asset_id: water.graywater_branch.residence.01
+  domain: water
+  asset_class: graywater_branch
+  name: Residence Graywater Branch
+  status: concept
+  criticality: discretionary
+  control_authority: local_only
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    source_fixture_status: TBD
+    destination_status: orchard_reuse_subject_to_regulation
+    regulatory_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Graywater reuse is regulated differently in every jurisdiction and the property jurisdiction is unknown. The branch is
+    modelled so the topology exists, not because reuse has been approved.
+  open_fields:
+  - contributing_fixtures
+  - regulatory_permission_for_reuse
+  - permitted_reuse_crops_and_methods
+  - detergent_and_sodium_policy
+  - pipe_route
+  tags:
+  - graywater
+  - reuse
+- asset_id: water.tank.graywater.surge_01
+  domain: water
+  asset_class: tank
+  name: Graywater Surge Tank
+  status: concept
+  criticality: discretionary
+  control_authority: none
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    gross_volume_l: TBD
+    material_status: TBD
+    vessel_type: graywater_surge
+    maximum_retention_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Graywater must not be stored long enough to turn septic; the retention limit is a design constraint.
+  open_fields:
+  - gross_volume_l
+  - maximum_retention_time_h
+  - overflow_to_sewer_or_septic
+  - odour_control_method
+  tags:
+  - graywater
+  - storage
+- asset_id: water.filter.graywater.01
+  domain: water
+  asset_class: filter
+  name: Graywater Filter
+  status: concept
+  criticality: discretionary
+  control_authority: none
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    media_type: coarse_screen_or_media_TBD
+    nominal_flow_status: TBD
+    service_access_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes: []
+  open_fields:
+  - filtration_rating
+  - nominal_flow
+  - service_interval
+  - backwash_or_replace
+  tags:
+  - graywater
+- asset_id: water.pump.graywater.01
+  domain: water
+  asset_class: pump
+  name: Graywater Transfer Pump
+  status: concept
+  criticality: discretionary
+  control_authority: local_controller_with_supervisory_setpoints
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    motor_rating_status: TBD
+    source_asset_id: water.tank.graywater.surge_01
+    destination_asset_id: water.valve.graywater.diverter_01
+    curve_status: TBD
+    interlocks:
+    - dry_run
+    - low_source_level
+    - freeze_lockout
+    - overcurrent
+    - unavailable_discharge_path
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id004
+  source_refs:
+  - *id001
+  - *id002
+  notes: []
+  open_fields:
+  - motor_rated_kw
+  - solids_handling_requirement
+  - overcurrent_threshold
+  - branch_circuit
+  tags:
+  - pump
+  - graywater
+  - fr_203
+- asset_id: water.valve.graywater.diverter_01
+  domain: water
+  asset_class: valve
+  name: Graywater Reuse Diverter Valve
+  status: concept
+  criticality: discretionary
+  control_authority: supervisory
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    valve_type: three_way_diverter
+    fail_position: fail_to_sewer_or_septic
+    served_line: graywater_reuse_or_disposal
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id004
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Fails to disposal, never to reuse. Diverting unsuitable graywater onto the orchard is the failure mode worth designing
+    against.
+  open_fields:
+  - valve_size
+  - actuator_type
+  - disposal_destination
+  - reuse_destination_zones
+  tags:
+  - graywater
+  - reuse
+- asset_id: water.flow_meter.graywater.01
+  domain: water
+  asset_class: flow_meter
+  name: Graywater Reuse Flow Meter
+  status: concept
+  criticality: discretionary
+  control_authority: none
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    pipe_size_status: TBD
+    direction: surge_to_reuse
+    meter_technology_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Reuse leg of the FR-201 balance.
+  open_fields:
+  - pipe_size
+  - meter_technology
+  - fouling_tolerance
+  tags:
+  - accounting
+  - graywater
+  - fr_201
+- asset_id: water.controller.freeze_protection.01
+  domain: water
+  asset_class: controller
+  name: Freeze-Protection and Winterization Controller
+  status: concept
+  criticality: critical
+  control_authority: local_controller_with_supervisory_setpoints
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    controller_role: freeze_protection_and_winterization
+    platform_status: TBD
+    must_operate_without_central_server: true
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id004
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - FR-204 and SDD section 16.1 require freeze protection to survive loss of the power/server container, so this controller
+    is a local device, not a rule in the central platform.
+  open_fields:
+  - controller_platform
+  - io_count_and_type
+  - freeze_threshold_temperatures
+  - drain_sequence_definition
+  - independent_power_source
+  tags:
+  - freeze_protection
+  - fr_204
+  - local_control
+- asset_id: water.sensor.freeze_protection.line_temp_01
+  domain: water
+  asset_class: sensor
+  name: Outdoor Line Temperature Sensor
+  status: concept
+  criticality: critical
+  control_authority: none
+  functional_position: true
+  parent_id: water.controller.freeze_protection.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    sensor_type: pipe_surface_temperature
+    range_status: TBD
+    calibration_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes: []
+  open_fields:
+  - sensor_technology
+  - mounting_points
+  - number_of_sensors_required
+  - measurement_range
+  tags:
+  - freeze_protection
+  - instrument
+  - fr_204
+- asset_id: water.valve.freeze_protection.drain_01
+  domain: water
+  asset_class: valve
+  name: Winter Drain Valve 1
+  status: concept
+  criticality: critical
+  control_authority: supervisory
+  functional_position: true
+  parent_id: water.controller.freeze_protection.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    valve_type: motorized_drain
+    fail_position: fail_open_to_drain
+    served_line: outdoor_potable_hose_bibs
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id004
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Fails open so a loss of power or control leaves the line draining rather than frozen and full.
+  open_fields:
+  - valve_size
+  - actuator_type
+  - drain_discharge_point
+  - line_slope_to_drain
+  - proof_of_drain_method
+  tags:
+  - freeze_protection
+  - winterization
+  - fr_204
+- asset_id: water.valve.freeze_protection.drain_02
+  domain: water
+  asset_class: valve
+  name: Winter Drain Valve 2
+  status: concept
+  criticality: critical
+  control_authority: supervisory
+  functional_position: true
+  parent_id: water.controller.freeze_protection.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    valve_type: motorized_drain
+    fail_position: fail_open_to_drain
+    served_line: irrigation_main_and_zone_laterals
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id004
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Fails open so a loss of power or control leaves the line draining rather than frozen and full.
+  open_fields:
+  - valve_size
+  - actuator_type
+  - drain_discharge_point
+  - line_slope_to_drain
+  - proof_of_drain_method
+  tags:
+  - freeze_protection
+  - winterization
+  - fr_204
+- asset_id: safety.safety_sensor.water_service.leak_01
+  domain: safety
+  asset_class: safety_sensor
+  name: Potable Service Leak Sensor
+  status: concept
+  criticality: critical
+  control_authority: safety_interlock
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    sensor_type: leak_or_fluid_detection
+    range_status: not_applicable_discrete
+    detection_method_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Floor-level detection at the potable service and pressure equipment.
+  - Physical detection complements, and does not replace, the FR-202 inference model.
+  open_fields:
+  - detection_technology_spot_or_rope
+  - cable_route_or_spot_locations
+  - supervision_and_self_test_method
+  tags:
+  - leak_detection
+  - fr_202
+- asset_id: safety.safety_sensor.water_treatment.leak_02
+  domain: safety
+  asset_class: safety_sensor
+  name: Water Treatment Leak Sensor
+  status: concept
+  criticality: critical
+  control_authority: safety_interlock
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    sensor_type: leak_or_fluid_detection
+    range_status: not_applicable_discrete
+    detection_method_status: TBD
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id003
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Detection under the filtration and disinfection train, where cartridge-housing failures show up first.
+  - Physical detection complements, and does not replace, the FR-202 inference model.
+  open_fields:
+  - detection_technology_spot_or_rope
+  - cable_route_or_spot_locations
+  - supervision_and_self_test_method
+  tags:
+  - leak_detection
+  - fr_202
+- asset_id: water.controller.water_system.01
+  domain: water
+  asset_class: controller
+  name: Water System Local Controller
+  status: concept
+  criticality: critical
+  control_authority: local_controller_with_supervisory_setpoints
+  functional_position: true
+  parent_id: site.site.primary.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    controller_role: water_source_treatment_and_distribution_control
+    platform_status: TBD
+    must_operate_without_central_server: true
+    owns_interlocks:
+    - dry_run
+    - low_source_level
+    - freeze_lockout
+    - overcurrent
+    - discharge_path
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id004
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - The pump interlocks required by FR-203 are owned here. The supervisory platform requests operation and publishes budgets;
+    it does not enforce equipment protection.
+  - Controller family is an open design decision (SDD section 22 item 5, docs/design-decisions/DD-004).
+  open_fields:
+  - controller_platform
+  - io_count_and_type
+  - communication_protocol_to_the_platform
+  - interlock_wiring_versus_software
+  - independent_power_source
+  tags:
+  - local_control
+  - fr_203
+- asset_id: water.controller.irrigation.01
+  domain: water
+  asset_class: controller
+  name: Irrigation Zone Controller
+  status: concept
+  criticality: important
+  control_authority: local_controller_with_supervisory_setpoints
+  functional_position: true
+  parent_id: site.geographic_zone.orchard.01
+  location:
+    structure_or_zone: TBD
+    coordinates_status: TBD
+  properties:
+    controller_role: irrigation_zone_sequencing
+    platform_status: TBD
+    must_operate_without_central_server: true
+  external_identifiers: []
+  network: {}
+  power: {}
+  dependencies: []
+  manual_override: {}
+  documentation: []
+  maintenance_plan: {}
+  point_profile_refs: *id004
+  source_refs:
+  - *id001
+  - *id002
+  notes:
+  - Enforces the FR-302 maximum runtime and minimum rest period locally so a lost server cannot flood a zone.
+  open_fields:
+  - controller_platform
+  - zone_output_count
+  - field_wiring_or_radio
+  - maximum_simultaneous_zones
+  tags:
+  - local_control
+  - irrigation
+  - fr_302
+relationships:
+- relationship_id: rel.1001
+  from_asset_id: water.pump.well.01
+  relationship_type: part_of
+  to_asset_id: water.well.site.01
+  status: concept
+  notes: []
+- relationship_id: rel.1002
+  from_asset_id: water.sensor.well.level_01
+  relationship_type: monitors
+  to_asset_id: water.well.site.01
+  status: concept
+  notes: []
+- relationship_id: rel.1003
+  from_asset_id: water.flow_meter.well.01
+  relationship_type: measures
+  to_asset_id: water.pump.well.01
+  status: concept
+  notes: []
+- relationship_id: rel.1004
+  from_asset_id: water.pressure_sensor.well.discharge_01
+  relationship_type: monitors
+  to_asset_id: water.pump.well.01
+  status: concept
+  notes: []
+- relationship_id: rel.1005
+  from_asset_id: water.tank.well.pressure_01
+  relationship_type: part_of
+  to_asset_id: water.pump.well.01
+  status: concept
+  notes: []
+- relationship_id: rel.1006
+  from_asset_id: water.well.site.01
+  relationship_type: feeds
+  to_asset_id: water.pump.well.01
+  status: concept
+  notes: []
+- relationship_id: rel.1007
+  from_asset_id: water.pump.well.01
+  relationship_type: feeds
+  to_asset_id: water.tank.potable.storage_01
+  status: concept
+  notes: []
+- relationship_id: rel.1008
+  from_asset_id: water.valve.rainwater.first_flush_01
+  relationship_type: feeds
+  to_asset_id: water.filter.rainwater.inlet_screen_01
+  status: concept
+  notes: []
+- relationship_id: rel.1009
+  from_asset_id: water.filter.rainwater.inlet_screen_01
+  relationship_type: feeds
+  to_asset_id: water.tank.rainwater.cistern_01
+  status: concept
+  notes: []
+- relationship_id: rel.1010
+  from_asset_id: water.filter.rainwater.inlet_screen_01
+  relationship_type: feeds
+  to_asset_id: water.tank.rainwater.cistern_02
+  status: concept
+  notes: []
+- relationship_id: rel.1011
+  from_asset_id: water.flow_meter.rainwater.inlet_01
+  relationship_type: measures
+  to_asset_id: water.tank.rainwater.cistern_01
+  status: concept
+  notes: []
+- relationship_id: rel.1012
+  from_asset_id: water.tank.rainwater.cistern_01
+  relationship_type: feeds
+  to_asset_id: water.pump.rainwater.transfer_01
+  status: concept
+  notes: []
+- relationship_id: rel.1013
+  from_asset_id: water.tank.rainwater.cistern_02
+  relationship_type: feeds
+  to_asset_id: water.pump.rainwater.transfer_01
+  status: concept
+  notes: []
+- relationship_id: rel.1014
+  from_asset_id: water.pump.rainwater.transfer_01
+  relationship_type: feeds
+  to_asset_id: water.tank.irrigation.buffer_01
+  status: concept
+  notes: []
+- relationship_id: rel.1015
+  from_asset_id: water.tank.potable.storage_01
+  relationship_type: feeds
+  to_asset_id: water.pump.potable.pressure_01
+  status: concept
+  notes: []
+- relationship_id: rel.1016
+  from_asset_id: water.pump.potable.pressure_01
+  relationship_type: feeds
+  to_asset_id: water.filter.potable.sediment_01
+  status: concept
+  notes: []
+- relationship_id: rel.1017
+  from_asset_id: water.filter.potable.sediment_01
+  relationship_type: feeds
+  to_asset_id: water.filter.potable.carbon_01
+  status: concept
+  notes: []
+- relationship_id: rel.1018
+  from_asset_id: water.filter.potable.carbon_01
+  relationship_type: feeds
+  to_asset_id: water.treatment_stage.potable.uv_01
+  status: concept
+  notes: []
+- relationship_id: rel.1019
+  from_asset_id: water.treatment_stage.potable.uv_01
+  relationship_type: feeds
+  to_asset_id: water.treatment_stage.potable.polish_01
+  status: concept
+  notes: []
+- relationship_id: rel.1020
+  from_asset_id: water.treatment_stage.potable.polish_01
+  relationship_type: feeds
+  to_asset_id: water.valve.potable.service_isolation_01
+  status: concept
+  notes: []
+- relationship_id: rel.1021
+  from_asset_id: water.flow_meter.potable.service_01
+  relationship_type: measures
+  to_asset_id: water.valve.potable.service_isolation_01
+  status: concept
+  notes: []
+- relationship_id: rel.1022
+  from_asset_id: water.pressure_sensor.potable.service_01
+  relationship_type: monitors
+  to_asset_id: water.valve.potable.service_isolation_01
+  status: concept
+  notes: []
+- relationship_id: rel.1023
+  from_asset_id: water.sensor.potable.quality_01
+  relationship_type: monitors
+  to_asset_id: water.treatment_stage.potable.uv_01
+  status: concept
+  notes: []
+- relationship_id: rel.1024
+  from_asset_id: water.valve.potable.emergency_reserve_01
+  relationship_type: protects
+  to_asset_id: water.tank.potable.storage_01
+  status: concept
+  notes:
+  - 'FR-205: isolates discretionary draw to preserve the emergency reserve.'
+- relationship_id: rel.1025
+  from_asset_id: water.tank.potable.storage_01
+  relationship_type: feeds
+  to_asset_id: water.tank.irrigation.buffer_01
+  status: concept
+  notes:
+  - Backup path only. Irrigation draws from the well and rainwater first.
+- relationship_id: rel.1026
+  from_asset_id: water.tank.irrigation.buffer_01
+  relationship_type: feeds
+  to_asset_id: water.pump.irrigation.01
+  status: concept
+  notes: []
+- relationship_id: rel.1027
+  from_asset_id: water.pump.irrigation.01
+  relationship_type: feeds
+  to_asset_id: water.filter.irrigation.disc_01
+  status: concept
+  notes: []
+- relationship_id: rel.1028
+  from_asset_id: water.filter.irrigation.disc_01
+  relationship_type: feeds
+  to_asset_id: water.valve.irrigation.main_01
+  status: concept
+  notes: []
+- relationship_id: rel.1029
+  from_asset_id: water.flow_meter.irrigation.main_01
+  relationship_type: measures
+  to_asset_id: water.valve.irrigation.main_01
+  status: concept
+  notes: []
+- relationship_id: rel.1030
+  from_asset_id: water.pressure_sensor.irrigation.main_01
+  relationship_type: monitors
+  to_asset_id: water.valve.irrigation.main_01
+  status: concept
+  notes: []
+- relationship_id: rel.1031
+  from_asset_id: water.valve.irrigation.main_01
+  relationship_type: feeds
+  to_asset_id: water.valve.orchard.zone_01
+  status: concept
+  notes: []
+- relationship_id: rel.1032
+  from_asset_id: water.valve.orchard.zone_01
+  relationship_type: serves
+  to_asset_id: agriculture.irrigation_zone.orchard.01
+  status: concept
+  notes: []
+- relationship_id: rel.1033
+  from_asset_id: agriculture.irrigation_zone.orchard.01
+  relationship_type: part_of
+  to_asset_id: site.geographic_zone.orchard.01
+  status: concept
+  notes: []
+- relationship_id: rel.1034
+  from_asset_id: water.controller.irrigation.01
+  relationship_type: controls
+  to_asset_id: water.valve.orchard.zone_01
+  status: concept
+  notes: []
+- relationship_id: rel.1035
+  from_asset_id: water.valve.irrigation.main_01
+  relationship_type: feeds
+  to_asset_id: water.valve.orchard.zone_02
+  status: concept
+  notes: []
+- relationship_id: rel.1036
+  from_asset_id: water.valve.orchard.zone_02
+  relationship_type: serves
+  to_asset_id: agriculture.irrigation_zone.orchard.02
+  status: concept
+  notes: []
+- relationship_id: rel.1037
+  from_asset_id: agriculture.irrigation_zone.orchard.02
+  relationship_type: part_of
+  to_asset_id: site.geographic_zone.orchard.01
+  status: concept
+  notes: []
+- relationship_id: rel.1038
+  from_asset_id: water.controller.irrigation.01
+  relationship_type: controls
+  to_asset_id: water.valve.orchard.zone_02
+  status: concept
+  notes: []
+- relationship_id: rel.1039
+  from_asset_id: water.graywater_branch.residence.01
+  relationship_type: feeds
+  to_asset_id: water.tank.graywater.surge_01
+  status: concept
+  notes: []
+- relationship_id: rel.1040
+  from_asset_id: water.tank.graywater.surge_01
+  relationship_type: feeds
+  to_asset_id: water.filter.graywater.01
+  status: concept
+  notes: []
+- relationship_id: rel.1041
+  from_asset_id: water.filter.graywater.01
+  relationship_type: feeds
+  to_asset_id: water.pump.graywater.01
+  status: concept
+  notes: []
+- relationship_id: rel.1042
+  from_asset_id: water.pump.graywater.01
+  relationship_type: feeds
+  to_asset_id: water.valve.graywater.diverter_01
+  status: concept
+  notes: []
+- relationship_id: rel.1043
+  from_asset_id: water.valve.graywater.diverter_01
+  relationship_type: serves
+  to_asset_id: agriculture.irrigation_zone.orchard.01
+  status: concept
+  notes:
+  - Subject to the reuse regulations of the final jurisdiction.
+- relationship_id: rel.1044
+  from_asset_id: water.flow_meter.graywater.01
+  relationship_type: measures
+  to_asset_id: water.pump.graywater.01
+  status: concept
+  notes: []
+- relationship_id: rel.1045
+  from_asset_id: water.controller.freeze_protection.01
+  relationship_type: controls
+  to_asset_id: water.valve.freeze_protection.drain_01
+  status: concept
+  notes: []
+- relationship_id: rel.1046
+  from_asset_id: water.controller.freeze_protection.01
+  relationship_type: controls
+  to_asset_id: water.valve.freeze_protection.drain_02
+  status: concept
+  notes: []
+- relationship_id: rel.1047
+  from_asset_id: water.sensor.freeze_protection.line_temp_01
+  relationship_type: monitors
+  to_asset_id: water.controller.freeze_protection.01
+  status: concept
+  notes: []
+- relationship_id: rel.1048
+  from_asset_id: water.valve.freeze_protection.drain_02
+  relationship_type: protects
+  to_asset_id: water.valve.irrigation.main_01
+  status: concept
+  notes: []
+- relationship_id: rel.1049
+  from_asset_id: water.controller.water_system.01
+  relationship_type: controls
+  to_asset_id: water.pump.well.01
+  status: concept
+  notes: []
+- relationship_id: rel.1050
+  from_asset_id: water.controller.water_system.01
+  relationship_type: controls
+  to_asset_id: water.pump.potable.pressure_01
+  status: concept
+  notes: []
+- relationship_id: rel.1051
+  from_asset_id: water.controller.water_system.01
+  relationship_type: controls
+  to_asset_id: water.pump.rainwater.transfer_01
+  status: concept
+  notes: []
+- relationship_id: rel.1052
+  from_asset_id: water.controller.water_system.01
+  relationship_type: controls
+  to_asset_id: water.pump.graywater.01
+  status: concept
+  notes: []
+- relationship_id: rel.1053
+  from_asset_id: water.controller.water_system.01
+  relationship_type: controls
+  to_asset_id: water.treatment_stage.potable.uv_01
+  status: concept
+  notes: []
+- relationship_id: rel.1054
+  from_asset_id: water.controller.water_system.01
+  relationship_type: controls
+  to_asset_id: water.valve.potable.service_isolation_01
+  status: concept
+  notes: []
+- relationship_id: rel.1055
+  from_asset_id: water.controller.water_system.01
+  relationship_type: controls
+  to_asset_id: water.valve.potable.emergency_reserve_01
+  status: concept
+  notes: []
+- relationship_id: rel.1056
+  from_asset_id: water.controller.irrigation.01
+  relationship_type: controls
+  to_asset_id: water.pump.irrigation.01
+  status: concept
+  notes: []
+- relationship_id: rel.1057
+  from_asset_id: water.controller.irrigation.01
+  relationship_type: controls
+  to_asset_id: water.valve.irrigation.main_01
+  status: concept
+  notes: []
+- relationship_id: rel.1058
+  from_asset_id: safety.safety_sensor.water_service.leak_01
+  relationship_type: monitors
+  to_asset_id: water.pump.potable.pressure_01
+  status: concept
+  notes: []
+- relationship_id: rel.1059
+  from_asset_id: safety.safety_sensor.water_treatment.leak_02
+  relationship_type: monitors
+  to_asset_id: water.treatment_stage.potable.uv_01
+  status: concept
+  notes: []
+- relationship_id: rel.1060
+  from_asset_id: water.pump.well.01
+  relationship_type: depends_on
+  to_asset_id: energy.load.site.water_pumping_01
+  status: concept
+  notes:
+  - Electrical demand is already represented by the register load group.
+- relationship_id: rel.1061
+  from_asset_id: water.pump.potable.pressure_01
+  relationship_type: depends_on
+  to_asset_id: energy.load.site.water_pumping_01
+  status: concept
+  notes: []
+- relationship_id: rel.1062
+  from_asset_id: water.pump.irrigation.01
+  relationship_type: depends_on
+  to_asset_id: energy.load.site.irrigation_01
+  status: concept
+  notes: []
+- relationship_id: rel.1063
+  from_asset_id: water.controller.irrigation.01
+  relationship_type: depends_on
+  to_asset_id: energy.load.site.irrigation_01
+  status: concept
+  notes: []
+- relationship_id: rel.1064
+  from_asset_id: water.controller.water_system.01
+  relationship_type: depends_on
+  to_asset_id: it.application_service.rack_01.mqtt_01
+  status: concept
+  notes:
+  - Supervisory setpoints only. Loss of the broker must not stop local interlock enforcement.
+- relationship_id: rel.1065
+  from_asset_id: water.controller.freeze_protection.01
+  relationship_type: depends_on
+  to_asset_id: it.server.secondary_control_node.01
+  status: concept
+  notes:
+  - Alerting path that survives loss of the power/server container.
+- relationship_id: rel.1066
+  from_asset_id: water.well.site.01
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1067
+  from_asset_id: water.valve.rainwater.first_flush_01
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1068
+  from_asset_id: water.filter.rainwater.inlet_screen_01
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1069
+  from_asset_id: water.flow_meter.rainwater.inlet_01
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1070
+  from_asset_id: water.tank.rainwater.cistern_01
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1071
+  from_asset_id: water.tank.rainwater.cistern_02
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1072
+  from_asset_id: water.pump.rainwater.transfer_01
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1073
+  from_asset_id: water.tank.potable.storage_01
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1074
+  from_asset_id: water.filter.potable.sediment_01
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1075
+  from_asset_id: water.filter.potable.carbon_01
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1076
+  from_asset_id: water.treatment_stage.potable.uv_01
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1077
+  from_asset_id: water.treatment_stage.potable.polish_01
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1078
+  from_asset_id: water.sensor.potable.quality_01
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1079
+  from_asset_id: water.pump.potable.pressure_01
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1080
+  from_asset_id: water.flow_meter.potable.service_01
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1081
+  from_asset_id: water.pressure_sensor.potable.service_01
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1082
+  from_asset_id: water.valve.potable.service_isolation_01
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1083
+  from_asset_id: water.graywater_branch.residence.01
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1084
+  from_asset_id: water.tank.graywater.surge_01
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1085
+  from_asset_id: water.filter.graywater.01
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1086
+  from_asset_id: water.pump.graywater.01
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1087
+  from_asset_id: water.valve.graywater.diverter_01
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1088
+  from_asset_id: water.flow_meter.graywater.01
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1089
+  from_asset_id: water.controller.freeze_protection.01
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1090
+  from_asset_id: safety.safety_sensor.water_service.leak_01
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1091
+  from_asset_id: safety.safety_sensor.water_treatment.leak_02
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+- relationship_id: rel.1092
+  from_asset_id: water.controller.water_system.01
+  relationship_type: located_in
+  to_asset_id: site.site.primary.01
+  status: concept
+  notes: []
+extension_notes:
+- Status concept everywhere. No water asset is planned in the procurement sense; the register reserves the identity so drawings,
+  CAPEX, controls and commissioning records can reference the same object (rule 25.3.8).
+- Irrigation zones use the agriculture domain, following the SDD section 25.2 worked example agriculture.irrigation_zone.orchard.03.
+  The irrigation_zone class permits both water and agriculture.
+- Two irrigation zones and two rainwater cisterns are pattern placeholders, not a survey. The real counts follow from a property
+  that has not been selected.
+- No tank volume, well yield, flow rate, pipe size, pressure or temperature threshold appears anywhere in this document. Every
+  such value is TBD with an entry in the owning asset's open_fields.
+- Electrical demand is not duplicated here. The register already carries energy.load.site.water_pumping_01 and energy.load.site.irrigation_01.

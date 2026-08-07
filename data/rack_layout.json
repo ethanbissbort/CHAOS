@@ -1,0 +1,1245 @@
+{
+  "schema_version": "0.4.0",
+  "document_type": "rack_layout",
+  "document_status": "proposal_for_review",
+  "approval_status": "not_ratified",
+  "authority": "none_until_owner_review",
+  "generated_at": "2026-08-07T00:00:00Z",
+  "extends": "homestead.primary.v0_3",
+  "merge_target": "data/homestead_asset_register.yaml",
+  "source_document": "Homestead_Digital_Twin_Software_Design_Document_v0.3.md",
+  "work_queue_item": "49.4",
+  "purpose": "Preliminary rack-unit, PDU-outlet, switch-port, VLAN and power-feed proposal for the primary 42U rack. The v0.3 README lists rack-unit positions and outlet assignments as deliberately unresolved, so this document is a proposal for owner and commissioning review, not a decided elevation.",
+  "review_required_before_use": true,
+  "supersedes": null,
+  "placement_principles": [
+    "Heaviest items lowest: UPS at the bottom of the rack, then power distribution, then storage and compute.",
+    "Switches and the router at the top so patching, uplinks and console access stay above the heat sources.",
+    "Environmental monitoring high enough that inlet and exhaust sensor leads reach the full height of the rack.",
+    "Contiguous free rack units kept in one block in the middle rather than scattered, so a future chassis fits.",
+    "Zero-U, door-mounted and sensor-port-powered devices consume no rack units and are listed separately.",
+    "No device is placed in a rack unit that another device already claims; the layout is checked for overlap."
+  ],
+  "rack": {
+    "rack_asset_id": "it.rack.power_container.01",
+    "rack_unit_count": 42,
+    "rack_unit_count_source": "register_property_u_height",
+    "rack_unit_numbering": "bottom_to_top_unit_1_is_lowest",
+    "open_fields": [
+      "rack_make_model",
+      "rail_type",
+      "cable_management_plan",
+      "blanking_panel_plan",
+      "cooling_airflow"
+    ]
+  },
+  "power_feeds": [
+    {
+      "feed_id": "A",
+      "upstream_asset_id": "energy.ups.rack_01.01",
+      "description": "UPS-backed feed. The only feed with an identified upstream asset in the register.",
+      "data_status": "derived_from_register",
+      "open_fields": [
+        "branch_circuit",
+        "breaker_rating",
+        "conductor_size"
+      ]
+    },
+    {
+      "feed_id": "B",
+      "upstream_asset_id": null,
+      "description": "Second source implied by the rack ATS. The register records source_b_id as TBD_secondary_source, so feed B has no upstream asset and every A_and_B assignment below is aspirational.",
+      "data_status": "unresolved",
+      "open_fields": [
+        "feed_b_upstream_source",
+        "branch_circuit",
+        "breaker_rating",
+        "conductor_size"
+      ]
+    }
+  ],
+  "pdus": [
+    {
+      "pdu_asset_id": "energy.pdu.rack_01.switched_01",
+      "outlet_count": 10,
+      "outlet_count_source": "register_property_outlet_count",
+      "nominal_voltage_v": 120,
+      "power_feed": "A",
+      "upstream_asset_id": "energy.ats.rack_01.ap5442_01",
+      "upstream_basis": "proposed_fed_from_rack_ats_output",
+      "outlets": [
+        {
+          "outlet": 1,
+          "assigned_asset_id": "it.server.rack_01.r740xd_01",
+          "purpose": "primary_power_cord",
+          "status": "preliminary_assignment"
+        },
+        {
+          "outlet": 2,
+          "assigned_asset_id": "it.server.rack_01.r740xd_01",
+          "purpose": "redundant_power_cord",
+          "status": "reserved_pending_psu_confirmation"
+        },
+        {
+          "outlet": 3,
+          "assigned_asset_id": "it.server.rack_01.t7820_01",
+          "purpose": "primary_power_cord",
+          "status": "preliminary_assignment"
+        },
+        {
+          "outlet": 4,
+          "assigned_asset_id": "it.storage_array.rack_01.sc200_01",
+          "purpose": "primary_power_cord",
+          "status": "preliminary_assignment"
+        },
+        {
+          "outlet": 5,
+          "assigned_asset_id": "it.storage_array.rack_01.sc200_01",
+          "purpose": "redundant_power_cord",
+          "status": "reserved_pending_psu_confirmation"
+        },
+        {
+          "outlet": 6,
+          "assigned_asset_id": "it.storage_array.rack_01.sc200_02",
+          "purpose": "primary_power_cord",
+          "status": "preliminary_assignment"
+        },
+        {
+          "outlet": 7,
+          "assigned_asset_id": "it.switch.rack_01.arista_7050qx_01",
+          "purpose": "primary_power_cord",
+          "status": "preliminary_assignment"
+        },
+        {
+          "outlet": 8,
+          "assigned_asset_id": "it.wireless_controller.rack_01.wlc5508_01",
+          "purpose": "primary_power_cord",
+          "status": "preliminary_assignment"
+        },
+        {
+          "outlet": 9,
+          "assigned_asset_id": "it.environmental_monitor.rack_01.nbrk0550_01",
+          "purpose": "primary_power_cord",
+          "status": "preliminary_assignment"
+        },
+        {
+          "outlet": 10,
+          "assigned_asset_id": null,
+          "purpose": "spare",
+          "status": "spare"
+        }
+      ],
+      "open_fields": [
+        "pdu_input_plug",
+        "per_outlet_current_rating",
+        "ats_outlet_number"
+      ],
+      "notes": [
+        "Per-outlet switching is the audited command path required by FR-802.",
+        "Outlets 2 and 5 are held for redundant cords; releasing them requires a confirmed PSU inventory."
+      ]
+    },
+    {
+      "pdu_asset_id": "energy.pdu.rack_01.basic_01",
+      "outlet_count": 8,
+      "outlet_count_source": "register_property_outlet_count",
+      "nominal_voltage_v": 120,
+      "power_feed": "A",
+      "upstream_asset_id": "energy.ups.rack_01.01",
+      "upstream_basis": "proposed_fed_from_ups_output",
+      "outlets": [
+        {
+          "outlet": 1,
+          "assigned_asset_id": "it.environmental_monitor.rack_01.ap9320_01",
+          "purpose": "primary_power_cord",
+          "status": "preliminary_assignment"
+        },
+        {
+          "outlet": 2,
+          "assigned_asset_id": "it.environmental_monitor.rack_01.ap92200_01",
+          "purpose": "primary_power_cord",
+          "status": "preliminary_assignment"
+        },
+        {
+          "outlet": 3,
+          "assigned_asset_id": "security.access_controller.rack_01.ap9361_01",
+          "purpose": "primary_power_cord",
+          "status": "preliminary_assignment"
+        },
+        {
+          "outlet": 4,
+          "assigned_asset_id": "security.camera.rack_01.netbotz_01",
+          "purpose": "primary_power_cord",
+          "status": "preliminary_assignment"
+        },
+        {
+          "outlet": 5,
+          "assigned_asset_id": null,
+          "purpose": "spare",
+          "status": "spare"
+        },
+        {
+          "outlet": 6,
+          "assigned_asset_id": null,
+          "purpose": "spare",
+          "status": "spare"
+        },
+        {
+          "outlet": 7,
+          "assigned_asset_id": null,
+          "purpose": "spare",
+          "status": "spare"
+        },
+        {
+          "outlet": 8,
+          "assigned_asset_id": null,
+          "purpose": "spare",
+          "status": "spare"
+        }
+      ],
+      "open_fields": [
+        "pdu_input_plug",
+        "per_outlet_current_rating"
+      ],
+      "notes": [
+        "Basic PDU carries monitoring and access hardware that must not be remotely power-cycled by mistake."
+      ]
+    }
+  ],
+  "switch_port_plan": {
+    "access_switch_asset_id": "it.switch.rack_01.catalyst_2960x_01",
+    "backbone_switch_asset_id": "it.switch.rack_01.arista_7050qx_01",
+    "numbering_basis": "positional_index_only",
+    "interface_naming_status": "unresolved",
+    "open_fields": [
+      "catalyst_exact_model_suffix",
+      "catalyst_port_count",
+      "catalyst_interface_names",
+      "arista_port_count",
+      "arista_interface_names",
+      "catalyst_to_arista_uplink_ports",
+      "trunk_and_allowed_vlan_lists"
+    ],
+    "notes": [
+      "Port numbers here are positional indexes, not interface names. The register already lists the exact 2960-X model suffix and port map as open fields, so no interface name is invented.",
+      "VLAN membership is copied from each asset's register network block and is not proposed by this document."
+    ]
+  },
+  "placements": [
+    {
+      "asset_id": "energy.ups.rack_01.01",
+      "name": "APC Smart-UPS 1500",
+      "asset_class": "ups",
+      "register_status": "planned",
+      "mount_style": "rack_unit",
+      "rack_unit_start": 1,
+      "rack_unit_height": 2,
+      "rack_unit_height_basis": "estimated_pending_model_confirmation",
+      "depth_class": "full_depth",
+      "power_feed": "A",
+      "power_feed_basis": "ups_is_the_origin_of_feed_a",
+      "power_source_asset_id": null,
+      "pdu_asset_id": null,
+      "pdu_outlet": null,
+      "pdu_outlet_basis": "not_applicable_upstream_of_pdus",
+      "switch_asset_id": "it.switch.rack_01.catalyst_2960x_01",
+      "switch_port": 1,
+      "switch_port_basis": "preliminary_positional_assignment",
+      "additional_switch_connections": [],
+      "vlan_ids": [
+        10
+      ],
+      "vlan_asset_ids": [
+        "it.network_segment.site.vlan_10"
+      ],
+      "vlan_basis": "derived_from_register_network_block",
+      "estimated_power_w": null,
+      "power_data_status": "not_estimated",
+      "heat_load_status": "not_calculated_pending_measured_load",
+      "placement_status": "preliminary",
+      "data_status": "estimated",
+      "open_fields": [
+        "rack_unit_height",
+        "ups_form_factor",
+        "ups_rack_or_tower_variant",
+        "battery_module_weight",
+        "input_branch_circuit"
+      ],
+      "notes": [
+        "Heaviest single item; placed at the bottom of the rack per normal practice.",
+        "Register records rated_w 1500 and rated_va TBD; the rack-mount variant is not confirmed, so 2U is an estimate."
+      ]
+    },
+    {
+      "asset_id": "energy.ats.rack_01.ap5442_01",
+      "name": "APC Rack ATS AP5442",
+      "asset_class": "ats",
+      "register_status": "planned",
+      "mount_style": "rack_unit",
+      "rack_unit_start": 3,
+      "rack_unit_height": 1,
+      "rack_unit_height_basis": "published_form_factor_for_named_model",
+      "depth_class": "shallow",
+      "power_feed": "A_and_B",
+      "power_feed_basis": "ats_is_the_a_b_selection_point",
+      "power_source_asset_id": "energy.ups.rack_01.01",
+      "pdu_asset_id": null,
+      "pdu_outlet": null,
+      "pdu_outlet_basis": "not_applicable_upstream_of_pdus",
+      "switch_asset_id": "it.switch.rack_01.catalyst_2960x_01",
+      "switch_port": 3,
+      "switch_port_basis": "preliminary_positional_assignment",
+      "additional_switch_connections": [],
+      "vlan_ids": [
+        10
+      ],
+      "vlan_asset_ids": [
+        "it.network_segment.site.vlan_10"
+      ],
+      "vlan_basis": "derived_from_register_network_block",
+      "estimated_power_w": null,
+      "power_data_status": "not_estimated",
+      "heat_load_status": "not_calculated_pending_measured_load",
+      "placement_status": "preliminary",
+      "data_status": "estimated",
+      "open_fields": [
+        "ats_outlet_count",
+        "ats_outlet_type",
+        "feed_b_upstream_source"
+      ],
+      "notes": [
+        "Register records source_a_id energy.ups.rack_01.01 and source_b_id TBD_secondary_source.",
+        "Feed B has no upstream asset in the register; every feed-B assignment in this document is blocked on it."
+      ]
+    },
+    {
+      "asset_id": "energy.pdu.rack_01.switched_01",
+      "name": "10-Outlet Individually Switched Rack PDU",
+      "asset_class": "pdu",
+      "register_status": "planned",
+      "mount_style": "rack_unit",
+      "rack_unit_start": 4,
+      "rack_unit_height": 1,
+      "rack_unit_height_basis": "estimated_pending_model_confirmation",
+      "depth_class": "shallow",
+      "power_feed": "A",
+      "power_feed_basis": "proposed_fed_from_rack_ats_output",
+      "power_source_asset_id": "energy.ats.rack_01.ap5442_01",
+      "pdu_asset_id": null,
+      "pdu_outlet": null,
+      "pdu_outlet_basis": "not_applicable_is_a_pdu",
+      "switch_asset_id": "it.switch.rack_01.catalyst_2960x_01",
+      "switch_port": 2,
+      "switch_port_basis": "preliminary_positional_assignment",
+      "additional_switch_connections": [],
+      "vlan_ids": [
+        10
+      ],
+      "vlan_asset_ids": [
+        "it.network_segment.site.vlan_10"
+      ],
+      "vlan_basis": "derived_from_register_network_block",
+      "estimated_power_w": null,
+      "power_data_status": "not_estimated",
+      "heat_load_status": "not_calculated_pending_measured_load",
+      "placement_status": "preliminary",
+      "data_status": "estimated",
+      "open_fields": [
+        "rack_unit_height",
+        "pdu_form_factor_horizontal_or_zero_u",
+        "pdu_input_plug",
+        "pdu_model"
+      ],
+      "notes": [
+        "Register records outlet_count 10, per-outlet switching and 120 V nominal."
+      ]
+    },
+    {
+      "asset_id": "energy.pdu.rack_01.basic_01",
+      "name": "8-Outlet Basic Rack PDU",
+      "asset_class": "pdu",
+      "register_status": "planned",
+      "mount_style": "rack_unit",
+      "rack_unit_start": 5,
+      "rack_unit_height": 1,
+      "rack_unit_height_basis": "estimated_pending_model_confirmation",
+      "depth_class": "shallow",
+      "power_feed": "A",
+      "power_feed_basis": "proposed_fed_from_ups_output",
+      "power_source_asset_id": "energy.ups.rack_01.01",
+      "pdu_asset_id": null,
+      "pdu_outlet": null,
+      "pdu_outlet_basis": "not_applicable_is_a_pdu",
+      "switch_asset_id": null,
+      "switch_port": null,
+      "switch_port_basis": "no_network_interface_recorded_in_register",
+      "additional_switch_connections": [],
+      "vlan_ids": [],
+      "vlan_asset_ids": [],
+      "vlan_basis": "no_network_interface_recorded_in_register",
+      "estimated_power_w": null,
+      "power_data_status": "not_estimated",
+      "heat_load_status": "not_calculated_pending_measured_load",
+      "placement_status": "preliminary",
+      "data_status": "estimated",
+      "open_fields": [
+        "rack_unit_height",
+        "pdu_form_factor_horizontal_or_zero_u",
+        "pdu_input_plug",
+        "pdu_model"
+      ],
+      "notes": [
+        "Register records outlet_count 8, basic/master switching and 120 V nominal."
+      ]
+    },
+    {
+      "asset_id": "energy.pdu.rack_01.ap9570_01",
+      "name": "APC AP9570 208 V Reserve PDU",
+      "asset_class": "pdu",
+      "register_status": "reserve",
+      "mount_style": "rack_unit",
+      "rack_unit_start": 6,
+      "rack_unit_height": 1,
+      "rack_unit_height_basis": "estimated_pending_model_confirmation",
+      "depth_class": "shallow",
+      "power_feed": "not_assigned",
+      "power_feed_basis": "no_208_v_source_exists_in_the_register",
+      "power_source_asset_id": null,
+      "pdu_asset_id": null,
+      "pdu_outlet": null,
+      "pdu_outlet_basis": "not_applicable_is_a_pdu",
+      "switch_asset_id": null,
+      "switch_port": null,
+      "switch_port_basis": "no_network_interface_recorded_in_register",
+      "additional_switch_connections": [],
+      "vlan_ids": [],
+      "vlan_asset_ids": [],
+      "vlan_basis": "no_network_interface_recorded_in_register",
+      "estimated_power_w": null,
+      "power_data_status": "not_estimated",
+      "heat_load_status": "not_calculated_pending_measured_load",
+      "placement_status": "preliminary",
+      "data_status": "estimated",
+      "open_fields": [
+        "rack_unit_height",
+        "pdu_form_factor_horizontal_or_zero_u",
+        "source_208_v_branch_circuit",
+        "commissioning_decision_to_use_or_remove"
+      ],
+      "notes": [
+        "Register status is reserve: 4x C19, 208 V, 30 A input.",
+        "No 208 V source is defined anywhere in the register, so this unit is positioned but not energized by this proposal."
+      ]
+    },
+    {
+      "asset_id": "it.storage_array.rack_01.sc200_01",
+      "name": "Dell Compellent SC200 Storage Array 1",
+      "asset_class": "storage_array",
+      "register_status": "planned",
+      "mount_style": "rack_unit",
+      "rack_unit_start": 7,
+      "rack_unit_height": 2,
+      "rack_unit_height_basis": "published_form_factor_for_named_model",
+      "depth_class": "full_depth",
+      "power_feed": "A_and_B",
+      "power_feed_basis": "proposed_dual_cord_pending_psu_inventory",
+      "power_source_asset_id": "energy.pdu.rack_01.switched_01",
+      "pdu_asset_id": "energy.pdu.rack_01.switched_01",
+      "pdu_outlet": 4,
+      "pdu_outlet_basis": "preliminary_assignment",
+      "switch_asset_id": null,
+      "switch_port": null,
+      "switch_port_basis": "sas_attached_no_ethernet_recorded_in_register",
+      "additional_switch_connections": [],
+      "vlan_ids": [],
+      "vlan_asset_ids": [],
+      "vlan_basis": "no_network_interface_recorded_in_register",
+      "estimated_power_w": null,
+      "power_data_status": "not_estimated",
+      "heat_load_status": "not_calculated_pending_measured_load",
+      "placement_status": "preliminary",
+      "data_status": "estimated",
+      "open_fields": [
+        "psu_count",
+        "drive_weight_loaded",
+        "sas_cable_routing",
+        "feed_b_upstream_source"
+      ],
+      "notes": [
+        "Register records the SAS host attachment to the R740xd; the array has no network block.",
+        "Outlet 5 on the switched PDU is reserved for the second cord if the enclosure has redundant PSUs."
+      ]
+    },
+    {
+      "asset_id": "it.storage_array.rack_01.sc200_02",
+      "name": "Dell Compellent SC200 Storage Array 2",
+      "asset_class": "storage_array",
+      "register_status": "reserve",
+      "mount_style": "rack_unit",
+      "rack_unit_start": 9,
+      "rack_unit_height": 2,
+      "rack_unit_height_basis": "published_form_factor_for_named_model",
+      "depth_class": "full_depth",
+      "power_feed": "A",
+      "power_feed_basis": "proposed_single_cord_reserve_unit",
+      "power_source_asset_id": "energy.pdu.rack_01.switched_01",
+      "pdu_asset_id": "energy.pdu.rack_01.switched_01",
+      "pdu_outlet": 6,
+      "pdu_outlet_basis": "preliminary_assignment",
+      "switch_asset_id": null,
+      "switch_port": null,
+      "switch_port_basis": "sas_attached_no_ethernet_recorded_in_register",
+      "additional_switch_connections": [],
+      "vlan_ids": [],
+      "vlan_asset_ids": [],
+      "vlan_basis": "no_network_interface_recorded_in_register",
+      "estimated_power_w": null,
+      "power_data_status": "not_estimated",
+      "heat_load_status": "not_calculated_pending_measured_load",
+      "placement_status": "preliminary",
+      "data_status": "estimated",
+      "open_fields": [
+        "psu_count",
+        "drive_population",
+        "deployment_role_expansion_or_backup"
+      ],
+      "notes": [
+        "Register status is reserve and drive population is TBD."
+      ]
+    },
+    {
+      "asset_id": "it.server.rack_01.r740xd_01",
+      "name": "Dell PowerEdge R740xd",
+      "asset_class": "server",
+      "register_status": "planned",
+      "mount_style": "rack_unit",
+      "rack_unit_start": 11,
+      "rack_unit_height": 2,
+      "rack_unit_height_basis": "published_form_factor_for_named_model",
+      "depth_class": "full_depth",
+      "power_feed": "A_and_B",
+      "power_feed_basis": "proposed_dual_cord_pending_psu_inventory",
+      "power_source_asset_id": "energy.pdu.rack_01.switched_01",
+      "pdu_asset_id": "energy.pdu.rack_01.switched_01",
+      "pdu_outlet": 1,
+      "pdu_outlet_basis": "preliminary_assignment",
+      "switch_asset_id": "it.switch.rack_01.catalyst_2960x_01",
+      "switch_port": 11,
+      "switch_port_basis": "preliminary_positional_assignment",
+      "additional_switch_connections": [
+        {
+          "switch_asset_id": "it.switch.rack_01.arista_7050qx_01",
+          "switch_port": 1,
+          "purpose": "server_and_storage_data_uplink",
+          "vlan_ids": [
+            20
+          ],
+          "status": "preliminary"
+        }
+      ],
+      "vlan_ids": [
+        10,
+        20
+      ],
+      "vlan_asset_ids": [
+        "it.network_segment.site.vlan_10",
+        "it.network_segment.site.vlan_20"
+      ],
+      "vlan_basis": "derived_from_register_network_block",
+      "estimated_power_w": null,
+      "power_data_status": "not_estimated",
+      "heat_load_status": "not_calculated_pending_measured_load",
+      "placement_status": "preliminary",
+      "data_status": "estimated",
+      "open_fields": [
+        "psu_count",
+        "nic_mapping",
+        "idrac_port_vlan_confirmation",
+        "feed_b_upstream_source"
+      ],
+      "notes": [
+        "Primary virtualization and core-services host; iDRAC on VLAN 10, data on VLAN 20 per the register.",
+        "Outlet 2 on the switched PDU is reserved for the second cord."
+      ]
+    },
+    {
+      "asset_id": "it.server.rack_01.t7820_01",
+      "name": "Dell Precision T7820",
+      "asset_class": "server",
+      "register_status": "planned",
+      "mount_style": "rack_unit",
+      "rack_unit_start": 13,
+      "rack_unit_height": 5,
+      "rack_unit_height_basis": "estimated_pending_model_confirmation",
+      "depth_class": "full_depth",
+      "power_feed": "A",
+      "power_feed_basis": "proposed_single_cord",
+      "power_source_asset_id": "energy.pdu.rack_01.switched_01",
+      "pdu_asset_id": "energy.pdu.rack_01.switched_01",
+      "pdu_outlet": 3,
+      "pdu_outlet_basis": "preliminary_assignment",
+      "switch_asset_id": "it.switch.rack_01.catalyst_2960x_01",
+      "switch_port": 12,
+      "switch_port_basis": "preliminary_positional_assignment",
+      "additional_switch_connections": [
+        {
+          "switch_asset_id": "it.switch.rack_01.arista_7050qx_01",
+          "switch_port": 2,
+          "purpose": "auxiliary_compute_data_uplink",
+          "vlan_ids": [
+            20
+          ],
+          "status": "preliminary"
+        }
+      ],
+      "vlan_ids": [
+        20
+      ],
+      "vlan_asset_ids": [
+        "it.network_segment.site.vlan_20"
+      ],
+      "vlan_basis": "derived_from_register_network_block",
+      "estimated_power_w": null,
+      "power_data_status": "not_estimated",
+      "heat_load_status": "not_calculated_pending_measured_load",
+      "placement_status": "preliminary",
+      "data_status": "estimated",
+      "open_fields": [
+        "rack_unit_height",
+        "rack_conversion_kit",
+        "tower_or_rack_orientation",
+        "psu_count"
+      ],
+      "notes": [
+        "The T7820 is a tower workstation. This placement assumes a rack conversion; height is an estimate only.",
+        "If no conversion kit is used the unit sits outside the rack and this row becomes free rack units."
+      ]
+    },
+    {
+      "asset_id": "it.environmental_monitor.rack_01.ap92200_01",
+      "name": "APC InfraStruXure Manager AP92200",
+      "asset_class": "environmental_monitor",
+      "register_status": "planned",
+      "mount_style": "rack_unit",
+      "rack_unit_start": 36,
+      "rack_unit_height": 1,
+      "rack_unit_height_basis": "estimated_pending_model_confirmation",
+      "depth_class": "mid_depth",
+      "power_feed": "A",
+      "power_feed_basis": "proposed_single_cord",
+      "power_source_asset_id": "energy.pdu.rack_01.basic_01",
+      "pdu_asset_id": "energy.pdu.rack_01.basic_01",
+      "pdu_outlet": 2,
+      "pdu_outlet_basis": "preliminary_assignment",
+      "switch_asset_id": "it.switch.rack_01.catalyst_2960x_01",
+      "switch_port": 6,
+      "switch_port_basis": "preliminary_positional_assignment",
+      "additional_switch_connections": [],
+      "vlan_ids": [
+        10
+      ],
+      "vlan_asset_ids": [
+        "it.network_segment.site.vlan_10"
+      ],
+      "vlan_basis": "derived_from_register_network_block",
+      "estimated_power_w": null,
+      "power_data_status": "not_estimated",
+      "heat_load_status": "not_calculated_pending_measured_load",
+      "placement_status": "preliminary",
+      "data_status": "estimated",
+      "open_fields": [
+        "rack_unit_height",
+        "form_factor",
+        "aggregation_scope"
+      ],
+      "notes": []
+    },
+    {
+      "asset_id": "it.environmental_monitor.rack_01.ap9320_01",
+      "name": "APC AP9320 Environmental Management Unit",
+      "asset_class": "environmental_monitor",
+      "register_status": "planned",
+      "mount_style": "rack_unit",
+      "rack_unit_start": 37,
+      "rack_unit_height": 1,
+      "rack_unit_height_basis": "estimated_pending_model_confirmation",
+      "depth_class": "mid_depth",
+      "power_feed": "A",
+      "power_feed_basis": "proposed_single_cord",
+      "power_source_asset_id": "energy.pdu.rack_01.basic_01",
+      "pdu_asset_id": "energy.pdu.rack_01.basic_01",
+      "pdu_outlet": 1,
+      "pdu_outlet_basis": "preliminary_assignment",
+      "switch_asset_id": "it.switch.rack_01.catalyst_2960x_01",
+      "switch_port": 5,
+      "switch_port_basis": "preliminary_positional_assignment",
+      "additional_switch_connections": [],
+      "vlan_ids": [
+        10
+      ],
+      "vlan_asset_ids": [
+        "it.network_segment.site.vlan_10"
+      ],
+      "vlan_basis": "derived_from_register_network_block",
+      "estimated_power_w": null,
+      "power_data_status": "not_estimated",
+      "heat_load_status": "not_calculated_pending_measured_load",
+      "placement_status": "preliminary",
+      "data_status": "estimated",
+      "open_fields": [
+        "rack_unit_height",
+        "form_factor",
+        "sensor_port_map"
+      ],
+      "notes": [
+        "Register notes the door contact and alarm beacon are attached to this unit."
+      ]
+    },
+    {
+      "asset_id": "it.environmental_monitor.rack_01.nbrk0550_01",
+      "name": "APC NetBotz Rack Monitor 550",
+      "asset_class": "environmental_monitor",
+      "register_status": "planned",
+      "mount_style": "rack_unit",
+      "rack_unit_start": 38,
+      "rack_unit_height": 1,
+      "rack_unit_height_basis": "published_form_factor_for_named_model",
+      "depth_class": "mid_depth",
+      "power_feed": "A",
+      "power_feed_basis": "proposed_single_cord",
+      "power_source_asset_id": "energy.pdu.rack_01.switched_01",
+      "pdu_asset_id": "energy.pdu.rack_01.switched_01",
+      "pdu_outlet": 9,
+      "pdu_outlet_basis": "preliminary_assignment",
+      "switch_asset_id": "it.switch.rack_01.catalyst_2960x_01",
+      "switch_port": 4,
+      "switch_port_basis": "preliminary_positional_assignment",
+      "additional_switch_connections": [],
+      "vlan_ids": [
+        10
+      ],
+      "vlan_asset_ids": [
+        "it.network_segment.site.vlan_10"
+      ],
+      "vlan_basis": "derived_from_register_network_block",
+      "estimated_power_w": null,
+      "power_data_status": "not_estimated",
+      "heat_load_status": "not_calculated_pending_measured_load",
+      "placement_status": "preliminary",
+      "data_status": "estimated",
+      "open_fields": [
+        "sensor_port_map",
+        "managed_sensor_inventory"
+      ],
+      "notes": [
+        "Placed high so its inlet/exhaust sensor leads reach both the top and bottom of the rack."
+      ]
+    },
+    {
+      "asset_id": "it.wireless_controller.rack_01.wlc5508_01",
+      "name": "Cisco AIR-CT5508 Wireless LAN Controller",
+      "asset_class": "wireless_controller",
+      "register_status": "planned",
+      "mount_style": "rack_unit",
+      "rack_unit_start": 39,
+      "rack_unit_height": 1,
+      "rack_unit_height_basis": "published_form_factor_for_named_model",
+      "depth_class": "mid_depth",
+      "power_feed": "A",
+      "power_feed_basis": "proposed_single_cord",
+      "power_source_asset_id": "energy.pdu.rack_01.switched_01",
+      "pdu_asset_id": "energy.pdu.rack_01.switched_01",
+      "pdu_outlet": 8,
+      "pdu_outlet_basis": "preliminary_assignment",
+      "switch_asset_id": "it.switch.rack_01.catalyst_2960x_01",
+      "switch_port": 10,
+      "switch_port_basis": "preliminary_positional_assignment",
+      "additional_switch_connections": [],
+      "vlan_ids": [
+        10
+      ],
+      "vlan_asset_ids": [
+        "it.network_segment.site.vlan_10"
+      ],
+      "vlan_basis": "derived_from_register_network_block",
+      "estimated_power_w": null,
+      "power_data_status": "not_estimated",
+      "heat_load_status": "not_calculated_pending_measured_load",
+      "placement_status": "preliminary",
+      "data_status": "estimated",
+      "open_fields": [
+        "psu_count",
+        "port_channel_configuration"
+      ],
+      "notes": []
+    },
+    {
+      "asset_id": "it.router.rack_01.isr4321_01",
+      "name": "Cisco ISR 4321 WAN and Voice Gateway",
+      "asset_class": "router",
+      "register_status": "planned",
+      "mount_style": "rack_unit",
+      "rack_unit_start": 40,
+      "rack_unit_height": 1,
+      "rack_unit_height_basis": "published_form_factor_for_named_model",
+      "depth_class": "mid_depth",
+      "power_feed": "A",
+      "power_feed_basis": "fed_from_rack_ats_per_register",
+      "power_source_asset_id": "energy.ats.rack_01.ap5442_01",
+      "pdu_asset_id": "energy.ats.rack_01.ap5442_01",
+      "pdu_outlet": null,
+      "pdu_outlet_basis": "outlet_number_unassigned_ats_outlet_count_unknown",
+      "switch_asset_id": "it.switch.rack_01.catalyst_2960x_01",
+      "switch_port": 9,
+      "switch_port_basis": "preliminary_positional_assignment",
+      "additional_switch_connections": [],
+      "vlan_ids": [
+        10
+      ],
+      "vlan_asset_ids": [
+        "it.network_segment.site.vlan_10"
+      ],
+      "vlan_basis": "derived_from_register_network_block",
+      "estimated_power_w": null,
+      "power_data_status": "not_estimated",
+      "heat_load_status": "not_calculated_pending_measured_load",
+      "placement_status": "preliminary",
+      "data_status": "estimated",
+      "open_fields": [
+        "ats_outlet_number",
+        "wan_service_handoff",
+        "trunk_configuration"
+      ],
+      "notes": [
+        "Register records power.feed_asset_id as the rack ATS, so this device is not on a PDU outlet."
+      ]
+    },
+    {
+      "asset_id": "it.switch.rack_01.arista_7050qx_01",
+      "name": "Arista 7050QX High-Speed Switch",
+      "asset_class": "switch",
+      "register_status": "planned",
+      "mount_style": "rack_unit",
+      "rack_unit_start": 41,
+      "rack_unit_height": 1,
+      "rack_unit_height_basis": "published_form_factor_for_named_model",
+      "depth_class": "mid_depth",
+      "power_feed": "A_and_B",
+      "power_feed_basis": "proposed_dual_cord_pending_psu_inventory",
+      "power_source_asset_id": "energy.pdu.rack_01.switched_01",
+      "pdu_asset_id": "energy.pdu.rack_01.switched_01",
+      "pdu_outlet": 7,
+      "pdu_outlet_basis": "preliminary_assignment",
+      "switch_asset_id": "it.switch.rack_01.catalyst_2960x_01",
+      "switch_port": 13,
+      "switch_port_basis": "preliminary_positional_assignment",
+      "additional_switch_connections": [],
+      "vlan_ids": [
+        10
+      ],
+      "vlan_asset_ids": [
+        "it.network_segment.site.vlan_10"
+      ],
+      "vlan_basis": "derived_from_register_network_block",
+      "estimated_power_w": null,
+      "power_data_status": "not_estimated",
+      "heat_load_status": "not_calculated_pending_measured_load",
+      "placement_status": "preliminary",
+      "data_status": "estimated",
+      "open_fields": [
+        "psu_count",
+        "qsfp_breakout_plan",
+        "airflow_direction",
+        "feed_b_upstream_source"
+      ],
+      "notes": [
+        "Switches sit at the top of the rack so patching and uplinks stay above the compute and storage.",
+        "Airflow direction (port-to-power or power-to-port) must be confirmed against the container cooling design."
+      ]
+    },
+    {
+      "asset_id": "it.switch.rack_01.catalyst_2960x_01",
+      "name": "Cisco Catalyst 2960-X Core Access Switch",
+      "asset_class": "switch",
+      "register_status": "planned",
+      "mount_style": "rack_unit",
+      "rack_unit_start": 42,
+      "rack_unit_height": 1,
+      "rack_unit_height_basis": "published_form_factor_for_named_model",
+      "depth_class": "mid_depth",
+      "power_feed": "A",
+      "power_feed_basis": "fed_from_rack_ats_per_register",
+      "power_source_asset_id": "energy.ats.rack_01.ap5442_01",
+      "pdu_asset_id": "energy.ats.rack_01.ap5442_01",
+      "pdu_outlet": null,
+      "pdu_outlet_basis": "outlet_number_unassigned_ats_outlet_count_unknown",
+      "switch_asset_id": "it.switch.rack_01.arista_7050qx_01",
+      "switch_port": 3,
+      "switch_port_basis": "preliminary_positional_assignment",
+      "additional_switch_connections": [],
+      "vlan_ids": [
+        10
+      ],
+      "vlan_asset_ids": [
+        "it.network_segment.site.vlan_10"
+      ],
+      "vlan_basis": "derived_from_register_network_block",
+      "estimated_power_w": null,
+      "power_data_status": "not_estimated",
+      "heat_load_status": "not_calculated_pending_measured_load",
+      "placement_status": "preliminary",
+      "data_status": "estimated",
+      "open_fields": [
+        "ats_outlet_number",
+        "exact_model_suffix",
+        "port_count",
+        "poe_budget"
+      ],
+      "notes": [
+        "Access-layer switch at the very top of the rack.",
+        "Port count depends on the unconfirmed 2960-X model suffix, which the register already lists as an open field."
+      ]
+    },
+    {
+      "asset_id": "security.access_controller.rack_01.ap9361_01",
+      "name": "APC AP9361 Rack Access PX-HID",
+      "asset_class": "access_controller",
+      "register_status": "planned",
+      "mount_style": "door_mounted",
+      "rack_unit_start": null,
+      "rack_unit_height": 0,
+      "rack_unit_height_basis": "not_applicable",
+      "depth_class": "not_applicable",
+      "power_feed": "A",
+      "power_feed_basis": "proposed_single_cord",
+      "power_source_asset_id": "energy.pdu.rack_01.basic_01",
+      "pdu_asset_id": "energy.pdu.rack_01.basic_01",
+      "pdu_outlet": 3,
+      "pdu_outlet_basis": "preliminary_assignment",
+      "switch_asset_id": "it.switch.rack_01.catalyst_2960x_01",
+      "switch_port": 7,
+      "switch_port_basis": "preliminary_positional_assignment",
+      "additional_switch_connections": [],
+      "vlan_ids": [
+        10
+      ],
+      "vlan_asset_ids": [
+        "it.network_segment.site.vlan_10"
+      ],
+      "vlan_basis": "derived_from_register_network_block",
+      "estimated_power_w": null,
+      "power_data_status": "not_estimated",
+      "heat_load_status": "not_calculated_pending_measured_load",
+      "placement_status": "preliminary",
+      "data_status": "estimated",
+      "open_fields": [
+        "door_leaf_front_or_rear",
+        "handle_kit",
+        "power_source_pdu_or_netbotz"
+      ],
+      "notes": [
+        "Mounted on the rack door rather than in a rack unit; consumes no rack units."
+      ]
+    },
+    {
+      "asset_id": "security.camera.rack_01.netbotz_01",
+      "name": "NetBotz Rack Camera",
+      "asset_class": "camera",
+      "register_status": "planned",
+      "mount_style": "zero_u_accessory",
+      "rack_unit_start": null,
+      "rack_unit_height": 0,
+      "rack_unit_height_basis": "not_applicable",
+      "depth_class": "not_applicable",
+      "power_feed": "A",
+      "power_feed_basis": "proposed_single_cord",
+      "power_source_asset_id": "energy.pdu.rack_01.basic_01",
+      "pdu_asset_id": "energy.pdu.rack_01.basic_01",
+      "pdu_outlet": 4,
+      "pdu_outlet_basis": "preliminary_assignment",
+      "switch_asset_id": "it.switch.rack_01.catalyst_2960x_01",
+      "switch_port": 8,
+      "switch_port_basis": "preliminary_positional_assignment",
+      "additional_switch_connections": [],
+      "vlan_ids": [
+        40
+      ],
+      "vlan_asset_ids": [
+        "it.network_segment.site.vlan_40"
+      ],
+      "vlan_basis": "derived_from_register_network_block",
+      "estimated_power_w": null,
+      "power_data_status": "not_estimated",
+      "heat_load_status": "not_calculated_pending_measured_load",
+      "placement_status": "preliminary",
+      "data_status": "estimated",
+      "open_fields": [
+        "mounting_point",
+        "field_of_view",
+        "power_source_pdu_or_netbotz"
+      ],
+      "notes": [
+        "VLAN 40 per the register; camera traffic stays in the camera segment."
+      ]
+    },
+    {
+      "asset_id": "safety.safety_sensor.rack_01.ap9512thblk_01",
+      "name": "Rack Temperature and Humidity Sensor",
+      "asset_class": "safety_sensor",
+      "register_status": "planned",
+      "mount_style": "zero_u_accessory",
+      "rack_unit_start": null,
+      "rack_unit_height": 0,
+      "rack_unit_height_basis": "not_applicable",
+      "depth_class": "not_applicable",
+      "power_feed": "not_assigned",
+      "power_feed_basis": "powered_from_environmental_monitor_sensor_port",
+      "power_source_asset_id": "it.environmental_monitor.rack_01.nbrk0550_01",
+      "pdu_asset_id": null,
+      "pdu_outlet": null,
+      "pdu_outlet_basis": "not_applicable_sensor_port_powered",
+      "switch_asset_id": null,
+      "switch_port": null,
+      "switch_port_basis": "no_network_interface_recorded_in_register",
+      "additional_switch_connections": [],
+      "vlan_ids": [],
+      "vlan_asset_ids": [],
+      "vlan_basis": "no_network_interface_recorded_in_register",
+      "estimated_power_w": null,
+      "power_data_status": "not_estimated",
+      "heat_load_status": "not_calculated_pending_measured_load",
+      "placement_status": "preliminary",
+      "data_status": "estimated",
+      "open_fields": [
+        "sensor_port_number",
+        "mounting_height",
+        "host_monitor_confirmation"
+      ],
+      "notes": [
+        "Proposed cold-aisle inlet position; the exact mounting height is a commissioning decision."
+      ]
+    },
+    {
+      "asset_id": "safety.safety_sensor.rack_01.ap9512tblk_01",
+      "name": "Rack Temperature Sensor",
+      "asset_class": "safety_sensor",
+      "register_status": "planned",
+      "mount_style": "zero_u_accessory",
+      "rack_unit_start": null,
+      "rack_unit_height": 0,
+      "rack_unit_height_basis": "not_applicable",
+      "depth_class": "not_applicable",
+      "power_feed": "not_assigned",
+      "power_feed_basis": "powered_from_environmental_monitor_sensor_port",
+      "power_source_asset_id": "it.environmental_monitor.rack_01.nbrk0550_01",
+      "pdu_asset_id": null,
+      "pdu_outlet": null,
+      "pdu_outlet_basis": "not_applicable_sensor_port_powered",
+      "switch_asset_id": null,
+      "switch_port": null,
+      "switch_port_basis": "no_network_interface_recorded_in_register",
+      "additional_switch_connections": [],
+      "vlan_ids": [],
+      "vlan_asset_ids": [],
+      "vlan_basis": "no_network_interface_recorded_in_register",
+      "estimated_power_w": null,
+      "power_data_status": "not_estimated",
+      "heat_load_status": "not_calculated_pending_measured_load",
+      "placement_status": "preliminary",
+      "data_status": "estimated",
+      "open_fields": [
+        "sensor_port_number",
+        "mounting_height",
+        "host_monitor_confirmation"
+      ],
+      "notes": [
+        "Proposed hot-aisle exhaust position so inlet and exhaust temperatures can be differenced."
+      ]
+    },
+    {
+      "asset_id": "safety.safety_sensor.rack_01.nbes0307_01",
+      "name": "Rack Smoke Sensor",
+      "asset_class": "safety_sensor",
+      "register_status": "planned",
+      "mount_style": "zero_u_accessory",
+      "rack_unit_start": null,
+      "rack_unit_height": 0,
+      "rack_unit_height_basis": "not_applicable",
+      "depth_class": "not_applicable",
+      "power_feed": "not_assigned",
+      "power_feed_basis": "powered_from_environmental_monitor_sensor_port",
+      "power_source_asset_id": "it.environmental_monitor.rack_01.nbrk0550_01",
+      "pdu_asset_id": null,
+      "pdu_outlet": null,
+      "pdu_outlet_basis": "not_applicable_sensor_port_powered",
+      "switch_asset_id": null,
+      "switch_port": null,
+      "switch_port_basis": "no_network_interface_recorded_in_register",
+      "additional_switch_connections": [],
+      "vlan_ids": [],
+      "vlan_asset_ids": [],
+      "vlan_basis": "no_network_interface_recorded_in_register",
+      "estimated_power_w": null,
+      "power_data_status": "not_estimated",
+      "heat_load_status": "not_calculated_pending_measured_load",
+      "placement_status": "preliminary",
+      "data_status": "estimated",
+      "open_fields": [
+        "sensor_port_number",
+        "mounting_height",
+        "host_monitor_confirmation"
+      ],
+      "notes": [
+        "Smoke sensing belongs near the top of the enclosure, above the highest heat source."
+      ]
+    },
+    {
+      "asset_id": "safety.alarm_output.rack_01.beacon_01",
+      "name": "Rack Alarm Beacon",
+      "asset_class": "alarm_output",
+      "register_status": "planned",
+      "mount_style": "zero_u_accessory",
+      "rack_unit_start": null,
+      "rack_unit_height": 0,
+      "rack_unit_height_basis": "not_applicable",
+      "depth_class": "not_applicable",
+      "power_feed": "not_assigned",
+      "power_feed_basis": "powered_from_environmental_monitor_output",
+      "power_source_asset_id": "it.environmental_monitor.rack_01.ap9320_01",
+      "pdu_asset_id": null,
+      "pdu_outlet": null,
+      "pdu_outlet_basis": "not_applicable_monitor_output_powered",
+      "switch_asset_id": null,
+      "switch_port": null,
+      "switch_port_basis": "no_network_interface_recorded_in_register",
+      "additional_switch_connections": [],
+      "vlan_ids": [],
+      "vlan_asset_ids": [],
+      "vlan_basis": "no_network_interface_recorded_in_register",
+      "estimated_power_w": null,
+      "power_data_status": "not_estimated",
+      "heat_load_status": "not_calculated_pending_measured_load",
+      "placement_status": "preliminary",
+      "data_status": "estimated",
+      "open_fields": [
+        "output_port_number",
+        "mounting_point"
+      ],
+      "notes": [
+        "Register records activation through the NetBotz or AP9320; top-of-rack mounting is proposed."
+      ]
+    }
+  ],
+  "rack_unit_allocation": {
+    "occupied_rack_units": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42
+    ],
+    "free_rack_units": [
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35
+    ],
+    "free_rack_unit_count": 18,
+    "contiguous_free_block": [
+      18,
+      35
+    ],
+    "notes": [
+      "Free units 18-35 are deliberately contiguous so a future chassis, patch panel or second UPS fits without re-elevating the rack.",
+      "No patch panel or cable manager is placed because neither exists as an asset in the register."
+    ]
+  },
+  "thermal_summary": {
+    "total_estimated_power_w": null,
+    "power_data_status": "not_estimated",
+    "heat_load_status": "not_calculated_pending_measured_load",
+    "basis": "The design package contains no measured or nameplate power figures for the rack equipment, and the README lists exact measured rack loads as deliberately unresolved. No wattage is invented here.",
+    "open_fields": [
+      "per_device_measured_power_w",
+      "per_device_nameplate_power_w",
+      "rack_total_heat_load_w",
+      "container_cooling_capacity_w",
+      "inlet_temperature_design_limit_c"
+    ],
+    "required_before_use": [
+      "Measure per-outlet power on the switched PDU under normal load.",
+      "Record nameplate ratings from the physical equipment during installation.",
+      "Confirm container cooling capacity and airflow path before the rack is fully populated."
+    ]
+  },
+  "excluded_assets": [
+    {
+      "asset_id": "it.environmental_monitor.power_container.netbotz_500_01",
+      "reason": "Wall-mount appliance in the container, not a rack-mounted device."
+    },
+    {
+      "asset_id": "it.server.secondary_control_node.01",
+      "reason": "Must sit outside the power-container common failure domain; it is not rack equipment."
+    },
+    {
+      "asset_id": "it.access_point.property.aironet_3702e_01",
+      "reason": "Distributed wireless coverage device; representative of the five APs, none of which are racked."
+    },
+    {
+      "asset_id": "it.voice_endpoint.site.cp8851_01",
+      "reason": "Desk endpoint; representative of the four voice endpoints, none of which are racked."
+    },
+    {
+      "asset_id": "it.application_service.rack_01.mqtt_01",
+      "reason": "Software service hosted on the R740xd; representative of all application services, which consume no rack units."
+    }
+  ],
+  "open_document_fields": [
+    "feed_b_upstream_source",
+    "ats_outlet_count_and_numbering",
+    "measured_or_nameplate_power_for_every_device",
+    "rack_total_heat_load",
+    "patch_panel_and_cable_management_assets",
+    "physical_rack_make_and_rail_type",
+    "final_owner_ratification"
+  ],
+  "layout_notes": [
+    "This document does not modify the asset register. Each device's register location.rack_units field stays TBD until this proposal is ratified and merged.",
+    "Feed B currently resolves to nothing. Until a second source exists, every device is effectively single-fed from the UPS, and the rack ATS provides no real redundancy.",
+    "Switch ports are positional proposals. Nothing here should be used to build a patching schedule before the 2960-X model suffix is confirmed.",
+    "No IP address, MAC address, serial number, breaker number or wattage has been invented by this document."
+  ]
+}

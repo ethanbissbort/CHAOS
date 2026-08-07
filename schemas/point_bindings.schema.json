@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://homestead.local/schemas/point-bindings.schema.json",
+  "title": "Homestead Point Bindings",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "document_type",
+    "generated_at",
+    "registry_id",
+    "bindings",
+    "notes"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "document_type": {
+      "const": "point_bindings"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "registry_id": {
+      "type": "string"
+    },
+    "bindings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "point_id",
+          "asset_id",
+          "point_name",
+          "binding_status",
+          "source_protocol",
+          "source_address",
+          "sample_interval_s",
+          "publish_interval_s",
+          "stale_after_s",
+          "historian_policy",
+          "quality_policy",
+          "automatic_control_allowed",
+          "notes"
+        ],
+        "properties": {
+          "point_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+){3,}/[a-z][a-z0-9_]*$"
+          },
+          "asset_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+){3,}$"
+          },
+          "point_name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "binding_status": {
+            "enum": [
+              "tbd",
+              "planned",
+              "active",
+              "disabled",
+              "not_available_until_metered_model_confirmed",
+              "not_applicable"
+            ]
+          },
+          "source_protocol": {
+            "type": "string"
+          },
+          "source_address": {
+            "type": "string"
+          },
+          "sample_interval_s": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "publish_interval_s": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "stale_after_s": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "historian_policy": {
+            "enum": [
+              "none",
+              "event_on_change",
+              "standard",
+              "high_resolution",
+              "long_term_aggregate"
+            ]
+          },
+          "quality_policy": {
+            "type": "string"
+          },
+          "automatic_control_allowed": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

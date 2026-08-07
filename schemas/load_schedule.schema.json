@@ -1,0 +1,292 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://homestead.local/schemas/load-schedule.schema.json",
+  "title": "Homestead Load Schedule",
+  "description": "Preliminary load schedule required by SDD sections 31.1 and 49 item 1. It carries priority, sequencing and restart policy for every material controllable load. It deliberately does not carry measured power, breaker numbers or circuit ratings; those stay null and are listed in open_fields.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "document_type",
+    "generated_at",
+    "registry_id",
+    "site_id",
+    "source_refs",
+    "tier_model",
+    "shed_groups",
+    "restoration_groups",
+    "loads",
+    "notes"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "document_type": {
+      "const": "load_schedule"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "registry_id": {
+      "type": "string"
+    },
+    "site_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+){3,}$"
+    },
+    "source_refs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["document", "section"],
+        "properties": {
+          "document": { "type": "string" },
+          "section": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "tier_model": {
+      "description": "SDD 31.2 tier vocabulary, zero-based. Tier 0 is physical protection and control survival.",
+      "type": "object",
+      "propertyNames": { "pattern": "^[0-4]$" },
+      "additionalProperties": { "type": "string" }
+    },
+    "shed_groups": {
+      "description": "SDD 32.2 shedding groups in execution order.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/group" }
+    },
+    "restoration_groups": {
+      "description": "SDD 33.3 restoration groups in execution order.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/group" }
+    },
+    "loads": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/load" }
+    },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "group": {
+      "type": "object",
+      "required": ["group", "order", "action"],
+      "properties": {
+        "group": { "type": "string", "pattern": "^[SR][0-9]+$" },
+        "order": { "type": "integer", "minimum": 1 },
+        "action": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "load": {
+      "type": "object",
+      "required": [
+        "asset_id",
+        "name",
+        "base_tier",
+        "criticality",
+        "rated_power_kw",
+        "estimated_power_kw",
+        "measured_power_point",
+        "control_method",
+        "branch_circuit",
+        "panel_asset_id",
+        "minimum_service",
+        "restart",
+        "shed",
+        "shed_group",
+        "shed_order",
+        "restoration_group",
+        "restoration_order",
+        "minimum_on_time_s",
+        "minimum_off_time_s",
+        "data_status",
+        "open_fields",
+        "notes"
+      ],
+      "properties": {
+        "asset_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+){3,}$"
+        },
+        "name": { "type": "string", "minLength": 1 },
+        "base_tier": {
+          "description": "SDD 31.2 tier. Tier 0 is never shed by the EMS.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "criticality": {
+          "enum": ["critical", "important", "discretionary", "experimental"]
+        },
+        "rated_power_kw": {
+          "description": "Nameplate rating. Null until the electrical schedule exists; must then be listed in open_fields.",
+          "type": ["number", "null"],
+          "exclusiveMinimum": 0
+        },
+        "estimated_power_kw": {
+          "description": "Planning figure only, never a measurement. data_status must not be 'measured' when this is the only power figure.",
+          "type": ["number", "null"],
+          "exclusiveMinimum": 0
+        },
+        "measured_power_point": {
+          "description": "Canonical point that will carry the measured load, <asset_id>/<point_name>.",
+          "type": ["string", "null"],
+          "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+){3,}/[a-z][a-z0-9_]*$"
+        },
+        "control_method": {
+          "enum": [
+            "not_controllable",
+            "monitor_only",
+            "automatic_supervisory",
+            "local_controller_budget",
+            "operator_request_with_power_lease",
+            "contactor",
+            "api"
+          ]
+        },
+        "branch_circuit": { "type": ["string", "null"] },
+        "panel_asset_id": {
+          "type": ["string", "null"],
+          "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+){3,}$"
+        },
+        "minimum_service": {
+          "description": "SDD 31.1 minimum service contract. maximum_off_time_min bounds how long the EMS may leave the load off before it must be restored regardless of energy state.",
+          "type": "object",
+          "required": ["mode", "maximum_off_time_min"],
+          "properties": {
+            "mode": {
+              "enum": [
+                "none",
+                "continuous",
+                "freeze_protection",
+                "minimum_container_cooling",
+                "battery_temperature_governed",
+                "potable_water_minimum",
+                "core_services_only",
+                "crop_survival"
+              ]
+            },
+            "maximum_off_time_min": {
+              "type": ["integer", "null"],
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "restart": {
+          "description": "SDD 31.1 restart policy; FR-103 anti-simultaneous-restart uses delay_s and inrush_class.",
+          "type": "object",
+          "required": ["delay_s", "inrush_class", "minimum_off_time_s", "automatic_restart_permitted"],
+          "properties": {
+            "delay_s": { "type": "integer", "minimum": 0 },
+            "inrush_class": { "enum": ["none", "low", "medium", "high"] },
+            "minimum_off_time_s": { "type": "integer", "minimum": 0 },
+            "automatic_restart_permitted": {
+              "description": "False for attended equipment: SDD 33.2 rules 6 and 7 forbid unattended restart of workshop machinery and spa sessions.",
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "shed": {
+          "type": "object",
+          "required": ["permitted", "local_survival_mode", "notification_required", "action"],
+          "properties": {
+            "permitted": { "type": "boolean" },
+            "local_survival_mode": {
+              "description": "True when the local controller keeps a bounded survival behaviour after the EMS sheds the load.",
+              "type": "boolean"
+            },
+            "notification_required": { "type": "boolean" },
+            "action": {
+              "enum": [
+                "never_shed",
+                "stop",
+                "reduce",
+                "local_survival_profile",
+                "graceful_shutdown",
+                "deny_new_grants",
+                "revoke_lease"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "shed_group": {
+          "type": ["string", "null"],
+          "pattern": "^S[0-9]+$"
+        },
+        "shed_order": { "type": ["integer", "null"], "minimum": 0 },
+        "restoration_group": {
+          "type": ["string", "null"],
+          "pattern": "^R[0-9]+$"
+        },
+        "restoration_order": { "type": ["integer", "null"], "minimum": 0 },
+        "minimum_on_time_s": { "type": ["integer", "null"], "minimum": 0 },
+        "minimum_off_time_s": { "type": ["integer", "null"], "minimum": 0 },
+        "data_status": {
+          "description": "Provenance of the power figures on this record. 'measured' requires a commissioned measured_power_point.",
+          "enum": ["measured", "estimated", "unknown", "placeholder"]
+        },
+        "open_fields": {
+          "description": "Everything this record does not yet know. Never leave an invented value in place of an entry here.",
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "notes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "description": "Tier 0 is physical protection and control survival: it may not be assigned a shed group and may not be shed.",
+          "if": { "properties": { "base_tier": { "const": 0 } }, "required": ["base_tier"] },
+          "then": {
+            "properties": {
+              "shed_group": { "type": "null" },
+              "shed_order": { "type": "null" },
+              "shed": { "properties": { "permitted": { "const": false } } }
+            }
+          }
+        },
+        {
+          "description": "A load that may be shed needs a shed group and an order inside it.",
+          "if": {
+            "properties": { "shed": { "properties": { "permitted": { "const": true } } } },
+            "required": ["shed"]
+          },
+          "then": {
+            "properties": {
+              "shed_group": { "type": "string" },
+              "shed_order": { "type": "integer" }
+            }
+          }
+        },
+        {
+          "description": "Every load must be restorable to a defined group so restoration order is deterministic.",
+          "properties": {
+            "restoration_group": { "type": "string" },
+            "restoration_order": { "type": "integer" }
+          }
+        },
+        {
+          "description": "A record claiming measured data must name the point that measures it.",
+          "if": { "properties": { "data_status": { "const": "measured" } }, "required": ["data_status"] },
+          "then": { "properties": { "measured_power_point": { "type": "string" } } }
+        }
+      ]
+    }
+  }
+}

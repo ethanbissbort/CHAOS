@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "homestead-twin"
+version = "0.4.0"
+description = "Project CHAOS — Central Homestead Automation and Operation System"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "sqlalchemy>=2.0",
+    "pydantic>=2.6",
+    "pydantic-settings>=2.2",
+    "PyYAML>=6.0",
+    "jsonschema>=4.18",
+    "paho-mqtt>=2.0",
+    "httpx>=0.27",
+]
+
+[project.optional-dependencies]
+postgres = ["psycopg[binary]>=3.1", "alembic>=1.13"]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.23", "httpx>=0.27"]
+
+[project.scripts]
+homestead-twin = "homestead_twin.cli:main"
+homestead-simulator = "simulator.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+# Ruff's default rule set, minus checks that conflict with deliberate choices
+# in this codebase. Each exclusion is a decision, not a convenience.
+ignore = [
+    # Implicit string concatenation inside collections. Used throughout for
+    # readable multi-line messages and assumption lists; none are missing commas.
+    "ISC004",
+    # Blind `except Exception`. Load-bearing here: a subsystem that fails to
+    # start, an MQTT handler that raises, or an interlock that errors must not
+    # take the platform down. A frozen greenhouse is worse than a logged error.
+    "BLE001",
+    # subprocess.run without check=. Deliberate: the validator's non-zero exit
+    # is an expected signal that gets turned into an actionable CommandError.
+    "PLW1510",
+    # Unused loop variable when unpacking. Naming the unused half of a pair is
+    # usually clearer than indexing.
+    "RUF059",
+    # Collapsible nested ifs. Kept where each level carries its own comment, or
+    # where the outer test keeps a chain of sibling branches parallel.
+    "SIM102",
+]

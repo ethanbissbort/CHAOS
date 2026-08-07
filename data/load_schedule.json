@@ -1,0 +1,720 @@
+{
+  "schema_version": "0.3.0",
+  "document_type": "load_schedule",
+  "generated_at": "2026-08-07T00:00:00Z",
+  "registry_id": "homestead.primary.v0_3",
+  "site_id": "site.site.primary.01",
+  "source_refs": [
+    {
+      "document": "Homestead_Digital_Twin_Software_Design_Document_v0.3.md",
+      "section": "31.1, 31.2, 32.2, 33.3, 49 item 1"
+    }
+  ],
+  "tier_model": {
+    "0": "Physical protection and control survival. Normally not shed by the EMS (SDD 31.2).",
+    "1": "Essential service. Shed only under emergency plans with defined survival behaviour.",
+    "2": "Important operations. May be reduced, duty-cycled or temporarily shed.",
+    "3": "Deferrable operations. Normally shed in CONSERVE or earlier if forecast margin is poor.",
+    "4": "Opportunistic surplus operations. Enabled only under a granted surplus budget."
+  },
+  "shed_groups": [
+    {
+      "group": "S1",
+      "order": 1,
+      "action": "Stop opportunistic surplus loads"
+    },
+    {
+      "group": "S2",
+      "order": 2,
+      "action": "Defer new deferrable work"
+    },
+    {
+      "group": "S3",
+      "order": 3,
+      "action": "Reduce active deferrable loads"
+    },
+    {
+      "group": "S4",
+      "order": 4,
+      "action": "Enter subsystem conservation profiles"
+    },
+    {
+      "group": "S5",
+      "order": 5,
+      "action": "Shed nonessential Tier 2 branches"
+    },
+    {
+      "group": "S6",
+      "order": 6,
+      "action": "Enter critical survival profiles"
+    },
+    {
+      "group": "S7",
+      "order": 7,
+      "action": "Controlled IT shutdown"
+    },
+    {
+      "group": "S8",
+      "order": 8,
+      "action": "Emergency isolation through defined emergency procedure and equipment-native controls only"
+    }
+  ],
+  "restoration_groups": [
+    {
+      "group": "R1",
+      "order": 1,
+      "action": "Core controls, communications, refrigeration, freeze protection"
+    },
+    {
+      "group": "R2",
+      "order": 2,
+      "action": "Water and greenhouse normal-minimum operation"
+    },
+    {
+      "group": "R3",
+      "order": 3,
+      "action": "Normal rack services and routine building systems"
+    },
+    {
+      "group": "R4",
+      "order": 4,
+      "action": "Deferred pumping, treatment and equipment charging"
+    },
+    {
+      "group": "R5",
+      "order": 5,
+      "action": "Batch compute and opportunistic loads"
+    }
+  ],
+  "loads": [
+    {
+      "asset_id": "energy.load.site.control_core_01",
+      "name": "Critical Control and Communications Core",
+      "base_tier": 0,
+      "criticality": "critical",
+      "rated_power_kw": null,
+      "estimated_power_kw": 0.25,
+      "measured_power_point": "energy.load.site.control_core_01/power_kw",
+      "control_method": "automatic_supervisory",
+      "branch_circuit": null,
+      "panel_asset_id": "energy.panel.power_container.critical_01",
+      "minimum_service": {
+        "mode": "continuous",
+        "maximum_off_time_min": 0
+      },
+      "restart": {
+        "delay_s": 0,
+        "inrush_class": "none",
+        "minimum_off_time_s": 0,
+        "automatic_restart_permitted": true
+      },
+      "shed": {
+        "permitted": false,
+        "local_survival_mode": false,
+        "notification_required": true,
+        "action": "never_shed"
+      },
+      "shed_group": null,
+      "shed_order": null,
+      "restoration_group": "R1",
+      "restoration_order": 10,
+      "minimum_on_time_s": null,
+      "minimum_off_time_s": null,
+      "data_status": "estimated",
+      "open_fields": [
+        "branch_circuit",
+        "rated_power_kw",
+        "measured_idle_power_kw",
+        "measured_peak_power_kw",
+        "control_interface",
+        "restart_delay_s",
+        "inrush_class",
+        "minimum_on_time_s",
+        "minimum_off_time_s"
+      ],
+      "notes": [
+        "SDD 31.2 Tier 0: emergency-stop circuits, control-panel power, secondary control node, core timing and minimum communications. Never shed by the EMS.",
+        "estimated_power_kw carries the register planning_baseline_kw, not a measurement."
+      ]
+    },
+    {
+      "asset_id": "energy.load.site.server_rack_01",
+      "name": "Primary Server Rack",
+      "base_tier": 1,
+      "criticality": "critical",
+      "rated_power_kw": null,
+      "estimated_power_kw": 1.5,
+      "measured_power_point": "energy.load.site.server_rack_01/power_kw",
+      "control_method": "automatic_supervisory",
+      "branch_circuit": null,
+      "panel_asset_id": "energy.panel.power_container.critical_01",
+      "minimum_service": {
+        "mode": "core_services_only",
+        "maximum_off_time_min": null
+      },
+      "restart": {
+        "delay_s": 120,
+        "inrush_class": "medium",
+        "minimum_off_time_s": 300,
+        "automatic_restart_permitted": true
+      },
+      "shed": {
+        "permitted": true,
+        "local_survival_mode": true,
+        "notification_required": true,
+        "action": "graceful_shutdown"
+      },
+      "shed_group": "S7",
+      "shed_order": 10,
+      "restoration_group": "R3",
+      "restoration_order": 10,
+      "minimum_on_time_s": 600,
+      "minimum_off_time_s": 300,
+      "data_status": "estimated",
+      "open_fields": [
+        "branch_circuit",
+        "rated_power_kw",
+        "measured_idle_power_kw",
+        "measured_peak_power_kw",
+        "control_interface",
+        "restart_delay_s",
+        "inrush_class",
+        "minimum_on_time_s",
+        "minimum_off_time_s",
+        "ups_graceful_shutdown_budget_min"
+      ],
+      "notes": [
+        "SDD 31.2 Tier 1 core networking, DNS, MQTT and digital-twin services; SDD 31.3 splits server workloads so batch compute is carried by energy.load.site.opportunistic_compute_01.",
+        "SDD 32.2 group S7 is a controlled IT shutdown executed by the IT orchestration service (SDD 30.4); the EMS publishes state and deadline, it does not cut rack power.",
+        "estimated_power_kw carries the register planning_baseline_kw, not a measurement."
+      ]
+    },
+    {
+      "asset_id": "energy.load.site.rack_cooling_01",
+      "name": "Rack Cooling",
+      "base_tier": 0,
+      "criticality": "critical",
+      "rated_power_kw": null,
+      "estimated_power_kw": null,
+      "measured_power_point": "energy.load.site.rack_cooling_01/power_kw",
+      "control_method": "automatic_supervisory",
+      "branch_circuit": null,
+      "panel_asset_id": "energy.panel.power_container.critical_01",
+      "minimum_service": {
+        "mode": "minimum_container_cooling",
+        "maximum_off_time_min": null
+      },
+      "restart": {
+        "delay_s": 60,
+        "inrush_class": "high",
+        "minimum_off_time_s": 300,
+        "automatic_restart_permitted": true
+      },
+      "shed": {
+        "permitted": false,
+        "local_survival_mode": true,
+        "notification_required": true,
+        "action": "never_shed"
+      },
+      "shed_group": null,
+      "shed_order": null,
+      "restoration_group": "R1",
+      "restoration_order": 30,
+      "minimum_on_time_s": null,
+      "minimum_off_time_s": 300,
+      "data_status": "unknown",
+      "open_fields": [
+        "branch_circuit",
+        "rated_power_kw",
+        "measured_idle_power_kw",
+        "measured_peak_power_kw",
+        "control_interface",
+        "restart_delay_s",
+        "inrush_class",
+        "minimum_on_time_s",
+        "minimum_off_time_s",
+        "maximum_off_time_min",
+        "minimum_cooling_profile_kw"
+      ],
+      "notes": [
+        "SDD 31.2 Tier 0 minimum battery/container environmental protection.",
+        "SDD 31.2 Tier 2 also lists normal rack cooling above the minimum critical-compute profile; that reduction is a local-controller setpoint change, not an EMS shed."
+      ]
+    },
+    {
+      "asset_id": "energy.load.site.battery_hvac_01",
+      "name": "Battery-Zone HVAC",
+      "base_tier": 0,
+      "criticality": "critical",
+      "rated_power_kw": null,
+      "estimated_power_kw": null,
+      "measured_power_point": "energy.load.site.battery_hvac_01/power_kw",
+      "control_method": "automatic_supervisory",
+      "branch_circuit": null,
+      "panel_asset_id": "energy.panel.power_container.critical_01",
+      "minimum_service": {
+        "mode": "battery_temperature_governed",
+        "maximum_off_time_min": null
+      },
+      "restart": {
+        "delay_s": 60,
+        "inrush_class": "high",
+        "minimum_off_time_s": 300,
+        "automatic_restart_permitted": true
+      },
+      "shed": {
+        "permitted": false,
+        "local_survival_mode": true,
+        "notification_required": true,
+        "action": "never_shed"
+      },
+      "shed_group": null,
+      "shed_order": null,
+      "restoration_group": "R1",
+      "restoration_order": 20,
+      "minimum_on_time_s": null,
+      "minimum_off_time_s": 300,
+      "data_status": "unknown",
+      "open_fields": [
+        "branch_circuit",
+        "rated_power_kw",
+        "measured_idle_power_kw",
+        "measured_peak_power_kw",
+        "control_interface",
+        "restart_delay_s",
+        "inrush_class",
+        "minimum_on_time_s",
+        "minimum_off_time_s",
+        "maximum_off_time_min",
+        "minimum_cooling_profile_kw"
+      ],
+      "notes": [
+        "SDD 31.2 Tier 0 minimum battery environmental protection. Shedding battery cooling to save reserve would defeat SDD 30.3 objective 1."
+      ]
+    },
+    {
+      "asset_id": "energy.load.site.water_pumping_01",
+      "name": "Well and Essential Water Pumping",
+      "base_tier": 1,
+      "criticality": "critical",
+      "rated_power_kw": null,
+      "estimated_power_kw": null,
+      "measured_power_point": "energy.load.site.water_pumping_01/power_kw",
+      "control_method": "automatic_supervisory",
+      "branch_circuit": null,
+      "panel_asset_id": "energy.panel.power_container.critical_01",
+      "minimum_service": {
+        "mode": "potable_water_minimum",
+        "maximum_off_time_min": null
+      },
+      "restart": {
+        "delay_s": 60,
+        "inrush_class": "high",
+        "minimum_off_time_s": 300,
+        "automatic_restart_permitted": true
+      },
+      "shed": {
+        "permitted": true,
+        "local_survival_mode": true,
+        "notification_required": true,
+        "action": "local_survival_profile"
+      },
+      "shed_group": "S6",
+      "shed_order": 20,
+      "restoration_group": "R2",
+      "restoration_order": 10,
+      "minimum_on_time_s": 300,
+      "minimum_off_time_s": 300,
+      "data_status": "unknown",
+      "open_fields": [
+        "branch_circuit",
+        "rated_power_kw",
+        "measured_idle_power_kw",
+        "measured_peak_power_kw",
+        "control_interface",
+        "restart_delay_s",
+        "inrush_class",
+        "minimum_on_time_s",
+        "minimum_off_time_s",
+        "maximum_off_time_min",
+        "potable_reserve_litres"
+      ],
+      "notes": [
+        "SDD 31.2 Tier 1 potable-water control and minimum well/pump protection.",
+        "SDD 32.2 group S6 enters a critical survival profile; the pump controller keeps its own dry-run and pressure interlocks (SDD 30.4)."
+      ]
+    },
+    {
+      "asset_id": "energy.load.site.irrigation_01",
+      "name": "Irrigation Pumping and Valves",
+      "base_tier": 2,
+      "criticality": "important",
+      "rated_power_kw": null,
+      "estimated_power_kw": null,
+      "measured_power_point": "energy.load.site.irrigation_01/power_kw",
+      "control_method": "automatic_supervisory",
+      "branch_circuit": null,
+      "panel_asset_id": "energy.panel.power_container.general_01",
+      "minimum_service": {
+        "mode": "none",
+        "maximum_off_time_min": null
+      },
+      "restart": {
+        "delay_s": 120,
+        "inrush_class": "high",
+        "minimum_off_time_s": 300,
+        "automatic_restart_permitted": true
+      },
+      "shed": {
+        "permitted": true,
+        "local_survival_mode": false,
+        "notification_required": true,
+        "action": "stop"
+      },
+      "shed_group": "S3",
+      "shed_order": 10,
+      "restoration_group": "R4",
+      "restoration_order": 10,
+      "minimum_on_time_s": 300,
+      "minimum_off_time_s": 300,
+      "data_status": "unknown",
+      "open_fields": [
+        "branch_circuit",
+        "rated_power_kw",
+        "measured_idle_power_kw",
+        "measured_peak_power_kw",
+        "control_interface",
+        "restart_delay_s",
+        "inrush_class",
+        "minimum_on_time_s",
+        "minimum_off_time_s"
+      ],
+      "notes": [
+        "base_tier follows the asset register (load_tier 3 on its 1-based scale) and SDD 31.2 Tier 2 'irrigation pumping when no immediate crop stress exists'.",
+        "SDD 31.3 gives the opposite example - orchard irrigation rising from Tier 3 to Tier 2 under soil-moisture stress. The reconciliation is an open commissioning decision; the dynamic-priority mechanism supports either base value."
+      ]
+    },
+    {
+      "asset_id": "energy.load.site.greenhouse_climate_01",
+      "name": "Greenhouse Climate Control",
+      "base_tier": 1,
+      "criticality": "critical",
+      "rated_power_kw": null,
+      "estimated_power_kw": null,
+      "measured_power_point": "energy.load.site.greenhouse_climate_01/power_kw",
+      "control_method": "automatic_supervisory",
+      "branch_circuit": null,
+      "panel_asset_id": "energy.panel.power_container.critical_01",
+      "minimum_service": {
+        "mode": "freeze_protection",
+        "maximum_off_time_min": 20
+      },
+      "restart": {
+        "delay_s": 180,
+        "inrush_class": "high",
+        "minimum_off_time_s": 300,
+        "automatic_restart_permitted": true
+      },
+      "shed": {
+        "permitted": true,
+        "local_survival_mode": true,
+        "notification_required": true,
+        "action": "local_survival_profile"
+      },
+      "shed_group": "S6",
+      "shed_order": 10,
+      "restoration_group": "R1",
+      "restoration_order": 40,
+      "minimum_on_time_s": 300,
+      "minimum_off_time_s": 300,
+      "data_status": "estimated",
+      "open_fields": [
+        "branch_circuit",
+        "rated_power_kw",
+        "measured_idle_power_kw",
+        "measured_peak_power_kw",
+        "control_interface",
+        "restart_delay_s",
+        "inrush_class",
+        "minimum_on_time_s",
+        "minimum_off_time_s",
+        "crop_survival_temperature_c",
+        "measured_heater_power_kw"
+      ],
+      "notes": [
+        "SDD 31.2 Tier 1 greenhouse freeze protection and minimum life-support ventilation.",
+        "restart and maximum_off_time_min reproduce the SDD 31.1 worked example for a greenhouse HVAC load; they are commissioning placeholders, not measured values."
+      ]
+    },
+    {
+      "asset_id": "energy.load.site.greenhouse_lighting_01",
+      "name": "Greenhouse Grow Lighting",
+      "base_tier": 2,
+      "criticality": "important",
+      "rated_power_kw": null,
+      "estimated_power_kw": null,
+      "measured_power_point": "energy.load.site.greenhouse_lighting_01/power_kw",
+      "control_method": "automatic_supervisory",
+      "branch_circuit": null,
+      "panel_asset_id": "energy.panel.power_container.general_01",
+      "minimum_service": {
+        "mode": "none",
+        "maximum_off_time_min": null
+      },
+      "restart": {
+        "delay_s": 300,
+        "inrush_class": "medium",
+        "minimum_off_time_s": 600,
+        "automatic_restart_permitted": true
+      },
+      "shed": {
+        "permitted": true,
+        "local_survival_mode": true,
+        "notification_required": true,
+        "action": "local_survival_profile"
+      },
+      "shed_group": "S4",
+      "shed_order": 10,
+      "restoration_group": "R4",
+      "restoration_order": 20,
+      "minimum_on_time_s": 600,
+      "minimum_off_time_s": 600,
+      "data_status": "unknown",
+      "open_fields": [
+        "branch_circuit",
+        "rated_power_kw",
+        "measured_idle_power_kw",
+        "measured_peak_power_kw",
+        "control_interface",
+        "restart_delay_s",
+        "inrush_class",
+        "minimum_on_time_s",
+        "minimum_off_time_s",
+        "photoperiod_minimum_h",
+        "lamp_restrike_delay_s"
+      ],
+      "notes": [
+        "base_tier follows the asset register (load_tier 3 on its 1-based scale).",
+        "SDD 32.2 group S4 is the greenhouse reduced-light profile; SDD 31.3 keeps lighting deferrable while freeze protection stays Tier 1 on the climate load.",
+        "SDD 31.2 Tier 4 covers experimental photoperiod extension, which is a lease-funded surplus activity rather than this load's base tier."
+      ]
+    },
+    {
+      "asset_id": "energy.load.site.spa_01",
+      "name": "Hydrothermal Spa Pavilion",
+      "base_tier": 3,
+      "criticality": "discretionary",
+      "rated_power_kw": null,
+      "estimated_power_kw": null,
+      "measured_power_point": "energy.load.site.spa_01/power_kw",
+      "control_method": "operator_request_with_power_lease",
+      "branch_circuit": null,
+      "panel_asset_id": "energy.panel.power_container.general_01",
+      "minimum_service": {
+        "mode": "none",
+        "maximum_off_time_min": null
+      },
+      "restart": {
+        "delay_s": 600,
+        "inrush_class": "high",
+        "minimum_off_time_s": 900,
+        "automatic_restart_permitted": false
+      },
+      "shed": {
+        "permitted": true,
+        "local_survival_mode": false,
+        "notification_required": true,
+        "action": "revoke_lease"
+      },
+      "shed_group": "S2",
+      "shed_order": 10,
+      "restoration_group": "R5",
+      "restoration_order": 20,
+      "minimum_on_time_s": 900,
+      "minimum_off_time_s": 900,
+      "data_status": "unknown",
+      "open_fields": [
+        "branch_circuit",
+        "rated_power_kw",
+        "measured_idle_power_kw",
+        "measured_peak_power_kw",
+        "control_interface",
+        "restart_delay_s",
+        "inrush_class",
+        "minimum_on_time_s",
+        "minimum_off_time_s",
+        "sanitation_completion_time_min",
+        "heater_power_kw"
+      ],
+      "notes": [
+        "SDD 31.2 Tier 3 hydrothermal spa heating, pumps and infrared emitters.",
+        "SDD 33.2 rule 7: a spa session is never resumed automatically; restoration only removes the block and requires a new operator lease.",
+        "SDD 31.3: sanitation or post-use drying may take a temporary tier override once a session has started; SDD 32.1 rule 7 protects that completion unless EMERGENCY."
+      ]
+    },
+    {
+      "asset_id": "energy.load.site.workshop_heavy_01",
+      "name": "Workshop Heavy Machinery",
+      "base_tier": 3,
+      "criticality": "discretionary",
+      "rated_power_kw": null,
+      "estimated_power_kw": null,
+      "measured_power_point": "energy.load.site.workshop_heavy_01/power_kw",
+      "control_method": "operator_request_with_power_lease",
+      "branch_circuit": null,
+      "panel_asset_id": "energy.panel.power_container.general_01",
+      "minimum_service": {
+        "mode": "none",
+        "maximum_off_time_min": null
+      },
+      "restart": {
+        "delay_s": 0,
+        "inrush_class": "high",
+        "minimum_off_time_s": 0,
+        "automatic_restart_permitted": false
+      },
+      "shed": {
+        "permitted": false,
+        "local_survival_mode": false,
+        "notification_required": true,
+        "action": "deny_new_grants"
+      },
+      "shed_group": "S2",
+      "shed_order": 20,
+      "restoration_group": "R5",
+      "restoration_order": 30,
+      "minimum_on_time_s": null,
+      "minimum_off_time_s": null,
+      "data_status": "unknown",
+      "open_fields": [
+        "branch_circuit",
+        "rated_power_kw",
+        "measured_idle_power_kw",
+        "measured_peak_power_kw",
+        "control_interface",
+        "restart_delay_s",
+        "inrush_class",
+        "minimum_on_time_s",
+        "minimum_off_time_s",
+        "welder_duty_cycle",
+        "machine_inventory"
+      ],
+      "notes": [
+        "SDD 31.2 Tier 3 workshop machinery and welding.",
+        "Attended equipment: the EMS defers new reservations (SDD 32.2 group S2) and revokes the power lease, but never opens a contactor on a running machine and never restarts it (SDD 33.2 rule 6)."
+      ]
+    },
+    {
+      "asset_id": "energy.load.site.tool_charging_01",
+      "name": "Tool and Equipment Battery Charging",
+      "base_tier": 3,
+      "criticality": "discretionary",
+      "rated_power_kw": null,
+      "estimated_power_kw": null,
+      "measured_power_point": "energy.load.site.tool_charging_01/power_kw",
+      "control_method": "automatic_supervisory",
+      "branch_circuit": null,
+      "panel_asset_id": "energy.panel.power_container.general_01",
+      "minimum_service": {
+        "mode": "none",
+        "maximum_off_time_min": null
+      },
+      "restart": {
+        "delay_s": 120,
+        "inrush_class": "low",
+        "minimum_off_time_s": 60,
+        "automatic_restart_permitted": true
+      },
+      "shed": {
+        "permitted": true,
+        "local_survival_mode": false,
+        "notification_required": false,
+        "action": "stop"
+      },
+      "shed_group": "S1",
+      "shed_order": 20,
+      "restoration_group": "R4",
+      "restoration_order": 30,
+      "minimum_on_time_s": 300,
+      "minimum_off_time_s": 60,
+      "data_status": "unknown",
+      "open_fields": [
+        "branch_circuit",
+        "rated_power_kw",
+        "measured_idle_power_kw",
+        "measured_peak_power_kw",
+        "control_interface",
+        "restart_delay_s",
+        "inrush_class",
+        "minimum_on_time_s",
+        "minimum_off_time_s",
+        "charger_inventory"
+      ],
+      "notes": [
+        "SDD 31.2 Tier 3 EV, cart, mower and tool-battery charging; SDD 32.2 group S1 stops optional equipment charging first.",
+        "SDD 33.2 rule 8: equipment charging resumes only under a new lease."
+      ]
+    },
+    {
+      "asset_id": "energy.load.site.opportunistic_compute_01",
+      "name": "Opportunistic Compute Workloads",
+      "base_tier": 4,
+      "criticality": "discretionary",
+      "rated_power_kw": null,
+      "estimated_power_kw": null,
+      "measured_power_point": "energy.load.site.opportunistic_compute_01/power_kw",
+      "control_method": "automatic_supervisory",
+      "branch_circuit": null,
+      "panel_asset_id": "energy.panel.power_container.general_01",
+      "minimum_service": {
+        "mode": "none",
+        "maximum_off_time_min": null
+      },
+      "restart": {
+        "delay_s": 60,
+        "inrush_class": "none",
+        "minimum_off_time_s": 60,
+        "automatic_restart_permitted": true
+      },
+      "shed": {
+        "permitted": true,
+        "local_survival_mode": false,
+        "notification_required": false,
+        "action": "stop"
+      },
+      "shed_group": "S1",
+      "shed_order": 10,
+      "restoration_group": "R5",
+      "restoration_order": 10,
+      "minimum_on_time_s": 60,
+      "minimum_off_time_s": 60,
+      "data_status": "unknown",
+      "open_fields": [
+        "branch_circuit",
+        "rated_power_kw",
+        "measured_idle_power_kw",
+        "measured_peak_power_kw",
+        "control_interface",
+        "restart_delay_s",
+        "inrush_class",
+        "minimum_on_time_s",
+        "minimum_off_time_s",
+        "job_queue_energy_kwh"
+      ],
+      "notes": [
+        "SDD 31.2 Tier 4 data-processing jobs without deadlines; enabled only under a granted surplus budget and preempted first (SDD 32.2 group S1)."
+      ]
+    }
+  ],
+  "notes": [
+    "This is the SDD section 49 item 1 preliminary load schedule. It is a priority and sequencing schedule, not an electrical schedule.",
+    "No measured power, branch circuit, breaker number or circuit rating is invented. rated_power_kw is null for every record and every unknown is listed in open_fields, consistent with the 'deliberately unresolved' section of the package README.",
+    "estimated_power_kw is populated only where the asset register already carried a planning baseline (control core 0.25 kW, server rack 1.5 kW). It is a planning figure, not a measurement; data_status records that.",
+    "base_tier uses the SDD 31.2 zero-based tier model. The asset register property load_tier is one-based (Tier 0 -> load_tier 1), so base_tier = register load_tier - 1 for all twelve loads.",
+    "measured_power_point names the canonical point that will carry the measurement once the binding is commissioned. The binding for every one of these points is still 'tbd' in data/point_bindings.yaml, so a load is not confirmed shed until that point reports (SDD 32.2).",
+    "restart.delay_s, inrush_class, minimum_on_time_s and minimum_off_time_s are commissioning parameters with engineering defaults: compressors and submersible pumps get the anti-short-cycle 300 s off time, lamp loads get a restrike allowance, and electronics get short values. Every one of them is also listed in open_fields.",
+    "Groups S5 and S8 have no member in this revision. S5 needs branch-circuit identification before nonessential Tier 2 branches can be named; S8 is an equipment-native emergency procedure and is deliberately not automated.",
+    "shed.action values are supervisory intents: never_shed, stop, reduce, local_survival_profile, graceful_shutdown, deny_new_grants and revoke_lease. The EMS requests them; the local controller enforces equipment interlocks (SDD 30.4).",
+    "Tier 0 loads carry shed.permitted false and no shed_group. The shedding engine also refuses Tier 0 independently, so a data error in this file cannot shed physical protection."
+  ]
+}
