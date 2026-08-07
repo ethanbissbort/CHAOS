@@ -137,6 +137,10 @@ class AlarmEvent(Base, UUIDPrimaryKeyMixin):
     note: Mapped[str | None] = mapped_column(Text)
     occurred_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
+    # Reciprocal of ``Alarm.events``; without it mapper configuration fails for
+    # the whole registry, which breaks every model in the platform.
+    alarm: Mapped["Alarm"] = relationship(back_populates="events")
+
 
 class NotificationLog(Base, UUIDPrimaryKeyMixin):
     """Delivery record for every notification attempt (SDD FR-007)."""

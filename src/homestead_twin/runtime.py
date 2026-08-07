@@ -112,4 +112,14 @@ def build_services(
         except Exception:
             logger.exception("Energy manager unavailable")
 
+    # Work generation is likewise a primary-node duty; duplicating it on the
+    # secondary would raise the same work order twice.
+    if not settings.is_secondary:
+        try:
+            from homestead_twin.maintenance.service import MaintenanceSchedulerService
+
+            manager.register(MaintenanceSchedulerService(session_factory, bus, settings))
+        except Exception:
+            logger.exception("Maintenance scheduler unavailable")
+
     return manager

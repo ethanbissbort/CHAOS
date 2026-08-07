@@ -35,6 +35,9 @@ class MaintenancePlan(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     condition_point: Mapped[str | None] = mapped_column(String(POINT_ID_LEN))
     condition_operator: Mapped[str | None] = mapped_column(String(16))
     condition_value: Mapped[float | None] = mapped_column(Float)
+    #: Counter reading captured at the last completion, so runtime/cycle plans
+    #: measure wear since the last service rather than since installation.
+    counter_baseline: Mapped[float | None] = mapped_column(Float)
     season: Mapped[str | None] = mapped_column(String(30))
     procedure: Mapped[str | None] = mapped_column(Text)
     required_parts: Mapped[list] = mapped_column(JSONType, default=list)
