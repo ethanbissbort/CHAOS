@@ -286,7 +286,7 @@ nothing to show; `/health` answers 503 with `backend: "down"`.
 3. **On a development build this is expected.** The gateway's shipped entry
    point does not register a backend supervisor, so nothing starts the Python
    backend for it. See
-   [Visual Studio § The gap you should know about](./visual-studio.md#the-gap-you-should-know-about).
+   [Visual Studio § What happens when you press F5](./visual-studio.md#what-happens-when-you-press-f5).
 
 ### 5.6 It starts, then stops, then starts again
 

@@ -133,15 +133,16 @@ windows/
   src/Chaos.Host/           the .NET gateway — LAN listener, proxy, first-run setup
   src/Chaos.Host.Supervisor/ supervises the Python backend as a child process
   src/Chaos.Api/            subsystems ported from Python to .NET (none live yet)
+  src/Chaos.Runtime/        builds the embedded Python runtime and this help site
   src/Chaos.Shell/          the WinUI 3 desktop shell (Windows only)
   src/Chaos.Shell.Core/     the shell's testable half — runs everywhere
   tests/                    five xUnit projects
-  build/                    PowerShell build and packaging scripts (advanced)
+  build/                    build targets, and the packaging scripts (advanced)
   installer/                installer configuration
 
 deploy/          Docker Compose stacks for headless nodes (advanced)
 docs/            this documentation set — start at docs/index.md
-tests/           2062 pytest tests, all against SQLite and the in-memory bus</code></pre></div>
+tests/           2128 pytest tests, all against SQLite and the in-memory bus</code></pre></div>
 <hr>
 <h2 id="current-status" class="doc-h"><span class="doc-h-text">Current status</span><a class="doc-anchor" href="#current-status" aria-label="Link to this section"></a></h2>
 <h3 id="working-and-exercised-against-the-simulator" class="doc-h"><span class="doc-h-text">Working, and exercised against the simulator</span><a class="doc-anchor" href="#working-and-exercised-against-the-simulator" aria-label="Link to this section"></a></h3>
@@ -152,12 +153,9 @@ alarm definitions, evaluation, correlation, log notification · command path wit
 eight interlocks, operating modes and audit · maintenance and commissioning
 records · annunciator panel · topology and blast-radius analysis · rack
 elevation · 83 REST endpoints · the .NET gateway with first-run setup · the
-WinUI 3 desktop shell · 2062 passing Python tests.</p>
+WinUI 3 desktop shell · 2128 passing Python tests.</p>
 <h3 id="partial-or-stubbed" class="doc-h"><span class="doc-h-text">Partial or stubbed</span><a class="doc-anchor" href="#partial-or-stubbed" aria-label="Link to this section"></a></h3>
-<ul><li><strong>The gateway does not start the Python backend yet.</strong> <code>Chaos.Host</code> is built
-to supervise it and ships the supervisor, but its entry point registers the
-no-op supervisor, so the backend must be started separately. <code>/host/info</code>
-reports <code>supervisor.registered: false</code> when this is the case.</li><li><strong>Notification backends</strong> — <code>log</code> is wired. <code>email</code>, <code>push</code> and <code>voice</code> are
+<ul><li><strong>Notification backends</strong> — <code>log</code> is wired. <code>email</code>, <code>push</code> and <code>voice</code> are
 named but not implemented. A log line is not an alert.</li><li><strong>Historian</strong> is a relational table. The InfluxDB-versus-TimescaleDB decision
 is unresolved, so neither is deployed.</li><li><strong>PostGIS</strong> geometry column is prepared but disabled; geometry is stored as
 GeoJSON.</li><li><strong>MQTT TLS</strong> is configured and deliberately left disabled rather than

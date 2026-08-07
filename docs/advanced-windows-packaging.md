@@ -74,8 +74,8 @@ run the control plane against dependency versions nobody tested.
 
 (The gateway's shipped entry point does not currently register the process
 supervisor, so the backend is started by something else — see
-[Architecture § The gap: process supervision](./architecture.md#the-gap-process-supervision)
-and [Visual Studio § The gap you should know about](./visual-studio.md#the-gap-you-should-know-about).
+[Architecture § The gap: process supervision](./architecture.md#process-supervision)
+and [Visual Studio § What happens when you press F5](./visual-studio.md#what-happens-when-you-press-f5).
 Nothing in this document depends on that; the interpreter is resolved the same
 way either way.)
 

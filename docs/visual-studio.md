@@ -188,31 +188,28 @@ correct behaviour, not a fault: a gateway that returned 200 while the platform
 behind it was dead would tell every status-code-only monitor that an off-grid
 site with no alarm engine is fine.
 
-### The gap you should know about
+### What happens when you press F5
 
-**The gateway does not start the Python backend today.** `Chaos.Host` ships
-`Chaos.Host.Supervisor` and is built to supervise the backend, but its
-composition root registers the *no-op* supervisor
-(`NullBackendSupervisor`), so nothing launches the backend process. `/host/info`
-reports it honestly:
+The gateway starts the Python backend itself. `Chaos.Host` registers
+`Chaos.Host.Supervisor`, which resolves an interpreter — the embedded runtime
+if one is present, otherwise the Python on your `PATH` with the repository's
+`src` on `PYTHONPATH` — launches the platform on loopback, waits for its
+`/health` to answer, and restarts it with backoff if it dies. `/host/info`
+reports what it found:
 
 ```json
-"supervisor": { "registered": false, "state": "Unknown",
-  "detail": "No backend supervisor is registered; this host does not manage the Python backend process." }
+"supervisor": { "registered": true, "state": "Running",
+  "runtime": "development", "restarts": 0 }
 ```
 
-Until that is wired up, there are two ways to get live data behind an F5 gateway:
+If you would rather run the backend yourself, under its own debugger, set
+`CHAOS_SuperviseBackend=false` in the launch profile. The gateway then keeps
+proxying to `Chaos:BackendUrl` and reports the backend from probing alone; it
+simply does not start or stop it.
 
-1. **Point the shell at an installed platform.** Shell → **Settings** →
-   *Gateway* → set the address and port of a node where the installed service is
-   running. The shell then drives that platform and your F5 build is not
-   involved.
-2. **Start the backend yourself.** This is the one development task that has no
-   GUI path today; it is written up in
-   [Command line § Running the backend for development](./advanced-command-line.md#8-running-the-backend-for-development).
-
-Proxying, health reporting and setup all work correctly either way — only
-process supervision is absent.
+To drive an installed platform on another machine instead, point the shell at
+it: **Settings** → *Gateway* → address and port. Your F5 build is then not
+involved at all.
 
 ---
 
@@ -331,7 +328,7 @@ not part of `CHAOS.sln`.
 
 ### Its tests
 
-**2062 tests**, all against SQLite and an in-memory message bus — no PostgreSQL,
+**2128 tests**, all against SQLite and an in-memory message bus — no PostgreSQL,
 no broker, no hardware. That is deliberate: it is step 1 of the twelve-step
 commissioning sequence ("bench test"), and it means the whole platform is
 exercisable end to end from a laptop.

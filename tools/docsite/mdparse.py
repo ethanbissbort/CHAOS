@@ -30,10 +30,11 @@ THE SUBSET, IN FULL
         allowlist of inline HTML tags: ``<br> <kbd> <sup> <sub> <wbr>``.
 
     Anything outside that subset — raw HTML blocks, arbitrary inline HTML,
-    definition lists, math, admonition directives — is rendered as literal
-    escaped text and reported through ``RenderResult.warnings``. It is never
-    silently dropped, and the generator can be told to treat a warning as a
-    build failure.
+    definition lists, math, admonition directives — is rendered as the literal
+    escaped text the author typed and reported as a build warning
+    (``Document.warnings`` for block-level surprises, ``RenderResult.warnings``
+    for inline ones). It is never silently dropped, and ``build_docs --strict``
+    turns any such warning into a build failure.
 
 NO ABSOLUTE URLS IN THE OUTPUT
     Every escape helper here also neutralises the scheme separator of any URL

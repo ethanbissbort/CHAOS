@@ -226,7 +226,7 @@ step 12 captures a subsystem's baseline.
 The gateway is built to supervise the Python backend as a child process, and
 ships the supervisor — but its shipped entry point registers the no-op
 supervisor, so nothing launches the backend. See
-[Visual Studio § The gap you should know about](./visual-studio.md#the-gap-you-should-know-about).
+[Visual Studio § What happens when you press F5](./visual-studio.md#what-happens-when-you-press-f5).
 
 Until that is wired up, start the backend yourself on the port the gateway
 expects:

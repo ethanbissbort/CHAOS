@@ -162,15 +162,16 @@ windows/
   src/Chaos.Host/           the .NET gateway — LAN listener, proxy, first-run setup
   src/Chaos.Host.Supervisor/ supervises the Python backend as a child process
   src/Chaos.Api/            subsystems ported from Python to .NET (none live yet)
+  src/Chaos.Runtime/        builds the embedded Python runtime and this help site
   src/Chaos.Shell/          the WinUI 3 desktop shell (Windows only)
   src/Chaos.Shell.Core/     the shell's testable half — runs everywhere
   tests/                    five xUnit projects
-  build/                    PowerShell build and packaging scripts (advanced)
+  build/                    build targets, and the packaging scripts (advanced)
   installer/                installer configuration
 
 deploy/          Docker Compose stacks for headless nodes (advanced)
 docs/            this documentation set — start at docs/index.md
-tests/           2062 pytest tests, all against SQLite and the in-memory bus
+tests/           2128 pytest tests, all against SQLite and the in-memory bus
 ```
 
 ---
@@ -186,14 +187,10 @@ alarm definitions, evaluation, correlation, log notification · command path wit
 eight interlocks, operating modes and audit · maintenance and commissioning
 records · annunciator panel · topology and blast-radius analysis · rack
 elevation · 83 REST endpoints · the .NET gateway with first-run setup · the
-WinUI 3 desktop shell · 2062 passing Python tests.
+WinUI 3 desktop shell · 2128 passing Python tests.
 
 ### Partial or stubbed
 
-- **The gateway does not start the Python backend yet.** `Chaos.Host` is built
-  to supervise it and ships the supervisor, but its entry point registers the
-  no-op supervisor, so the backend must be started separately. `/host/info`
-  reports `supervisor.registered: false` when this is the case.
 - **Notification backends** — `log` is wired. `email`, `push` and `voice` are
   named but not implemented. A log line is not an alert.
 - **Historian** is a relational table. The InfluxDB-versus-TimescaleDB decision

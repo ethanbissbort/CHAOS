@@ -875,7 +875,12 @@ def _guard(text: str, where: str) -> str:
     return text
 
 
-def _commit(files: Sequence[tuple[Path, str]], report: BuildReport, clean: Path | None = None) -> None:
+def _commit(
+    files: Sequence[tuple[Path, str]],
+    report: BuildReport,
+    clean: Path | None = None,
+    preserve: Sequence[Path] = (),
+) -> None:
     """Check everything, then write everything.
 
     A build either produces a whole site or leaves the previous one alone. The
@@ -885,7 +890,8 @@ def _commit(files: Sequence[tuple[Path, str]], report: BuildReport, clean: Path 
     for path, text in files:
         _guard(text, path.name)
     if clean is not None:
-        _clean_output(clean)
+        keep = {path.resolve() for path in preserve} | {path.resolve() for path, _ in files}
+        _clean_output(clean, keep)
     for path, text in files:
         path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "w", encoding="utf-8", newline="\n") as handle:
@@ -893,14 +899,22 @@ def _commit(files: Sequence[tuple[Path, str]], report: BuildReport, clean: Path 
         report.written.append(path)
 
 
-def _clean_output(out_dir: Path) -> None:
+def _clean_output(out_dir: Path, keep: set[Path]) -> None:
+    """Remove the previous directory build so a deleted document leaves no page.
+
+    ``keep`` is what this invocation is responsible for, plus the single-file
+    build's target. Without it, ``--no-single-file`` would quietly delete the
+    committed offline copy — the one file that has to exist during an outage —
+    because it lives in the same folder and ends in ``.html``.
+    """
     if not out_dir.exists():
         return
     assets = out_dir / "assets"
     if assets.is_dir():
         shutil.rmtree(assets)
     for path in sorted(out_dir.glob("*.html")):
-        path.unlink()
+        if path.resolve() not in keep:
+            path.unlink()
 
 
 def write_directory(
@@ -909,6 +923,7 @@ def write_directory(
     pages: Sequence[Page],
     stylesheet: str,
     report: BuildReport,
+    preserve: Sequence[Path] = (),
 ) -> None:
     resolver = Resolver(repo_root, pages, "dir", report)
     records = build_index(pages)
@@ -943,7 +958,7 @@ def write_directory(
             files.append((out_dir / f"{page.slug}.html", html))
 
     _raise_if_broken(resolver)
-    _commit(files, report, clean=out_dir)
+    _commit(files, report, clean=out_dir, preserve=preserve)
 
 
 def write_single_file(
@@ -994,6 +1009,7 @@ def build_site(
     sources: Sequence[str] = DEFAULT_SOURCES,
     excludes: Sequence[str] = (),
     strict: bool = False,
+    preserve: Sequence[Path] = (),
 ) -> BuildReport:
     report = BuildReport()
     paths = discover(repo_root, sources, excludes)
@@ -1004,7 +1020,7 @@ def build_site(
     stylesheet = _stylesheet(repo_root, report)
 
     if out_dir is not None:
-        write_directory(repo_root, out_dir, pages, stylesheet, report)
+        write_directory(repo_root, out_dir, pages, stylesheet, report, preserve)
     if single_file is not None:
         write_single_file(repo_root, single_file, pages, stylesheet, report)
     if not report.sections:
@@ -1103,7 +1119,10 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     repo_root = args.repo_root.resolve()
     out_dir = None if args.no_directory else (args.out or repo_root / DEFAULT_OUT)
-    single = None if args.no_single_file else (args.single_file or repo_root / DEFAULT_SINGLE)
+    # Where the single file lives, whether or not this run rebuilds it: the
+    # directory clean-up has to know not to delete it.
+    single_path = args.single_file or repo_root / DEFAULT_SINGLE
+    single = None if args.no_single_file else single_path
     sources = tuple(args.source) if args.source else DEFAULT_SOURCES
 
     try:
@@ -1129,6 +1148,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             sources,
             tuple(args.exclude),
             strict=args.strict,
+            preserve=(Path(single_path),),
         )
     except BuildError as error:
         print(f"build_docs: {error}", file=sys.stderr)

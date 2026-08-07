@@ -149,7 +149,7 @@ step 12 captures a subsystem's baseline.</p>
 <p>The gateway is built to supervise the Python backend as a child process, and
 ships the supervisor — but its shipped entry point registers the no-op
 supervisor, so nothing launches the backend. See
-<a href="visual-studio.html#the-gap-you-should-know-about">Visual Studio § The gap you should know about</a>.</p>
+<a href="visual-studio.html#what-happens-when-you-press-f5">Visual Studio § What happens when you press F5</a>.</p>
 <p>Until that is wired up, start the backend yourself on the port the gateway
 expects:</p>
 <div class="doc-code" data-lang="sh"><div class="doc-code-bar"><span class="doc-code-lang">sh</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-sh">chaos serve <span class="t-o">--host</span> <span class="t-n">127.0</span>.<span class="t-n">0.1</span> <span class="t-o">--port</span> <span class="t-n">8081</span></code></pre></div>

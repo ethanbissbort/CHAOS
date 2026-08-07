@@ -131,16 +131,20 @@ fine. And a gateway reporting healthy over a platform with **no database** is
 the same lie in a different costume, so a setup state of `failed` or
 `needs_attention` forces `degraded` whatever the backend says.
 
-### The gap: process supervision
+### Process supervision
 
-`Chaos.Host.Supervisor` exists, resolves which Python runs the platform, and
-implements a restart policy. **The gateway's shipped entry point does not
-register it** — it registers the no-op supervisor instead, and reports that
-honestly on `/host/info`. So today the backend is started by something else.
+`Chaos.Host.Supervisor` resolves which Python runs the platform — the embedded
+runtime when one is installed, otherwise a development interpreter — launches it
+on loopback, and gates readiness on its `/health` answering rather than on the
+process having started. It restarts with backoff behind a circuit breaker, so a
+crash loop reports a terminal failure instead of looking like "starting"
+forever. The gateway registers it at composition and `/host/info` reports its
+state.
 
-Proxying, health reporting and first-run setup all work regardless; only process
-supervision is absent. See
-[Visual Studio § The gap you should know about](./visual-studio.md#the-gap-you-should-know-about).
+`CHAOS_SuperviseBackend=false` turns it off on a node where the backend is
+started by something else; proxying, health reporting and first-run setup work
+either way. See
+[Visual Studio § What happens when you press F5](./visual-studio.md#what-happens-when-you-press-f5).
 
 ---
 
@@ -322,7 +326,7 @@ records · annunciator panel · topology and blast-radius analysis · rack
 elevation · 83 REST endpoints under `/api/v1` · the operator console · the .NET
 gateway with route ownership and first-run setup · the WinUI 3 desktop shell ·
 the command line · container deployment for both node roles · Grafana dashboards
-over real tables · 2062 Python tests.
+over real tables · 2128 Python tests.
 
 ### Stubbed or partial
 

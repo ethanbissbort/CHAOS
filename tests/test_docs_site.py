@@ -534,6 +534,38 @@ def test_unsupported_raw_html_is_escaped_not_executed():
     assert "&lt;span" in rendered
 
 
+def _minimal_repo(tmp_path: Path, body: str) -> Path:
+    fake = tmp_path / "repo"
+    (fake / "docs").mkdir(parents=True)
+    (fake / "src" / "chaos" / "web").mkdir(parents=True)
+    (fake / "src" / "chaos" / "web" / "tokens.css").write_text(
+        ":root { --accent: #4ade80; }\n", encoding="utf-8"
+    )
+    (fake / "README.md").write_text("# Root\n", encoding="utf-8")
+    (fake / "docs" / "page.md").write_text(body, encoding="utf-8")
+    return fake
+
+
+def test_markdown_we_do_not_support_is_reported_and_can_fail_the_build(tmp_path):
+    """Unsupported syntax degrades to visible text — and says so."""
+    fake = _minimal_repo(tmp_path, "# Page\n\nA <details open>disclosure</details> block.\n")
+
+    report = build.build_site(fake, tmp_path / "out", None)
+    assert any("raw inline HTML" in warning for warning in report.warnings), report.warnings
+    rendered = (tmp_path / "out" / "page.html").read_text(encoding="utf-8")
+    assert "&lt;details" in rendered, "the author's text must still be on the page"
+
+    with pytest.raises(build.BuildError) as error:
+        build.build_site(fake, tmp_path / "strict", None, strict=True)
+    assert "raw inline HTML" in str(error.value)
+
+
+def test_a_nested_footnote_definition_is_reported_not_swallowed(tmp_path):
+    fake = _minimal_repo(tmp_path, "# Page\n\n- item\n\n    [^x]: a note nested in a list\n")
+    report = build.build_site(fake, tmp_path / "out", None)
+    assert any("footnote definition" in warning for warning in report.warnings), report.warnings
+
+
 def test_absolute_urls_are_neutralised_but_still_readable():
     rendered = _render("Open <http://127.0.0.1:8000> now")
     assert "http://" not in rendered
@@ -604,6 +636,37 @@ def test_output_location_is_a_parameter_not_a_constant(tmp_path):
     assert (elsewhere / "index.html").is_file()
     assert other.is_file()
     assert report.pages
+
+
+def test_rebuilding_the_directory_does_not_delete_the_offline_copy(tmp_path):
+    """The offline file sits inside the served folder. It must survive a rebuild."""
+    out_dir = tmp_path / "site"
+    single = out_dir / "chaos-help-offline.html"
+    build.build_site(REPO_ROOT, out_dir, single)
+    before = single.read_bytes()
+
+    build.build_site(REPO_ROOT, out_dir, None, preserve=(single,))
+    assert single.is_file(), "the directory rebuild deleted the offline copy"
+    assert single.read_bytes() == before
+
+
+def test_a_removed_document_leaves_no_stale_page_behind(tmp_path):
+    fake = tmp_path / "repo"
+    (fake / "docs").mkdir(parents=True)
+    (fake / "src" / "chaos" / "web").mkdir(parents=True)
+    (fake / "src" / "chaos" / "web" / "tokens.css").write_text(
+        ":root { --accent: #4ade80; }\n", encoding="utf-8"
+    )
+    (fake / "README.md").write_text("# Root\n", encoding="utf-8")
+    (fake / "docs" / "temporary.md").write_text("# Temporary\n", encoding="utf-8")
+
+    out_dir = tmp_path / "out"
+    build.build_site(fake, out_dir, None)
+    assert (out_dir / "temporary.html").is_file()
+
+    (fake / "docs" / "temporary.md").unlink()
+    build.build_site(fake, out_dir, None)
+    assert not (out_dir / "temporary.html").exists(), "a deleted document left its page behind"
 
 
 def test_the_generator_survives_a_restructured_document_set(tmp_path):
