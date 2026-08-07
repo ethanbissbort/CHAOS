@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Chaos.Api holds the /api/v1 routes that have been ported from the Python
+    platform and are now served natively by the .NET gateway.
+
+    It is a LIBRARY, not a host. Chaos.Host owns composition: it decides the
+    listener, the configuration, the route-ownership table and which prefixes
+    are reverse-proxied to Python. This project only offers AddChaosApi() and
+    MapChaosApi() and is otherwise inert.
+
+    It targets $(ChaosTargetFramework) — net10.0, the LTS line — and never a
+    net10.0-windows flavour, so it builds and is tested on Linux as well as in
+    Visual Studio 2026. Nothing here touches a Windows API.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>$(ChaosTargetFramework)</TargetFramework>
+    <RootNamespace>Chaos.Api</RootNamespace>
+    <AssemblyName>Chaos.Api</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      The ONLY data dependency, and it is a raw ADO.NET provider on purpose.
+
+      Python owns this schema (SQLAlchemy create_all). Adding EF Core would add
+      a second description of the same tables AND `dotnet ef migrations`, which
+      is a DDL writer pointed at a database another system already owns. There
+      is no configuration that removes that risk once the tool is in the repo.
+      See docs/dotnet-migration.md, "Data access".
+
+      PostgreSQL is reached through the same System.Data.Common abstraction:
+      the host registers an Npgsql connection factory and no query changes.
+      Npgsql is deliberately NOT referenced here because this leg cannot test
+      it — see IChaosConnectionFactory.
+    -->
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Chaos.Api.Tests" />
+  </ItemGroup>
+
+</Project>

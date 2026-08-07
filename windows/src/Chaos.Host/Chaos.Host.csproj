@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+    Chaos.Host - the .NET gateway for Project CHAOS.
+
+    Targets $(ChaosTargetFramework) (net10.0) from windows/Directory.Build.props.
+    Deliberately NOT a Windows-specific TFM: this project is developed and
+    tested on Linux and deployed on Windows, and the Windows Service
+    integration is a runtime-guarded call rather than a build target. The
+    WinUI shell owns the windows-specific TFM.
+
+    LangVersion / Nullable / TreatWarningsAsErrors / Version /
+    ChaosPlatformVersion are inherited from Directory.Build.props and
+    deliberately not repeated here.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>$(ChaosTargetFramework)</TargetFramework>
+    <AssemblyName>Chaos.Host</AssemblyName>
+    <RootNamespace>Chaos.Host</RootNamespace>
+    <!-- The public surface of this assembly is a contract other agents code
+         against, so an undocumented public member is a build error. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Surface the platform version contract from Directory.Build.props into
+         the assembly so /host/info can report it without a second source of
+         truth. -->
+    <AssemblyMetadata Include="ChaosPlatformVersion" Value="$(ChaosPlatformVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Yarp.ReverseProxy" Version="2.3.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Chaos.Host.Tests" />
+  </ItemGroup>
+
+</Project>

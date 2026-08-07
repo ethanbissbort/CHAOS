@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Chaos.Shell.Core holds every part of the Windows desktop shell that does not
+    need a Windows API. It targets plain net8.0 so it builds, runs and is tested
+    on any platform, including the Linux CI leg and a developer laptop.
+
+    Nothing in this project may reference WPF, WinForms, WebView2, the registry
+    or P/Invoke. If a change here needs one of those, the change belongs in
+    Chaos.Shell (net8.0-windows) instead, and this project should grow the
+    decision it needs as data.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>Chaos.Shell.Core</RootNamespace>
+    <AssemblyName>Chaos.Shell.Core</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
+  </PropertyGroup>
+
+</Project>
