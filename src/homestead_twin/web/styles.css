@@ -180,6 +180,34 @@ code, .mono, .num {
 .btn-sm { font-size: .78rem; padding: .25rem .55rem; }
 .btn-operator[data-signed="no"] { border-style: dashed; color: var(--text-dim); }
 
+/* Annunciator launcher: a miniature four-window panel, so the button looks
+   like the thing it opens. */
+.btn-annunciator { display: inline-flex; align-items: center; gap: .45rem; }
+
+.ann-chip {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  width: 1rem; height: .8rem;
+  padding: 1px;
+  background: #11161a;
+  border: 1px solid var(--line-strong);
+  border-radius: 2px;
+}
+
+.ann-chip i { background: #2b3a33; border-radius: 1px; }
+.ann-chip i:first-child { background: #ff4b32; }
+.ann-chip i:nth-child(2) { background: #ffa023; }
+
+.ann-chip-count {
+  min-width: 1.2rem;
+  padding: 0 .3rem;
+  font-size: .72rem; font-weight: 700;
+  text-align: center;
+  color: #1a0d05; background: var(--sev-major, #ffa023);
+  border-radius: 999px;
+}
+
 .select-sm, .input, select, input[type="text"], input[type="search"], textarea {
   font: inherit; font-size: .85rem;
   color: var(--text); background: var(--bg-input);

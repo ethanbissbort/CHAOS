@@ -370,6 +370,16 @@ function paintChrome() {
     badge.hidden = count === 0;
     badge.textContent = String(count);
     badge.title = `${emergency + critical} critical/emergency, ${major} major`;
+
+    const annCount = document.getElementById('annunciator-count');
+    if (annCount) {
+      const unacked = (data.alarms || {}).unacknowledged_active;
+      // Fall back to the lit-severity count when the overview does not report
+      // an unacknowledged figure, rather than showing a confident zero.
+      const lit = unacked === undefined || unacked === null ? count : unacked;
+      annCount.hidden = lit === 0;
+      annCount.textContent = String(lit);
+    }
   } else if (overviewStore.result && !overviewStore.result.ok) {
     clear(stateHost).appendChild(statusChip('unknown', 'No overview', true));
     siteLine.textContent = overviewStore.result.offline ? 'API unreachable' : `API error ${overviewStore.result.status}`;
@@ -414,6 +424,32 @@ function paintFreshness() {
 }
 
 /* ========================================================= operator IDs === */
+
+/** Reference to the annunciator window, so repeat clicks focus it rather than
+ *  opening a second copy -- two panels disagreeing about the horn would be
+ *  worse than none. */
+let annunciatorWindow = null;
+
+function openAnnunciator() {
+  if (annunciatorWindow && !annunciatorWindow.closed) {
+    annunciatorWindow.focus();
+    return;
+  }
+  const url = `${window.__UI_ROOT__}annunciator.html`;
+  annunciatorWindow = window.open(
+    url,
+    'chaos-annunciator',
+    'width=1440,height=920,menubar=no,toolbar=no,location=no,status=no'
+  );
+  if (!annunciatorWindow) {
+    // Popup blocked: give the operator the link rather than failing silently.
+    toast(
+      'warning',
+      'Popup blocked',
+      `Allow popups for this site, or open the panel directly at ${url}`
+    );
+  }
+}
 
 function openOperatorDialog() {
   const dialog = document.getElementById('operator-dialog');
@@ -554,6 +590,7 @@ function boot() {
     setWallMode(document.documentElement.dataset.density !== 'wall');
   });
   document.getElementById('operator-button').addEventListener('click', openOperatorDialog);
+  document.getElementById('open-annunciator').addEventListener('click', openAnnunciator);
 
   document.getElementById('operator-form').addEventListener('submit', (event) => {
     const action = event.submitter && event.submitter.value;
