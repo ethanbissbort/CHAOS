@@ -171,6 +171,81 @@ annunciator rather than dark, which is honest but is not coverage.
 
 ---
 
+## F-008 — Losing the power container takes 71% of the homestead, including potable water pressure
+
+**Severity: high — the common-mode domain is larger than the design assumes**
+
+*Found by the topology view's blast-radius analysis (`GET /api/v1/topology/impact/{asset_id}`),
+which walks the same relationship graph the alarm correlator uses. Verified
+directly against the register.*
+
+SDD section 16.1 instructs the design to assume complete loss of the combined
+power, battery, utilities and server container. Computing that loss gives:
+
+| | |
+|---|---|
+| Assets lost | **98 of 137 (71%)** |
+| Of which `critical` criticality | **50** |
+| Survivors | 38 |
+
+Section 16.1 is not being conservative. It is barely adequate.
+
+**The actionable part is the water system.** 21 water assets survive — the well,
+the freeze-protection controller, both winter drain valves, the field pipework.
+But **22 do not**, and the path to them is only four hops:
+
+```
+power container → power zone → critical loads panel
+                → water pumping load → potable pressure pump
+```
+
+**Lose the container and you lose potable water pressure**, even though the
+well, the tank and the pipework are all outside it and physically unharmed.
+That is a single electrical dependency defeating an otherwise independent
+subsystem, and it is exactly the kind of coupling section 16.1 exists to find.
+
+**Two safety assets die with the thing they exist to watch:**
+- the fluid-detection sensor monitoring for flooding *in that container*
+- `safety.alarm_output.rack_01.beacon_01`, the local alarm beacon that
+  `alarms/correlation.py` deliberately exempts from incident folding so it can
+  always speak for itself. It cannot speak if it is inside the fire.
+
+**The dependency structure is top-heavy, and the top is spatial rather than
+electrical**: 19 single assets each take out 30 or more others, while 73 take
+out nobody. The server zone (67) and the rack (65) outrank the battery bank
+(40) — containment, not power, is the dominant coupling.
+
+**Recommendation:** decide whether potable water pressure should survive the
+container. If it should, it needs a supply path that does not pass through the
+critical loads panel. Separately, relocate the container's own leak sensor and
+the alarm beacon outside the failure domain they report on.
+
+---
+
+## F-009 — The register cannot express N+1 redundancy
+
+**Severity: medium — it makes every redundancy claim unverifiable**
+
+There is no way in the asset register to say that a set of devices is a
+redundant group. The four hybrid inverters are modelled as four separate assets
+each feeding the same AC combiner, so a failure of any one reads as a full
+outage of everything downstream — a blast radius of 37 assets apiece. The same
+applies to the paired storage arrays.
+
+The traversal is correct; the model is missing a concept. The impact endpoint
+reports this in its own `caveats` rather than quietly overstating the loss, but
+that is mitigation, not a fix.
+
+This compounds F-007's rack finding: the register also could not express that
+the dual-fed devices' two cords land on one PDU. In both cases the platform can
+only reason about redundancy that the data model is capable of stating.
+
+**Recommendation:** add a redundancy grouping to the asset schema — a group id
+plus an `n_plus` degree — so that "four inverters, N+1" and "two cords, one
+PDU" are both statable and checkable.
+
+---
+
 ## F-007a — `battery_cell_imbalance` (the original case)
 
 **Severity: high — an alarm that looks configured and is not**

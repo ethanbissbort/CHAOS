@@ -1,0 +1,104 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Project CHAOS desktop shell — WinUI 3 (Windows App SDK), unpackaged.
+
+    THIS PROJECT CANNOT BE COMPILED ON LINUX. It is written to be built and run
+    from Visual Studio 2026 on Windows. The cross-platform half of the shell
+    lives in Chaos.Shell.Core and is covered by tests that do run everywhere.
+
+    Deployment shape, and why:
+
+    * Unpackaged (WindowsPackageType=None). The platform is supervised by a
+      Windows service and installed by an installer, not from the Store, and an
+      operator has to be able to run the .exe directly on a node.
+    * Because WindowsPackageType is None, OutputType is WinExe and this is not
+      self-contained, the Windows App SDK sets WindowsAppSdkBootstrapInitialize
+      itself and injects the bootstrapper as a MODULE INITIALIZER. That runs
+      independently of Main, which is what makes the custom Main in Program.cs
+      (needed for single-instance redirection) safe. Do not call
+      Bootstrap.TryInitialize by hand as well — it would double-initialise.
+    * WinUI 3 has no AnyCPU: Platforms is explicit.
+  -->
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>$(ChaosWindowsTargetFramework)</TargetFramework>
+    <TargetPlatformMinVersion>$(ChaosTargetPlatformMinVersion)</TargetPlatformMinVersion>
+    <RootNamespace>Chaos.Shell</RootNamespace>
+    <AssemblyName>Chaos.Shell</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x86;x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+    <UseWinUI>true</UseWinUI>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <WindowsPackageType>None</WindowsPackageType>
+    <IsPackable>false</IsPackable>
+
+    <!-- Program.cs owns Main so that a second launch can be redirected to the
+         running instance before any XAML is created. -->
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+  </PropertyGroup>
+
+  <!--
+    Skip cleanly on non-Windows hosts instead of failing.
+
+    A WinUI 3 project cannot be COMPILED off Windows, but it can still be
+    RESTORED there, and that is worth keeping: restoring on Linux verifies the
+    package graph — that Microsoft.WindowsAppSDK $(WindowsAppSdkVersion) and
+    everything under it actually resolve — without a Windows machine. So the
+    package references below stay unconditional, EnableWindowsTargeting lets
+    evaluation and restore succeed off Windows, and only the compile is
+    skipped. A repository-wide "dotnet build" on Linux therefore stays green
+    and says plainly that this project was not built, rather than emitting an
+    artefact that could be mistaken for one.
+  -->
+  <PropertyGroup>
+    <ChaosShellBuildable Condition="'$(ChaosShellBuildable)' == ''">$([MSBuild]::IsOSPlatform('Windows'))</ChaosShellBuildable>
+  </PropertyGroup>
+
+  <!--
+    Every property here sits inside a condition that is FALSE on Windows, so
+    none of it can affect the Visual Studio build. On a non-Windows host it
+    turns the project into an empty library: WinUI's XAML compiler is off, no
+    sources are compiled, and the output is a stub assembly that is never
+    shipped (packaging builds on Windows). Chosen over overriding the Build
+    target because overriding Build would require moving the SDK imports
+    around, and getting that subtly wrong would break the owner's build rather
+    than a throwaway Linux one.
+  -->
+  <PropertyGroup Condition="'$(ChaosShellBuildable)' != 'true'">
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <UseWinUI>false</UseWinUI>
+    <OutputType>Library</OutputType>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <ApplicationManifest />
+
+    <!-- MSIX/PRI tooling shells out to makepri.exe, which is a Windows binary. -->
+    <EnableMsixTooling>false</EnableMsixTooling>
+    <GenerateProjectPriFile>false</GenerateProjectPriFile>
+    <AppxGeneratePriEnabled>false</AppxGeneratePriEnabled>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="$(WindowsAppSdkVersion)" />
+
+    <!-- Tray icons are drawn at runtime from the live alarm state, so the
+         shell needs a rasteriser. WebView2 itself arrives transitively with
+         the Windows App SDK (Microsoft.Web.WebView2) and is not referenced
+         separately, to avoid pinning a second, conflicting version. -->
+    <PackageReference Include="System.Drawing.Common" Version="10.0.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Chaos.Shell.Core\Chaos.Shell.Core.csproj" />
+  </ItemGroup>
+
+  <Target Name="ChaosShellNotBuiltHere"
+          BeforeTargets="Build"
+          Condition="'$(ChaosShellBuildable)' != 'true'">
+    <Message Importance="high"
+             Text="Chaos.Shell (WinUI 3) was NOT COMPILED: it requires Windows. Restore ran, so package resolution is still verified. Build it in Visual Studio 2026." />
+  </Target>
+
+</Project>

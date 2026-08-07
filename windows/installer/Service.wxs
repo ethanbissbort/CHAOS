@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Windows Service.
+
+  WHO REGISTERS THE SERVICE
+  =========================
+  Two candidates exist: this MSI, declaratively, or the host registering itself
+  through its own service-registration switch (spelled "install-service" with
+  two leading hyphens; the literal is in the CustomAction Value below).
+
+  This authoring uses the MSI, and makes the alternative a one-switch change
+  (-d ChaosServiceRegistration=host). The MSI is the default because:
+
+    * Windows Installer owns rollback. If the install fails after the service is
+      created, MSI removes it. A custom action that shells out to the host has
+      to reimplement that, and the failure mode of getting it wrong is a
+      half-registered service pointing at files that are no longer there.
+    * Uninstall is symmetric and guaranteed: ServiceControl Remove="uninstall"
+      is what stops orphaned services surviving an upgrade. "No orphaned
+      services" was an explicit requirement and this is the mechanism that
+      delivers it.
+    * `msiexec /x` works even when Chaos.Host.exe is broken. Delegating
+      unregistration to the binary being uninstalled means a crashing host is
+      also an uninstall you cannot complete.
+
+  If the supervisor author prefers to own the definition in code (service
+  description, dependencies, delayed start, a virtual account), switch
+  ChaosServiceRegistration to "host" and the custom actions below take over. In
+  that case the host owns the whole definition and this file stops describing
+  it, which is the point: one owner, not two.
+
+  SERVICE ACCOUNT
+  ===============
+  LocalSystem, and that is a compromise worth stating out loud rather than
+  burying. This repository is emphatic that the platform runs as uid 10001 in
+  the container and "has no business running as uid 0"; LocalSystem is the
+  Windows equivalent of root. The least-privilege alternative is a virtual
+  account (NT SERVICE\ChaosHost) plus an explicit ACL grant on
+  %ProgramData%\Project CHAOS. That change is small but it is an ACL change on
+  the directory holding the alarm history, and it has not been tested on real
+  Windows by the author of this file. Shipping an untested ACL that locks the
+  service out of its own database would be worse than shipping the honest
+  compromise. Tracked in docs/windows-deployment.md, "Open items".
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+
+  <?include Chaos.Definitions.wxi ?>
+
+  <?ifndef ChaosServiceRegistration ?>
+    <?define ChaosServiceRegistration = "msi" ?>
+  <?endif?>
+
+  <Fragment>
+    <ComponentGroup Id="ChaosHostService">
+
+      <Component Id="ChaosHostExe" Directory="INSTALLFOLDER"
+                 Guid="18F8E7D9-1303-4BC5-B8D5-3AD04BE1D03A">
+
+        <!-- Authored explicitly instead of being harvested with the rest of the
+             payload (Payload.wxs excludes it) because the service has to hang
+             off this component's key file. -->
+        <File Id="FileChaosHostExe" Name="$(var.ChaosHostExe)"
+              Source="!(bindpath.Stage)\$(var.ChaosHostExe)" KeyPath="yes" />
+
+        <?if $(var.ChaosServiceRegistration) = "msi" ?>
+
+        <ServiceInstall Id="ChaosHostServiceInstall"
+                        Name="$(var.ChaosServiceName)"
+                        DisplayName="$(var.ChaosServiceDisplayName)"
+                        Description="Supervises the homestead control platform: gateway, LAN web interface and the Python backend. Requests only; local controllers retain authority."
+                        Type="ownProcess"
+                        Start="auto"
+                        ErrorControl="normal"
+                        Account="LocalSystem"
+                        Vital="yes"
+                        Interactive="no" />
+
+        <!--
+          Restart on failure.
+
+          util:ServiceConfig rather than the MSI ServiceConfigFailureActions
+          table: WiX itself warns (WIX1149) that the Windows Installer
+          implementation is documented "not [to work] as expected", and a
+          recovery policy that silently does nothing is worse than none, because
+          you stop checking.
+
+          The policy: restart after 60 s, three times, with the failure count
+          reset once a day. A backend that crash-loops therefore keeps being
+          restarted rather than being given up on after three tries in the small
+          hours — but the 60 s delay means a genuinely broken build does not
+          spin the CPU, and the Event Log shows a clean 60-second cadence that
+          is easy to recognise as a crash loop.
+        -->
+        <util:ServiceConfig ServiceName="$(var.ChaosServiceName)"
+                            FirstFailureActionType="restart"
+                            SecondFailureActionType="restart"
+                            ThirdFailureActionType="restart"
+                            RestartServiceDelayInSeconds="60"
+                            ResetPeriodInDays="1" />
+
+        <!--
+          Stop="both" stops the service on uninstall AND before a major upgrade
+          replaces the files; without it the upgrade leaves a running old host
+          holding the LAN port and a Python child nobody owns.
+          Wait="yes" so the files are actually free before they are replaced.
+        -->
+        <ServiceControl Id="ChaosHostServiceControl"
+                        Name="$(var.ChaosServiceName)"
+                        Start="install"
+                        Stop="both"
+                        Remove="uninstall"
+                        Wait="yes" />
+
+        <?endif?>
+      </Component>
+
+    </ComponentGroup>
+  </Fragment>
+
+  <!-- ==================================================================
+       Alternative: let the host register itself.
+       ==================================================================
+       Enabled with -d ChaosServiceRegistration=host at package time. Kept in
+       its own fragment so that the default build does not carry custom actions
+       it never runs.
+
+       CONTRACT if this path is used:
+         install-service     registers and starts the service
+         uninstall-service   stops and removes it, exit 0 if it is not there
+       Both spelled with two leading hyphens; see the CustomAction elements
+       below for the exact command lines.
+       Both must be idempotent and must exit non-zero only on real failure.
+  -->
+  <?if $(var.ChaosServiceRegistration) = "host" ?>
+  <Fragment>
+    <CustomAction Id="ChaosInstallServiceCmd" Property="ChaosInstallService"
+                  Value="&quot;[INSTALLFOLDER]$(var.ChaosHostExe)&quot; --install-service" Execute="immediate" />
+    <CustomAction Id="ChaosInstallService" BinaryRef="Wix4UtilCA_X64" DllEntry="WixQuietExec64"
+                  Execute="deferred" Return="check" Impersonate="no" />
+
+    <CustomAction Id="ChaosUninstallServiceCmd" Property="ChaosUninstallService"
+                  Value="&quot;[INSTALLFOLDER]$(var.ChaosHostExe)&quot; --uninstall-service" Execute="immediate" />
+    <CustomAction Id="ChaosUninstallService" BinaryRef="Wix4UtilCA_X64" DllEntry="WixQuietExec64"
+                  Execute="deferred" Return="ignore" Impersonate="no" />
+
+    <InstallExecuteSequence>
+      <Custom Action="ChaosUninstallServiceCmd" Before="ChaosUninstallService" Condition="REMOVE=&quot;ALL&quot;" />
+      <Custom Action="ChaosUninstallService"    Before="RemoveFiles"           Condition="REMOVE=&quot;ALL&quot;" />
+      <Custom Action="ChaosInstallServiceCmd"   Before="ChaosInstallService"   Condition="NOT REMOVE" />
+      <Custom Action="ChaosInstallService"      After="InstallFiles"           Condition="NOT REMOVE" />
+    </InstallExecuteSequence>
+  </Fragment>
+  <?endif?>
+</Wix>

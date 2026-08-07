@@ -1,0 +1,534 @@
+/* ---------------------------------------------------------------------------
+   Topology canvas — SDD 16.1, 25.5.
+
+   Loaded on demand by views/topology.js, so a phone opening the alarm screen
+   never parses it. Every colour is a token from styles.css, so this screen
+   follows the console into light mode and into wall-display density without a
+   second palette to keep in sync.
+
+   The register is dark, precise and quiet: the canvas should recede and the
+   plant should be the only thing with contrast. Health and criticality are the
+   only saturated things on screen, and each is carried by a glyph and a word as
+   well as a colour.
+
+   Visual inspiration: Reticle, MIT, Copyright (c) 2026 Matt Anderson /
+   MA Software LLC. See ACKNOWLEDGEMENTS.
+--------------------------------------------------------------------------- */
+
+.topo {
+  --topo-line: color-mix(in srgb, var(--line-strong) 70%, transparent);
+  --topo-dim: 0.13;
+  --edge-supply:  var(--st-ok);
+  --edge-host:    var(--sev-info);
+  --edge-control: var(--st-designonly);
+  --edge-depend:  var(--st-stale);
+  --edge-contain: var(--text-faint);
+  --edge-observe: var(--st-nodata);
+  --edge-backup:  var(--sev-major);
+  --edge-link:    var(--text-faint);
+
+  display: flex;
+  flex-direction: column;
+  gap: .55rem;
+  /* Fill the shell's main area; the canvas owns its own scrolling. */
+  height: calc(100vh - 8.5rem);
+  min-height: 30rem;
+}
+
+.topo-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(20rem, 25rem);
+  gap: .55rem;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (max-width: 62rem) {
+  .topo-body { grid-template-columns: minmax(0, 1fr); }
+  .topo-side { max-height: 24rem; }
+}
+
+/* ------------------------------------------------------------- toolbar --- */
+
+.topo-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  padding: .45rem .6rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.topo-toolbar-main,
+.topo-toolbar-right {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .4rem;
+}
+
+.topo-search { min-width: 15rem; }
+.topo-facet { display: inline-flex; }
+.topo-zoom {
+  min-width: 3.4rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+  font-size: .82rem;
+}
+
+.topo-moved {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .1rem .2rem .1rem .55rem;
+  font-size: .78rem;
+  color: var(--st-stale);
+  border: 1px solid color-mix(in srgb, var(--st-stale) 45%, transparent);
+  border-radius: var(--radius-pill, 999px);
+}
+.topo-moved[hidden] { display: none; }
+
+/* --------------------------------------------------------------- stage --- */
+
+.topo-stage {
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+  background:
+    radial-gradient(120% 90% at 15% 0%, color-mix(in srgb, var(--bg-raised) 55%, transparent), transparent 65%),
+    var(--bg-sunken);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: grab;
+  touch-action: none;
+  contain: paint;
+}
+.topo-stage.is-panning { cursor: grabbing; }
+
+.topo-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.topo-svg {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.topo-grid-dot { fill: color-mix(in srgb, var(--text-faint) 55%, transparent); }
+.topo-grid { pointer-events: none; }
+
+/* ------------------------------------------------------ group boundaries - */
+
+.topo-group-rect {
+  fill: color-mix(in srgb, var(--bg-raised) 42%, transparent);
+  stroke: var(--line-strong);
+  stroke-width: 1.6;
+  stroke-dasharray: 7 5;
+  pointer-events: none;
+  transition: opacity .18s ease;
+}
+.topo-group[data-level="0"] .topo-group-rect { stroke-dasharray: 2 7; fill: none; }
+.topo-group[data-level="2"] .topo-group-rect,
+.topo-group[data-level="3"] .topo-group-rect {
+  fill: color-mix(in srgb, var(--bg-raised) 65%, transparent);
+  stroke-dasharray: 5 4;
+}
+
+.topo-group-tab {
+  fill: color-mix(in srgb, var(--bg-raised) 92%, transparent);
+  stroke: var(--topo-line);
+  stroke-width: 1;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.topo-group-tab:hover { fill: var(--bg-input); stroke: var(--line-strong); }
+.topo-group-tab:focus-visible { stroke: var(--focus); stroke-width: 2.5; outline: none; }
+
+.topo-group-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .09em;
+  fill: var(--text-dim);
+  pointer-events: none;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.topo-group.is-selected .topo-group-rect { stroke: var(--focus); stroke-width: 2; }
+.topo-group.is-outside-blast { opacity: var(--topo-dim); }
+
+/* ---------------------------------------------------------------- edges -- */
+
+.topo-edge {
+  fill: none;
+  stroke-linecap: round;
+  transition: opacity .18s ease;
+}
+.topo-edge.tone-supply  { stroke: var(--edge-supply); }
+.topo-edge.tone-host    { stroke: var(--edge-host); }
+.topo-edge.tone-control { stroke: var(--edge-control); }
+.topo-edge.tone-depend  { stroke: var(--edge-depend); }
+.topo-edge.tone-contain { stroke: var(--edge-contain); opacity: .55; }
+.topo-edge.tone-observe { stroke: var(--edge-observe); opacity: .6; }
+.topo-edge.tone-backup  { stroke: var(--edge-backup); }
+.topo-edge.tone-link    { stroke: var(--edge-link); opacity: .7; }
+
+.topo-arrow.tone-supply,  .topo-arrow-open.tone-supply  { fill: var(--edge-supply);  stroke: var(--edge-supply); }
+.topo-arrow.tone-host,    .topo-arrow-open.tone-host    { fill: var(--edge-host);    stroke: var(--edge-host); }
+.topo-arrow.tone-control, .topo-arrow-open.tone-control { fill: var(--edge-control); stroke: var(--edge-control); }
+.topo-arrow.tone-depend,  .topo-arrow-open.tone-depend  { fill: var(--edge-depend);  stroke: var(--edge-depend); }
+.topo-arrow.tone-contain, .topo-arrow-open.tone-contain { fill: var(--edge-contain); stroke: var(--edge-contain); }
+.topo-arrow.tone-observe, .topo-arrow-open.tone-observe { fill: var(--edge-observe); stroke: var(--edge-observe); }
+.topo-arrow.tone-backup,  .topo-arrow-open.tone-backup  { fill: var(--edge-backup);  stroke: var(--edge-backup); }
+.topo-arrow.tone-link,    .topo-arrow-open.tone-link    { fill: var(--edge-link);    stroke: var(--edge-link); }
+.topo-arrow-open { fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+.topo-edge.is-hidden { display: none; }
+.topo-edge.is-outside-blast { opacity: var(--topo-dim); }
+.topo-edge.is-touching { opacity: 1; stroke-width: 3; filter: drop-shadow(0 0 4px currentColor); }
+
+/* ---------------------------------------------------------------- cards -- */
+
+/* The card layer covers the whole world, so it must be transparent to the
+   pointer or it would swallow every click aimed at a group's title tab
+   underneath it. Only the cards themselves are targets. */
+.topo-cards { position: absolute; inset: 0; pointer-events: none; }
+
+.topo-card {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: .18rem;
+  padding: .38rem .5rem .34rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--st-notdeployed);
+  border-radius: var(--radius-s);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  overflow: hidden;
+  pointer-events: auto;
+  transition: opacity .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+
+.topo-card[data-health="ok"]           { border-left-color: var(--st-ok); }
+.topo-card[data-health="stale"]        { border-left-color: var(--st-stale); }
+.topo-card[data-health="no_data"]      { border-left-color: var(--st-nodata); }
+.topo-card[data-health="no_points"]    { border-left-color: var(--st-nodata); }
+.topo-card[data-health="design_only"]  { border-left-color: var(--st-designonly); }
+.topo-card[data-health="not_deployed"] { border-left-color: var(--st-notdeployed); }
+.topo-card[data-health="alarm"]        { border-left-color: var(--st-alarm); }
+.topo-card[data-health="degraded"]     { border-left-color: var(--st-degraded); }
+
+.topo-card:hover { border-color: var(--line-strong); }
+.topo-card:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.topo-card.is-selected {
+  border-color: var(--focus);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--focus) 45%, transparent), var(--shadow);
+}
+.topo-card.is-neighbour { border-color: color-mix(in srgb, var(--focus) 55%, var(--line)); }
+.topo-card.is-filtered { opacity: .22; }
+.topo-card.is-outside-blast { opacity: var(--topo-dim); }
+.topo-card.is-origin {
+  border-color: var(--st-alarm);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--st-alarm) 55%, transparent), var(--shadow);
+}
+
+.topo-card-top { display: flex; align-items: flex-start; gap: .4rem; min-width: 0; }
+
+.topo-card-icon {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  margin-top: 1px;
+  fill: none;
+  stroke: var(--text-dim);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.topo-card-titles { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
+
+.topo-card-name {
+  font-size: .74rem;
+  font-weight: 640;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topo-card-class {
+  font-size: .62rem;
+  color: var(--text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.topo-card-foot { display: flex; align-items: center; gap: .25rem; flex-wrap: nowrap; overflow: hidden; }
+.topo-card-foot .chip { font-size: .6rem; padding: .04rem .3rem; }
+
+.topo-crit {
+  font-size: .55rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: var(--sev-critical);
+  border: 1px solid color-mix(in srgb, var(--sev-critical) 45%, transparent);
+  border-radius: 3px;
+  padding: 0 .22rem;
+  white-space: nowrap;
+}
+
+.topo-open { font-size: .6rem; color: var(--st-designonly); font-variant-numeric: tabular-nums; }
+.topo-alarmdot { font-size: .65rem; color: var(--sev-critical); }
+
+/* Zoomed out, a card cannot show text legibly, so it stops trying. Position,
+   health colour and boundary survive at every zoom — the overview is about
+   where the plant is and what colour it is, not about reading its name. */
+.topo-stage.is-mid .topo-card-class { display: none; }
+.topo-stage.is-mid .topo-card-name { font-size: 1.05rem; line-height: 1.25; }
+.topo-stage.is-mid .topo-card-icon { width: 20px; height: 20px; }
+.topo-stage.is-mid .topo-card-foot .chip { font-size: .82rem; }
+.topo-stage.is-mid .topo-crit { font-size: .72rem; }
+
+.topo-stage.is-far .topo-card { padding: .3rem; border-left-width: 10px; align-items: center; justify-content: center; }
+.topo-stage.is-far .topo-card-titles,
+.topo-stage.is-far .topo-card-foot .chip,
+.topo-stage.is-far .topo-open,
+.topo-stage.is-far .topo-crit { display: none; }
+.topo-stage.is-far .topo-card-icon { width: 46px; height: 46px; stroke-width: 1; }
+.topo-stage.is-far .topo-card-top { align-items: center; }
+.topo-stage.is-far .topo-group-label { font-size: 26px; }
+.topo-stage.is-far .topo-alarmdot { font-size: 2rem; }
+
+/* Far out, the card *is* its health: a 1px border read at 10% zoom says
+   nothing, so the whole card takes the tint and the overview becomes a colour
+   map of where the plant is live, stale or not there at all. */
+.topo-stage.is-far .topo-card[data-health="ok"]           { background: color-mix(in srgb, var(--st-ok) 30%, var(--bg-raised)); }
+.topo-stage.is-far .topo-card[data-health="stale"]        { background: color-mix(in srgb, var(--st-stale) 30%, var(--bg-raised)); }
+.topo-stage.is-far .topo-card[data-health="no_data"]      { background: color-mix(in srgb, var(--st-nodata) 30%, var(--bg-raised)); }
+.topo-stage.is-far .topo-card[data-health="no_points"]    { background: color-mix(in srgb, var(--st-nodata) 22%, var(--bg-raised)); }
+.topo-stage.is-far .topo-card[data-health="design_only"]  { background: color-mix(in srgb, var(--st-designonly) 30%, var(--bg-raised)); }
+.topo-stage.is-far .topo-card[data-health="not_deployed"] { background: color-mix(in srgb, var(--st-notdeployed) 30%, var(--bg-raised)); }
+.topo-stage.is-far .topo-card[data-health="alarm"]        { background: color-mix(in srgb, var(--st-alarm) 45%, var(--bg-raised)); }
+.topo-stage.is-far .topo-card[data-health="degraded"]     { background: color-mix(in srgb, var(--st-degraded) 40%, var(--bg-raised)); }
+.topo-stage.is-far .topo-card.is-origin { background: var(--st-alarm); }
+
+/* -------------------------------------------------------------- overlay -- */
+
+.topo-overlay {
+  position: absolute;
+  left: .6rem;
+  bottom: .5rem;
+  pointer-events: none;
+}
+
+.topo-hint {
+  margin: 0;
+  padding: .22rem .5rem;
+  font-size: .7rem;
+  color: var(--text-faint);
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  transition: opacity 1.2s ease;
+}
+.topo-overlay.is-faded .topo-hint { opacity: .28; }
+
+/* ----------------------------------------------------------- status bar -- */
+
+.topo-statusbar {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  flex-wrap: wrap;
+  padding: .3rem .6rem;
+  font-size: .72rem;
+  color: var(--text-dim);
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+.topo-statusbar.is-stale { border-color: var(--st-stale); color: var(--st-stale); }
+.topo-sep { color: var(--text-faint); }
+.topo-det { color: var(--st-ok); cursor: help; }
+.topo-generated { margin-left: auto; color: var(--text-faint); }
+
+/* ------------------------------------------------------------ inspector -- */
+
+.topo-side {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  min-height: 0;
+  padding-right: .15rem;
+}
+
+.topo-panel {
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .6rem .7rem;
+}
+
+.topo-panel h3 { font-size: .95rem; }
+.topo-panel h4 { font-size: .8rem; letter-spacing: .02em; }
+.topo-panel h5.topo-subhead {
+  margin: .7rem 0 .3rem;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.topo-panel .card-note { font-size: .74rem; }
+.topo-panel-head { border-left: 3px solid var(--focus); }
+.topo-panel-title { display: flex; align-items: center; justify-content: space-between; gap: .4rem; }
+.topo-panel-title .topo-card-icon { width: 18px; height: 18px; }
+.topo-panel-title h3 { flex: 1; }
+
+.topo-mono {
+  margin: .15rem 0 .4rem;
+  font-size: .68rem;
+  color: var(--text-faint);
+  word-break: break-all;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.topo-chiprow { display: flex; flex-wrap: wrap; gap: .25rem; margin-bottom: .35rem; }
+.topo-actions { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .5rem; }
+
+.topo-link {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: var(--focus);
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.topo-link:hover { color: var(--text); }
+
+/* relationships */
+.topo-rel { display: flex; flex-direction: column; gap: .18rem; }
+.topo-rel-item {
+  display: grid;
+  grid-template-columns: 1rem 6.4rem minmax(0, 1fr) 1rem;
+  align-items: baseline;
+  gap: .3rem;
+  font-size: .74rem;
+  padding: .1rem 0;
+  border-bottom: 1px dotted color-mix(in srgb, var(--line) 70%, transparent);
+}
+.topo-rel-dir { color: var(--text-faint); }
+.topo-rel-type {
+  font-size: .64rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+.topo-rel-item.tone-supply  .topo-rel-type { color: var(--edge-supply); }
+.topo-rel-item.tone-host    .topo-rel-type { color: var(--edge-host); }
+.topo-rel-item.tone-control .topo-rel-type { color: var(--edge-control); }
+.topo-rel-item.tone-depend  .topo-rel-type { color: var(--edge-depend); }
+.topo-rel-item.tone-contain .topo-rel-type { color: var(--edge-contain); }
+.topo-rel-item.tone-observe .topo-rel-type { color: var(--edge-observe); }
+.topo-rel-item.tone-backup  .topo-rel-type { color: var(--edge-backup); }
+.topo-rel-item.tone-link    .topo-rel-type { color: var(--edge-link); }
+.topo-rel-flag { color: var(--st-stale); font-size: .7rem; }
+.topo-rel-flag.muted { color: var(--text-faint); }
+
+.topo-alarms { display: flex; flex-direction: column; gap: .35rem; font-size: .76rem; }
+.topo-fields { display: flex; flex-direction: column; gap: .18rem; font-size: .73rem; color: var(--text-dim); }
+.topo-fields li { padding-left: .8rem; text-indent: -.8rem; }
+.topo-fields li::before { content: "◇ "; color: var(--st-designonly); }
+
+/* blast radius */
+.topo-blast { border-left: 3px solid var(--st-alarm); }
+.topo-blast-head { margin: .3rem 0 .4rem; font-size: .82rem; }
+.topo-blast-head b { font-variant-numeric: tabular-nums; font-size: 1.05rem; }
+
+.topo-impact {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  max-height: 22rem;
+  overflow-y: auto;
+  counter-reset: impact;
+}
+.topo-impact li {
+  padding: .22rem .35rem .22rem .5rem;
+  border-left: 2px solid var(--text-faint);
+  background: color-mix(in srgb, var(--bg-sunken) 55%, transparent);
+  border-radius: 0 var(--radius-s) var(--radius-s) 0;
+  font-size: .75rem;
+}
+.topo-impact li.crit-life_safety { border-left-color: var(--sev-emergency); }
+.topo-impact li.crit-critical    { border-left-color: var(--sev-critical); }
+.topo-impact li.crit-important   { border-left-color: var(--sev-major); }
+.topo-impact li.crit-discretionary { border-left-color: var(--text-faint); }
+
+.topo-impact-meta { font-size: .66rem; color: var(--text-faint); }
+.topo-impact-crit { text-transform: uppercase; letter-spacing: .05em; }
+.topo-impact-path {
+  font-size: .62rem;
+  color: var(--text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* legend — always visible, never a hover affordance */
+.topo-legend-edges { display: flex; flex-direction: column; gap: .05rem; }
+.topo-legend-row {
+  display: grid;
+  grid-template-columns: 3.6rem minmax(0, 1fr) 2rem;
+  align-items: center;
+  gap: .4rem;
+  width: 100%;
+  padding: .12rem .25rem;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-s);
+  color: inherit;
+  font: inherit;
+  font-size: .73rem;
+  text-align: left;
+  cursor: pointer;
+}
+.topo-legend-row:hover { background: var(--bg-input); border-color: var(--line); }
+.topo-legend-row.is-off { opacity: .38; text-decoration: line-through; }
+.topo-legend-sample { width: 3.6rem; height: .75rem; overflow: visible; }
+.topo-legend-count { text-align: right; color: var(--text-faint); font-variant-numeric: tabular-nums; font-size: .66rem; }
+
+.topo-legend-health { display: flex; flex-direction: column; gap: .25rem; }
+.topo-legend-health li { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: .4rem; align-items: baseline; }
+.topo-legend-health .card-note { margin: 0; font-size: .68rem; }
+
+/* Wall-display mode: this screen is a diagram, so it grows by zooming rather
+   than by inflating chrome. Only the reading text steps up. */
+html[data-density="wall"] .topo-card-name { font-size: .82rem; }
+html[data-density="wall"] .topo-panel .card-note { font-size: .8rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .topo-card, .topo-edge, .topo-group-rect, .topo-hint { transition: none; }
+}

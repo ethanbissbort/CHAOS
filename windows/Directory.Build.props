@@ -1,0 +1,32 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsNotAsErrors>NU1900</WarningsNotAsErrors>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <Product>Project CHAOS</Product>
+    <Company>Homestead</Company>
+    <Authors>Homestead</Authors>
+    <Version>0.5.0</Version>
+
+    <!-- The platform version this host is contracted against. The gateway
+         refuses to proxy to a backend reporting a different major/minor,
+         because a route-ownership table is only meaningful against a known
+         API surface. -->
+    <ChaosPlatformVersion>0.4.0</ChaosPlatformVersion>
+
+    <!-- .NET 10 (LTS, active). .NET 11 exists only as preview at time of
+         writing; a system that controls off-grid power, water and freeze
+         protection tracks LTS rather than the newest preview. -->
+    <ChaosTargetFramework>net10.0</ChaosTargetFramework>
+
+    <!-- Windows App SDK / WinUI 3 shell. TargetPlatformVersion is the SDK
+         compiled against; MinVersion is the oldest Windows that will run it,
+         and is set by WinUI 2.3.0, which ships lib/net6.0-windows10.0.17763.0. -->
+    <ChaosWindowsTargetFramework>net10.0-windows10.0.26100.0</ChaosWindowsTargetFramework>
+    <ChaosTargetPlatformMinVersion>10.0.17763.0</ChaosTargetPlatformMinVersion>
+    <WindowsAppSdkVersion>2.3.1</WindowsAppSdkVersion>
+  </PropertyGroup>
+</Project>

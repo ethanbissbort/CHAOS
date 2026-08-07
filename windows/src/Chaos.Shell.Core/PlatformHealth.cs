@@ -1,0 +1,109 @@
+using System.Text.Json;
+
+namespace Chaos.Shell.Core;
+
+/// <summary>
+/// What <c>GET /health</c> reports about the node behind the gateway.
+/// </summary>
+public sealed record PlatformHealth
+{
+    public required string Status { get; init; }
+
+    public string? Version { get; init; }
+
+    public string? NodeRole { get; init; }
+
+    public string? SiteId { get; init; }
+
+    /// <summary>
+    /// Null when the platform did not say. The shell shows "unknown" for null
+    /// and never assumes the safe-looking answer in either direction.
+    /// </summary>
+    public bool? PhysicalControlEnabled { get; init; }
+
+    public bool IsOk => string.Equals(Status, "ok", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Reads a <c>/health</c> body. A response that parses but does not say
+    /// <c>ok</c> is returned as-is, so the caller can show the platform's own
+    /// word for its condition rather than a substitute.
+    /// </summary>
+    public static bool TryRead(string json, out PlatformHealth? health, out string? problem)
+    {
+        health = null;
+        problem = null;
+
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            problem = "the health response was empty";
+            return false;
+        }
+
+        JsonDocument document;
+        try
+        {
+            document = JsonDocument.Parse(json);
+        }
+        catch (JsonException ex)
+        {
+            problem = $"the health response was not valid JSON: {ex.Message}";
+            return false;
+        }
+
+        using (document)
+        {
+            var root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object)
+            {
+                problem = "the health response was not a JSON object";
+                return false;
+            }
+
+            var status = ReadString(root, "status");
+            if (status is null)
+            {
+                problem = "the health response carried no 'status'";
+                return false;
+            }
+
+            health = new PlatformHealth
+            {
+                Status = status,
+                Version = ReadString(root, "version"),
+                NodeRole = ReadString(root, "node_role"),
+                SiteId = ReadString(root, "site_id"),
+                PhysicalControlEnabled = ReadBool(root, "physical_control_enabled"),
+            };
+            return true;
+        }
+    }
+
+    /// <summary>One line for the tray "Service status" item.</summary>
+    public string Describe()
+    {
+        var role = string.IsNullOrWhiteSpace(NodeRole) ? "unknown role" : NodeRole!;
+        var version = string.IsNullOrWhiteSpace(Version) ? "unknown version" : Version!;
+        var control = PhysicalControlEnabled switch
+        {
+            true => "physical control ENABLED",
+            false => "physical control disabled",
+            null => "physical control unknown",
+        };
+        return $"{Status} · {role} · {version} · {control}";
+    }
+
+    private static string? ReadString(JsonElement root, string property) =>
+        root.TryGetProperty(property, out var element) && element.ValueKind == JsonValueKind.String
+            ? element.GetString()
+            : null;
+
+    private static bool? ReadBool(JsonElement root, string property) =>
+        root.TryGetProperty(property, out var element)
+            ? element.ValueKind switch
+            {
+                JsonValueKind.True => true,
+                JsonValueKind.False => false,
+                _ => null,
+            }
+            : null;
+}

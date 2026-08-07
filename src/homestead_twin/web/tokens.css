@@ -1,0 +1,536 @@
+/* ===========================================================================
+   Project CHAOS — design tokens
+   ---------------------------------------------------------------------------
+   THIS FILE IS AN INTERFACE. Other views (rack elevation, topology canvas,
+   future panels) code against the names below. Add tokens freely; renaming or
+   removing one is a breaking change.
+
+   Rules of the house, inherited from the console it serves:
+     * No build step, no npm, no CDN, no webfonts. The homestead loses its
+       uplink regularly; the console must not notice.
+     * Vanilla custom properties only. Everything resolves in the browser.
+     * Dark is the default (the console lives on a wall display in a
+       container). The light palette follows the operating system.
+     * Colour is never the only channel. Every token that carries meaning has
+       a documented glyph / border / weight partner in styles.css, and
+       tests/test_design_tokens.py asserts the pairing still holds.
+     * Every foreground/background pairing the UI actually uses clears WCAG AA
+       (4.5:1 body text, 3:1 large text and non-text indicators), in BOTH
+       themes. Ratios are computed, not asserted by eye. If a colour you want
+       fails, change the colour.
+
+   Credit: the token structure follows Reticle (MIT, Matt Anderson) and the
+   muted, contrast-tested category palette follows Rackula (MIT, Gareth
+   Evans). See ACKNOWLEDGEMENTS.md.
+
+   ---------------------------------------------------------------------------
+   THE INTERFACE, IN BRIEF
+
+   Surfaces      --surface-0 (page) --surface-1 (panel/card) --surface-2
+                 (elevated: hover, popover, sticky) --surface-3 (pressed)
+                 --surface-sunken (wells) --surface-input (fields)
+   Strokes       --stroke-1 (hairline) --stroke-2 (divider) --stroke-strong
+                 (emphasis) --stroke-focus
+   Text          --text-1 (primary) --text-2 (secondary) --text-3 (muted)
+                 --text-on-accent --text-on-severity
+   Accent        --accent --accent-strong --accent-soft --accent-ink
+   Focus         --focus --focus-ring-width --focus-ring-offset --focus-halo
+   Shape         --radius-xs/-sm/(base)/-lg/-pill
+   Space         --space-1 … --space-7, --gap (layout rhythm)
+   Motion        --dur-fast --dur --dur-slow --ease --ease-out
+   Elevation     --shadow-1 --shadow-2 --shadow-3
+
+   Availability  --status-ok --status-stale --status-no-data
+                 --status-no-points --status-design-only
+                 --status-not-deployed --status-alarm --status-degraded
+                 --status-unknown        (+ matching --status-*-soft fills)
+                 API status string -> token: replace "_" with "-".
+                 e.g. "no_points" -> var(--status-no-points)
+
+   Severity      --sev-emergency --sev-critical --sev-major --sev-warning
+                 --sev-info               (+ matching --sev-*-soft fills)
+                 --sev-ink  (text colour to use ON a solid severity fill)
+
+   Categories    --cat-<asset_class> for every class in
+                 data/asset_class_dictionary.yaml, e.g. --cat-server,
+                 --cat-switch, --cat-ups, --cat-pump, --cat-valve.
+                 --cat-bucket-<category> for every legend bucket
+                 /api/v1/rack returns (compute, network_edge, power, …).
+                 --cat-domain-<domain> for every SDD 25.4 domain.
+                 --cat-label is the ONLY text colour guaranteed legible on a
+                 category fill. --cat-fallback for unknown classes.
+                 Category colours do NOT change between light and dark: a
+                 device's identity colour is a property of the device.
+
+   HOW TO USE A CATEGORY COLOUR (rack / topology):
+       fill:   background: var(--cat-server);  color: var(--cat-label);
+       stroke: border-color: var(--cat-server);         (>= 3:1 both themes)
+       tint:   background: color-mix(in srgb, var(--cat-server)
+                                     var(--cat-tint), transparent);
+   Never put --text-1/--text-2 on a category fill, and never use category
+   colour as the only signal — pair it with the asset-class label or glyph.
+
+   Classes are grouped into 14 families and a class token aliases its family,
+   so several classes share one colour on purpose (a pump, a valve and a tank
+   are all --cat-water). Fourteen hues is the most that fits between "legible
+   under a white label" and "distinguishable from every other family", so the
+   families are the unit of colour and the class name is the unit of meaning.
+   Where two named classes would be confused side by side the family splits:
+   --cat-routing exists so a router racked next to a switch is not the same
+   violet.
+   =========================================================================== */
+
+:root {
+  color-scheme: dark light;
+
+  /* ---------------------------------------------------------- surfaces --
+     Ranked deepest to nearest. --surface-0 is the ground the console sits
+     on; --surface-1 is every card, panel and table; --surface-2 is anything
+     that lifts on hover or floats; --surface-sunken is a well cut into a
+     panel (meter tracks, incident headers, code blocks). */
+  --surface-0:       #0b1210;
+  --surface-1:       #121b18;
+  --surface-2:       #18231f;
+  --surface-3:       #1f2c27;
+  --surface-sunken:  #070d0b;
+  --surface-input:   #0e1714;
+  --surface-scrim:   rgba(0, 0, 0, .55);
+
+  /* ------------------------------------------------------------ strokes -- */
+  --stroke-1:        #24332d;   /* hairline: card and table borders */
+  --stroke-2:        #2c3d36;   /* divider that has to be seen across a room */
+  --stroke-strong:   #35493f;   /* inputs, buttons, dashed "not real" edges */
+
+  /* -------------------------------------------------------------- text --
+     Three ranks, all AA on every surface above. --text-3 is "muted", not
+     "optional": provenance and notes are read by an operator deciding
+     whether to trust a number, so it is held to body-text contrast. */
+  --text-1:          #e6efe9;
+  --text-2:          #a3b5ac;
+  --text-3:          #849688;
+  --text-on-accent:  #052016;
+  --text-on-severity:#1a0d05;   /* ink for solid severity fills, matches the
+                                   annunciator's lit-window ink */
+
+  /* ------------------------------------------------------------ accent -- */
+  --accent:          #4ade80;
+  --accent-strong:   #86efac;
+  --accent-soft:     rgba(74, 222, 128, .14);
+  --accent-ink:      var(--text-on-accent);
+
+  /* ------------------------------------------------------------- focus --
+     3px, offset, and a soft halo underneath so the ring survives on top of
+     an accent fill, a severity chip or a photograph of the screen. This
+     console is driven by keyboard under stress; the ring is not decoration. */
+  --focus:              #7dd3fc;
+  --focus-ring-width:   3px;
+  --focus-ring-offset:  2px;
+  --focus-halo:         0 0 0 6px rgba(125, 211, 252, .22);
+
+  /* ------------------------------------------------- availability scale --
+     The six words the API speaks (SDD / api/routers/overview.py), plus the
+     two roll-up words the subsystem health endpoint adds.
+
+       ok            live measured data
+       stale         last value is older than its stale window — UNKNOWN,
+                     not "fine"; the instrument or its link has stopped
+       no_data       points are registered but have never reported
+       no_points     assets exist, no matching points are registered
+       design_only   assets exist on paper only; nothing is installed
+       not_deployed  no assets of this kind exist in the registry yet
+       alarm         roll-up: an emergency/critical alarm is active
+       degraded      roll-up: an asset failed or a major alarm is active
+
+     Two distinctions are load-bearing and are asserted by the test suite:
+       * stale must not look like ok. It is a duller, darker gold, 1.5x
+         apart from ok in relative luminance, and its chip is DASHED.
+       * no_data must not look like a healthy zero. It is cool and blue,
+         never green, and its chip is DOTTED. A hatched meter, not a full
+         one, carries the same fact in the readouts. */
+  --status-ok:            #4ade80;
+  --status-stale:         #cf9612;
+  --status-no-data:       #7aa3c8;
+  --status-no-points:     #93a0ad;
+  --status-design-only:   #b090ec;
+  --status-not-deployed:  #9aa39c;
+  --status-alarm:         #f87171;
+  --status-degraded:      #fb923c;
+  /* "unknown" is not in the API vocabulary: it is what app.js falls back to
+     when a status word arrives that this build has never heard of. It is a
+     neutral, but a slightly louder one than --text-3 so its chip still clears
+     AA once the chip tints its own colour into its background. */
+  --status-unknown:       #8f9f94;
+
+  --status-ok-soft:           rgba(74, 222, 128, .14);
+  --status-stale-soft:        rgba(207, 150, 18, .14);
+  --status-no-data-soft:      rgba(122, 163, 200, .14);
+  --status-no-points-soft:    rgba(147, 160, 173, .14);
+  --status-design-only-soft:  rgba(176, 144, 236, .14);
+  --status-not-deployed-soft: rgba(154, 163, 156, .14);
+  --status-alarm-soft:        rgba(248, 113, 113, .14);
+  --status-degraded-soft:     rgba(251, 146, 60, .14);
+
+  /* --------------------------------------------------------- severities --
+     SDD 14.1. Ordered worst first. Each is paired with a distinct glyph in
+     app.js (✖ ▲ ◆ ! ℹ) and a distinct word; the colour is the third channel,
+     never the first. */
+  --sev-emergency:   #f472b6;
+  --sev-critical:    #f87171;
+  --sev-major:       #fb923c;
+  --sev-warning:     #fbbf24;
+  --sev-info:        #7dd3fc;
+  --sev-ink:         var(--text-on-severity);
+
+  --sev-emergency-soft: rgba(244, 114, 182, .14);
+  --sev-critical-soft:  rgba(248, 113, 113, .14);
+  --sev-major-soft:     rgba(251, 146, 60, .14);
+  --sev-warning-soft:   rgba(251, 191, 36, .14);
+  --sev-info-soft:      rgba(125, 211, 252, .14);
+
+  /* Alpha used when a chip tints its own colour into its background. The
+     contrast test composites this exact value, so change it here or the
+     assertion goes stale. */
+  --chip-tint: 14%;
+
+  /* -------------------------------------------------------------- shape -- */
+  --radius-xs:   3px;
+  --radius-sm:   6px;
+  --radius:      10px;
+  --radius-lg:   14px;
+  --radius-pill: 999px;
+
+  /* -------------------------------------------------------------- space --
+     A 4px-rooted scale expressed in rem so wall-display mode scales it. */
+  --space-1: .25rem;
+  --space-2: .4rem;
+  --space-3: .6rem;
+  --space-4: .85rem;
+  --space-5: 1.1rem;
+  --space-6: 1.5rem;
+  --space-7: 2rem;
+  --gap:     16px;          /* the layout rhythm; wall mode enlarges it */
+
+  /* Chrome metrics — shared so the sticky sidenav tracks the sticky topbar. */
+  --chrome-topbar-h: 3.4rem;
+  --control-h:       2rem;
+
+  /* ------------------------------------------------------------- motion --
+     Fast enough that an operator never waits, slow enough to be seen. All
+     of it is switched off under prefers-reduced-motion in styles.css. */
+  --dur-fast: 90ms;
+  --dur:      150ms;
+  --dur-slow: 260ms;
+  --ease:     cubic-bezier(.2, .7, .2, 1);
+  --ease-out: cubic-bezier(0, 0, .2, 1);
+
+  /* ---------------------------------------------------------- elevation -- */
+  --shadow-1: 0 1px 0 rgba(255, 255, 255, .03), 0 1px 2px rgba(0, 0, 0, .35);
+  --shadow-2: 0 1px 0 rgba(255, 255, 255, .03), 0 8px 24px rgba(0, 0, 0, .35);
+  --shadow-3: 0 2px 4px rgba(0, 0, 0, .3), 0 18px 40px rgba(0, 0, 0, .5);
+
+  /* --------------------------------------------------------- typography -- */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+               "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+               "Liberation Mono", monospace;
+  --fs-base:   15px;
+
+  /* =====================================================================
+     CATEGORY SCALE — asset-class identity colours
+     ---------------------------------------------------------------------
+     Rackula's register: muted, mid-luminance fills chosen so a near-white
+     device label stays legible on top of them. The bright accents used for
+     status would fail that test, which is exactly why this is a separate
+     scale and not a reuse of --accent / --sev-*.
+
+     Every --cat-* value below clears
+        >= 4.8:1  against --cat-label   (device labels, body text)
+        >= 3.3:1  against --surface-1 dark and >= 5.1:1 light  (strokes,
+                  swatches, and any non-text indicator)
+     and every pair of FAMILIES is at least 18 dE76 apart, so two devices
+     from different families never read as the same colour.
+
+     These values are deliberately identical in light and dark: a UPS is the
+     same UPS at midnight. Only the surfaces around it change.
+     ===================================================================== */
+  --cat-label: #f4f7f5;
+  --cat-tint:  16%;
+
+  /* Families — the source of truth. Per-class tokens below alias these. */
+  --cat-compute:     #2f7682;   /* cyan     — things that run software */
+  --cat-storage:     #257b50;   /* green    — things that hold bytes */
+  --cat-network:     #8657b6;   /* violet   — switching and access */
+  --cat-routing:     #925797;   /* orchid   — routing and gateways: related
+                                   to --cat-network on purpose, but a router
+                                   racked beside a switch must not read as one */
+  --cat-power:       #b9464e;   /* red      — distribution and protection */
+  --cat-generation:  #946218;   /* amber    — things that make electricity */
+  --cat-battery:     #687220;   /* olive    — things that store electricity */
+  --cat-water:       #2770b1;   /* blue     — things that hold or move water */
+  --cat-sensor:      #6565af;   /* indigo   — instruments */
+  --cat-security:    #b14779;   /* rose     — cameras, doors, access */
+  --cat-agriculture: #387b27;   /* leaf     — growing things */
+  --cat-structure:   #7a6b51;   /* taupe    — buildings, rooms, racks, zones */
+  --cat-load:        #a5573f;   /* terracotta — electrical consumers */
+  --cat-fallback:    #6b6d70;   /* grey     — unknown or passive */
+
+  /* Per-asset-class tokens. One entry for every class in
+     data/asset_class_dictionary.yaml (72 of them) so a consumer can write
+     var(--cat-<asset_class>) without a lookup table and without a fallback
+     chain. Grouped by family, alphabetical within a family.
+
+     Three asset classes share a name with their family — sensor, structure
+     and load — so for those the family token above IS the class token. They
+     are not re-aliased: a custom property may not reference itself. */
+
+  /* compute */
+  --cat-application-service: var(--cat-compute);
+  --cat-controller:          var(--cat-compute);
+  --cat-server:              var(--cat-compute);
+
+  /* storage */
+  --cat-storage-array:       var(--cat-storage);
+  --cat-storage-lot:         var(--cat-structure);
+
+  /* network */
+  --cat-access-point:        var(--cat-network);
+  --cat-gateway:             var(--cat-routing);
+  --cat-network-segment:     var(--cat-network);
+  --cat-router:              var(--cat-routing);
+  --cat-switch:              var(--cat-network);
+  --cat-voice-endpoint:      var(--cat-network);
+  --cat-wireless-controller: var(--cat-network);
+
+  /* power distribution and protection */
+  --cat-ats:                 var(--cat-power);
+  --cat-circuit:             var(--cat-power);
+  --cat-disconnect:          var(--cat-power);
+  --cat-meter:               var(--cat-power);
+  --cat-panel:               var(--cat-power);
+  --cat-pdu:                 var(--cat-power);
+
+  /* generation */
+  --cat-combiner:            var(--cat-generation);
+  --cat-generator:           var(--cat-generation);
+  --cat-inverter:            var(--cat-generation);
+  --cat-pv-array:            var(--cat-generation);
+  --cat-pv-row:              var(--cat-generation);
+  --cat-pv-string:           var(--cat-generation);
+
+  /* electrical storage */
+  --cat-battery-bank:        var(--cat-battery);
+  --cat-battery-module:      var(--cat-battery);
+  --cat-bms:                 var(--cat-battery);
+  --cat-thermal-storage:     var(--cat-battery);
+  --cat-ups:                 var(--cat-battery);
+
+  /* water and fluids */
+  --cat-filter:              var(--cat-water);
+  --cat-flow-meter:          var(--cat-water);
+  --cat-graywater-branch:    var(--cat-water);
+  --cat-irrigation-zone:     var(--cat-water);
+  --cat-nutrient-reservoir:  var(--cat-water);
+  --cat-pump:                var(--cat-water);
+  --cat-spa-pump:            var(--cat-water);
+  --cat-spa-reservoir:       var(--cat-water);
+  --cat-tank:                var(--cat-water);
+  --cat-treatment-stage:     var(--cat-water);
+  --cat-valve:               var(--cat-water);
+  --cat-well:                var(--cat-water);
+
+  /* instruments */
+  --cat-environmental-monitor: var(--cat-sensor);
+  --cat-pressure-sensor:       var(--cat-sensor);
+  --cat-safety-sensor:         var(--cat-sensor);
+  --cat-soil-sensor-node:      var(--cat-sensor);
+  --cat-weather-station:       var(--cat-sensor);
+
+  /* security and life safety */
+  --cat-access-controller:   var(--cat-security);
+  --cat-alarm-output:        var(--cat-security);
+  --cat-camera:              var(--cat-security);
+  --cat-door:                var(--cat-security);
+  --cat-gate:                var(--cat-security);
+
+  /* agriculture */
+  --cat-compost-batch:                   var(--cat-agriculture);
+  --cat-controlled-atmosphere-container: var(--cat-agriculture);
+  --cat-crop-batch:                      var(--cat-agriculture);
+  --cat-greenhouse-zone:                 var(--cat-agriculture);
+  --cat-guild:                           var(--cat-agriculture);
+  --cat-hydrogel-batch:                  var(--cat-agriculture);
+  --cat-mower-robot:                     var(--cat-agriculture);
+  --cat-nitrogen-generator:              var(--cat-agriculture);
+  --cat-planting-block:                  var(--cat-agriculture);
+  --cat-tree:                            var(--cat-agriculture);
+
+  /* structures, spaces and containers */
+  --cat-enclosure:           var(--cat-structure);
+  --cat-geographic-zone:     var(--cat-structure);
+  --cat-rack:                var(--cat-structure);
+  --cat-room:                var(--cat-structure);
+  --cat-site:                var(--cat-structure);
+
+  /* electrical consumers */
+  --cat-dehumidifier:        var(--cat-load);
+  --cat-spa-heater:          var(--cat-load);
+  --cat-tool:                var(--cat-load);
+
+  /* ------------------------------------------------ rack legend buckets --
+     /api/v1/rack groups asset classes into legend buckets server-side (see
+     CATEGORIES in api/routers/rack.py) and returns the bucket name on each
+     device, so the elevation can paint straight from the payload:
+
+         fill = `var(--cat-bucket-${device.category})`
+
+     Three pairs of buckets share a family colour on purpose, because the
+     muted register has no fourteenth hue left that is both legible under a
+     white label and distinct from the other thirteen. The API already returns
+     `category_labels`; use it. The distinguishing channel is the legend word
+     and the device glyph, not a fifteenth hue:
+
+         transfer  / power_distribution   both --cat-power
+         network   / wireless             both --cat-network
+         security  / safety               both --cat-security
+
+     A life-safety device's urgency is not a category fact anyway: it belongs
+     to the status and severity scales above, which do have their own hues. */
+  --cat-bucket-power:              var(--cat-battery);     /* UPS and power source */
+  --cat-bucket-transfer:           var(--cat-power);       /* automatic transfer switch */
+  --cat-bucket-power_distribution: var(--cat-power);
+  --cat-bucket-compute:            var(--cat-compute);
+  --cat-bucket-storage:            var(--cat-storage);
+  --cat-bucket-network:            var(--cat-network);     /* switching */
+  --cat-bucket-network_edge:       var(--cat-routing);     /* routing and WAN */
+  --cat-bucket-wireless:           var(--cat-network);
+  --cat-bucket-environment:        var(--cat-sensor);
+  --cat-bucket-security:           var(--cat-security);
+  --cat-bucket-safety:             var(--cat-security);
+  --cat-bucket-other:              var(--cat-fallback);
+
+  /* ------------------------------------------------------ SDD 25.4 domains --
+     For any view that colours by domain rather than asset class (the map, a
+     topology canvas grouped by subsystem). Same rule: `var(--cat-domain-${d})`
+     resolves for every domain the overview endpoint enumerates. */
+  --cat-domain-site:        var(--cat-structure);
+  --cat-domain-energy:      var(--cat-generation);
+  --cat-domain-water:       var(--cat-water);
+  --cat-domain-agriculture: var(--cat-agriculture);
+  --cat-domain-structure:   var(--cat-structure);
+  --cat-domain-it:          var(--cat-network);
+  --cat-domain-security:    var(--cat-security);
+  --cat-domain-safety:      var(--cat-security);
+  --cat-domain-storage:     var(--cat-structure);
+  --cat-domain-spa:         var(--cat-water);
+  --cat-domain-workshop:    var(--cat-load);
+  --cat-domain-fuel:        var(--cat-generation);
+
+  /* =====================================================================
+     COMPATIBILITY ALIASES
+     ---------------------------------------------------------------------
+     app.js, api.js and views/*.js reference these names inline (SVG fills,
+     inline styles). They are owned by other agents and must keep resolving.
+     Treat them as read-only history: write new code against the ranked
+     names above.
+     ===================================================================== */
+  --bg:          var(--surface-0);
+  --bg-raised:   var(--surface-1);
+  --bg-sunken:   var(--surface-sunken);
+  --bg-input:    var(--surface-input);
+  --line:        var(--stroke-1);
+  --line-strong: var(--stroke-strong);
+  --text:        var(--text-1);
+  --text-dim:    var(--text-2);
+  --text-faint:  var(--text-3);
+  --radius-s:    var(--radius-sm);
+  --shadow:      var(--shadow-2);
+
+  --st-ok:          var(--status-ok);
+  --st-stale:       var(--status-stale);
+  --st-nodata:      var(--status-no-data);
+  --st-designonly:  var(--status-design-only);
+  --st-notdeployed: var(--status-not-deployed);
+  --st-alarm:       var(--status-alarm);
+  --st-degraded:    var(--status-degraded);
+}
+
+/* ===========================================================================
+   LIGHT THEME
+   ---------------------------------------------------------------------------
+   Same structure, re-solved for a white ground. Every value here was chosen
+   by running the contrast test, not by lightening the dark one: the naive
+   inversions (#12805a accent, #b45309 major, #6b7a72 muted text) all landed
+   between 3.8:1 and 4.5:1 and are gone.
+
+   Category tokens are NOT redefined: device identity does not change with
+   the room lights.
+   =========================================================================== */
+@media (prefers-color-scheme: light) {
+  :root {
+    --surface-0:      #f2f5f3;
+    --surface-1:      #ffffff;
+    --surface-2:      #e9eeeb;
+    --surface-3:      #dde5e0;
+    --surface-sunken: #e6ebe8;
+    --surface-input:  #ffffff;
+    --surface-scrim:  rgba(16, 32, 26, .45);
+
+    --stroke-1:      #d4ded8;
+    --stroke-2:      #c3d0c9;
+    --stroke-strong: #b3c2ba;
+
+    --text-1:           #16211c;
+    --text-2:           #4c5c54;
+    --text-3:           #586761;
+    --text-on-accent:   #ffffff;
+    --text-on-severity: #ffffff;
+
+    --accent:        #096240;
+    --accent-strong: #0b7a4f;
+    --accent-soft:   rgba(9, 98, 64, .12);
+
+    --focus:      #0369a1;
+    --focus-halo: 0 0 0 6px rgba(3, 105, 161, .18);
+
+    --status-ok:           #096240;
+    --status-stale:        #625c08;
+    --status-no-data:      #245e8f;
+    --status-no-points:    #3f5b7d;
+    --status-design-only:  #6d33bd;
+    --status-not-deployed: #4f565b;
+    --status-unknown:      #4e5b56;
+    --status-alarm:        #ae1818;
+    --status-degraded:     #924409;
+
+    --status-ok-soft:           rgba(9, 98, 64, .12);
+    --status-stale-soft:        rgba(98, 92, 8, .12);
+    --status-no-data-soft:      rgba(36, 94, 143, .12);
+    --status-no-points-soft:    rgba(63, 91, 125, .12);
+    --status-design-only-soft:  rgba(109, 51, 189, .12);
+    --status-not-deployed-soft: rgba(79, 86, 91, .12);
+    --status-alarm-soft:        rgba(174, 24, 24, .12);
+    --status-degraded-soft:     rgba(146, 68, 9, .12);
+
+    --sev-emergency: #a6176d;
+    --sev-critical:  #ae1818;
+    --sev-major:     #924409;
+    --sev-warning:   #7c5200;
+    --sev-info:      #065e92;
+
+    --sev-emergency-soft: rgba(166, 23, 109, .12);
+    --sev-critical-soft:  rgba(174, 24, 24, .12);
+    --sev-major-soft:     rgba(146, 68, 9, .12);
+    --sev-warning-soft:   rgba(124, 82, 0, .12);
+    --sev-info-soft:      rgba(6, 94, 146, .12);
+
+    --shadow-1: 0 1px 2px rgba(16, 32, 26, .07);
+    --shadow-2: 0 1px 2px rgba(16, 32, 26, .07), 0 6px 18px rgba(16, 32, 26, .08);
+    --shadow-3: 0 2px 6px rgba(16, 32, 26, .10), 0 16px 36px rgba(16, 32, 26, .16);
+  }
+}
+
+/* Wall-display mode: bigger everything, readable from across a container. */
+html[data-density="wall"] {
+  --fs-base: 20px;
+  --gap: 22px;
+}

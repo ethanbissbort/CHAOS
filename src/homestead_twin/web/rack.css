@@ -1,0 +1,286 @@
+/* ---------------------------------------------------------------------------
+   Rack elevation — screen styling.
+
+   Loaded on demand by views/rack.js; index.html only ever loads styles.css.
+   Everything here is layered on the console's existing tokens (--bg-raised,
+   --line, --st-*), so the page keeps one visual identity and one theme switch.
+
+   Two deliberate exceptions to "follow the theme":
+
+     * The SVG plate renders on its own fixed dark ground in both light and dark
+       themes. A rack elevation is a drawing, and pinning the ground means the
+       exported SVG/PNG is identical to what the operator saw, with one verified
+       contrast ratio per faceplate instead of two theme-dependent ones.
+     * The proposal banner keeps a warning tint in both themes. Its whole job is
+       to be impossible to read past.
+
+   Visual language adapted from Rackula (MIT, Gareth Evans) — the U-grid, the
+   muted faceplate palette and the front-elevation framing. No code is shared:
+   there is no build step here and no dependency.
+--------------------------------------------------------------------------- */
+
+/* ------------------------------------------------------ proposal banner --- */
+
+.rack-banner {
+  border: 2px solid var(--st-designonly);
+  border-left-width: 8px;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--st-designonly) 12%, var(--bg-raised));
+  padding: .8rem 1rem;
+  margin-bottom: var(--gap);
+}
+
+.rack-banner-head { display: flex; align-items: baseline; gap: .5rem; }
+
+.rack-banner-glyph { color: var(--st-designonly); font-size: 1.15rem; line-height: 1; }
+
+.rack-banner strong {
+  font-size: 1rem;
+  letter-spacing: .04em;
+  color: var(--st-designonly);
+}
+
+.rack-banner p { font-size: .85rem; margin: .45rem 0 0; max-width: 92ch; }
+
+.rack-banner-ok {
+  border-color: var(--st-ok);
+  background: color-mix(in srgb, var(--st-ok) 10%, var(--bg-raised));
+}
+.rack-banner-ok strong { color: var(--st-ok); }
+
+.rack-banner-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem 1.4rem;
+  margin: .6rem 0 0;
+}
+.rack-banner-meta > div { display: flex; gap: .4rem; align-items: baseline; }
+.rack-banner-meta dt { font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); }
+.rack-banner-meta dd { margin: 0; font-size: .78rem; color: var(--text); }
+
+.rack-banner-fields { margin-top: .65rem; }
+.rack-banner-fields-title { font-size: .8rem !important; margin: 0 0 .3rem !important; }
+.rack-banner-fields ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem;
+}
+.rack-banner-fields li {
+  font-size: .72rem;
+  padding: .12em .5em;
+  border: 1px dashed var(--st-designonly);
+  border-radius: var(--radius-s);
+  color: var(--text-dim);
+}
+
+/* --------------------------------------------------------------- layout --- */
+
+.rack-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 620px) minmax(0, 1fr);
+  gap: var(--gap);
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .rack-layout { grid-template-columns: minmax(0, 1fr); }
+}
+
+.rack-side { display: grid; gap: var(--gap); }
+
+/* ------------------------------------------------------------ the plate --- */
+
+.rack-plate {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  padding: .7rem;
+  box-shadow: var(--shadow);
+}
+
+.rack-tools {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+  margin-bottom: .6rem;
+}
+.rack-tools .card-note { flex: 1 1 14rem; }
+
+.rack-svg-wrap {
+  /* The drawing is tall by nature; it scrolls inside its own box rather than
+     stretching the page, and never scrolls the page sideways. */
+  overflow: auto;
+  max-height: 78vh;
+  border-radius: var(--radius-s);
+  background: #0b1210;
+  border: 1px solid var(--line);
+}
+
+.rack-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 520px;
+}
+
+html[data-density="wall"] .rack-svg-wrap { max-height: none; }
+
+.rk-device { cursor: pointer; }
+.rk-device:hover rect:nth-of-type(2) { stroke: var(--focus); stroke-width: 1.8; }
+.rk-device:focus-visible { outline: none; }
+.rk-device:focus-visible rect:nth-of-type(2) { stroke: #7dd3fc; stroke-width: 2.6; stroke-dasharray: none; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .rk-device rect { transition: stroke-width .12s ease; }
+}
+
+/* --------------------------------------------------------------- legend --- */
+
+.rack-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: .8rem 1.4rem;
+  margin-top: .7rem;
+  padding-top: .7rem;
+  border-top: 1px solid var(--line);
+}
+
+.rack-legend h4 {
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--text-faint);
+  margin-bottom: .35rem;
+}
+
+.rack-legend li {
+  display: flex;
+  align-items: baseline;
+  gap: .45rem;
+  font-size: .75rem;
+  color: var(--text-dim);
+  margin: .18rem 0;
+}
+
+.rack-swatch {
+  flex: none;
+  width: .85rem;
+  height: .85rem;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, .3);
+  align-self: center;
+}
+
+.rack-legend-glyph {
+  flex: none;
+  width: 1rem;
+  text-align: center;
+  color: var(--text);
+}
+
+/* ------------------------------------------------------------- findings --- */
+
+.rack-findings { display: grid; gap: .6rem; }
+
+.rack-finding {
+  border-left: 4px solid var(--line-strong);
+  padding: .1rem 0 .1rem .7rem;
+}
+.rack-finding-blocking { border-left-color: var(--st-alarm); }
+.rack-finding-warning  { border-left-color: var(--st-degraded); }
+.rack-finding-info     { border-left-color: var(--st-nodata); }
+
+.rack-finding-head {
+  display: flex;
+  align-items: baseline;
+  gap: .4rem;
+  flex-wrap: wrap;
+}
+.rack-finding-head strong { font-size: .86rem; }
+.rack-finding p { font-size: .8rem; color: var(--text-dim); margin: .25rem 0 0; max-width: 74ch; }
+.rack-finding .provenance { word-break: break-all; }
+
+/* ----------------------------------------------------------------- feeds -- */
+
+.rack-feeds { display: grid; gap: .7rem; }
+
+.rack-feed {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: .55rem .7rem;
+  background: var(--bg-sunken);
+}
+.rack-feed-unresolved { border-style: dashed; border-color: var(--st-designonly); }
+
+.rack-feed-head { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.rack-feed-id { font-weight: 700; letter-spacing: .06em; font-size: .82rem; }
+
+/* ------------------------------------------------------------------ PDUs -- */
+
+.rack-pdu + .rack-pdu { margin-top: 1.1rem; padding-top: 1.1rem; border-top: 1px solid var(--line); }
+
+.rack-pdu-head { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+
+.rack-pdu-tag {
+  font-size: .72rem;
+  font-weight: 700;
+  padding: .12em .45em;
+  border-radius: var(--radius-s);
+  background: var(--bg-sunken);
+  border: 1px solid var(--line-strong);
+}
+
+.rack-pdu .table-wrap { margin-top: .5rem; }
+
+/* -------------------------------------------------------------- switches -- */
+
+.rack-switch + .rack-switch { margin-top: .9rem; }
+.rack-switch-head { display: flex; align-items: baseline; gap: .5rem; flex-wrap: wrap; margin: .6rem 0 .35rem; }
+
+/* --------------------------------------------------------------- detail --- */
+
+.rack-detail-h {
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--text-faint);
+  margin: .9rem 0 .3rem;
+  padding-top: .5rem;
+  border-top: 1px solid var(--line);
+}
+
+.rack-detail-flags { display: flex; gap: .35rem; flex-wrap: wrap; margin-bottom: .5rem; }
+
+.rack-alarms li {
+  font-size: .8rem;
+  padding: .35rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.rack-alarms li:last-child { border-bottom: 0; }
+
+.rack-open ul { display: flex; flex-wrap: wrap; gap: .3rem; }
+.rack-open li {
+  font-size: .72rem;
+  padding: .12em .5em;
+  border: 1px dashed var(--st-designonly);
+  border-radius: var(--radius-s);
+  color: var(--text-dim);
+}
+
+.rack-excluded li { padding: .35rem 0; border-bottom: 1px solid var(--line); font-size: .82rem; }
+.rack-excluded li:last-child { border-bottom: 0; }
+.rack-excluded .card-note { margin-top: .15rem; }
+
+/* Standalone .alarm-key is only styled inside .alarm-row in styles.css. */
+.rack-side .alarm-key,
+.rack-layout .alarm-key,
+.rack-excluded .alarm-key { font-size: .72rem; color: var(--text-faint); }
+
+/* ---------------------------------------------------------------- print --- */
+
+@media print {
+  .rack-tools, .rack-side { display: none; }
+  .rack-svg-wrap { max-height: none; overflow: visible; border: 0; }
+  .rack-banner { break-inside: avoid; }
+}

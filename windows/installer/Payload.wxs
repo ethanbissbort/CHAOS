@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The product payload.
+
+  Everything staged by `windows\build\build.ps1 -Task stage` is harvested from
+  the staging tree as-is, preserving the directory structure:
+
+      <install root>\Chaos.Shell.exe and the rest of the .NET output (flat)
+      <install root>\python\...        embedded CPython + site-packages
+      <install root>\app\data\         machine-readable design package
+      <install root>\app\schemas\      JSON Schemas
+      <install root>\app\tools\        validate_bundle.py, validate_registry_refs.py
+      <install root>\app\web\          operator UI assets for the gateway
+      <install root>\chaos.cmd         operator CLI shim
+
+  Harvesting from a staging tree rather than listing files means the installer
+  cannot drift from what was built: a new dependency, a new UI file or a new
+  design-package document is packaged the moment it is staged, and there is no
+  hand-maintained file list to forget.
+
+  data\, schemas\ and tools\ ship for the same reason the container image copies
+  them to /app: `homestead-twin validate` and `homestead-twin load-all` have to
+  work offline on a node with no repository checkout. That is the difference
+  between a commissioning engineer being able to reload the registry on the
+  property and having to bring a laptop with a git clone on it.
+
+  The one exclusion is Chaos.Host.exe, which Service.wxs authors explicitly
+  because the Windows Service registration has to hang off that file's component.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <?include Chaos.Definitions.wxi ?>
+
+  <Fragment>
+    <ComponentGroup Id="ChaosPayload" Directory="INSTALLFOLDER">
+      <Files Include="!(bindpath.Stage)\**">
+        <Exclude Files="!(bindpath.Stage)\$(var.ChaosHostExe)" />
+      </Files>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

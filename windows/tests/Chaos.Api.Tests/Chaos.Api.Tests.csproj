@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Unit tests for the ported /api/v1 slice.
+
+    The centre of gravity here is Serviceability: whether a tile can light is
+    the one rule in this endpoint with a safety consequence, and it is tested
+    exhaustively against constructed inputs rather than only through whatever
+    the shipped design package happens to contain.
+
+    Cross-implementation agreement with the Python platform is a separate
+    concern and lives in tests/test_dotnet_conformance.py at the repository
+    root, so it runs inside the existing pytest suite.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>$(ChaosTargetFramework)</TargetFramework>
+    <AssemblyName>Chaos.Api.Tests</AssemblyName>
+    <RootNamespace>Chaos.Api.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Chaos.Api\Chaos.Api.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Chaos.Shell.Core holds every part of the Windows desktop shell that does not
+    need a Windows API. It targets plain net10.0 so it builds, runs and is
+    tested anywhere — in Visual Studio 2026 next to the WinUI 3 shell, and on a
+    Linux developer box or CI leg where the WinUI project cannot compile at all.
+
+    Nothing in this project may reference WinUI, the Windows App SDK, WebView2,
+    System.Drawing, the registry or P/Invoke. If a change here needs one of
+    those, the change belongs in Chaos.Shell instead, and this project should
+    grow the decision it needs as plain data.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>$(ChaosTargetFramework)</TargetFramework>
+    <RootNamespace>Chaos.Shell.Core</RootNamespace>
+    <AssemblyName>Chaos.Shell.Core</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>Chaos.Shell.Core.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+</Project>
