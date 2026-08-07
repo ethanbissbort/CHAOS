@@ -117,8 +117,8 @@ public sealed class PlatformSetupCoordinatorTests : IDisposable
 
         // Exactly one init-db and one load-all across both runs: the second run
         // looked, found the platform set up, and stopped.
-        Assert.Single(runner.Invocations.Where(line => line == "init-db"));
-        Assert.Single(runner.Invocations.Where(line => line == "load-all --skip-missing"));
+        Assert.Single(runner.Invocations, line => line == "init-db");
+        Assert.Single(runner.Invocations, line => line == "load-all --skip-missing");
     }
 
     [Fact]
@@ -424,6 +424,18 @@ public sealed class PlatformSetupCoordinatorTests : IDisposable
         string? dataDirectory = null)
     {
         Directory.CreateDirectory(_stateDirectory);
+
+        // A machine that has the design package where the platform's own layout
+        // puts it: data/ beside the runtime's working directory. Leaving it out
+        // is a different case with its own test - setup declines to run when
+        // there is demonstrably nothing to load from.
+        if (dataDirectory is null)
+        {
+            var workingDirectory = Path.Combine(_stateDirectory, "workdir");
+            Directory.CreateDirectory(Path.Combine(workingDirectory, "data"));
+            File.WriteAllText(Path.Combine(workingDirectory, "data", "asset_register.yaml"), "assets: []\n");
+            runner.WorkingDirectory = workingDirectory;
+        }
 
         var options = new ChaosHostOptions
         {

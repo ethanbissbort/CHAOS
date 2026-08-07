@@ -142,6 +142,23 @@ internal sealed class SetupHostFactory : WebApplicationFactory<Program>
         public SetupHostFactory Build()
         {
             Directory.CreateDirectory(_stateDirectory);
+
+            // Unless a test says otherwise, this host looks like a machine that
+            // has its design package where the platform's layout puts it: data/
+            // beside the runtime's working directory. The gateway derives the
+            // path from the working directory the runner reports, so this also
+            // exercises that derivation rather than short-circuiting it with an
+            // explicit Chaos:DataDirectory.
+            if (!_settings.ContainsKey("Chaos:DataDirectory"))
+            {
+                var workingDirectory = Path.Combine(_stateDirectory, "workdir");
+                Directory.CreateDirectory(Path.Combine(workingDirectory, "data"));
+                File.WriteAllText(
+                    Path.Combine(workingDirectory, "data", "asset_register.yaml"),
+                    "assets: []\n");
+                _runner.WorkingDirectory = workingDirectory;
+            }
+
             return new SetupHostFactory(_settings, _runner, _stateDirectory);
         }
     }
