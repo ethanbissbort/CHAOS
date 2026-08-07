@@ -382,6 +382,32 @@ class TestObservabilityScenarios:
         assert fraction(1900, 2900) == 0.0  # gateway silent
         assert fraction(3200, 4000) > 0.9  # publishing again
 
+    def test_internet_loss_does_not_touch_local_control(self, settings):
+        """EMS-T001: lose internet while normal -- no control loss."""
+        scenario = get_scenario("comms_loss")
+        bus = InMemoryBus()
+        site = scenario.build(bus, settings=settings)
+        runner = ScenarioRunner(site, scenario)
+        site.start()
+        runner.pump()
+
+        def on_step(current, _balance):
+            runner.pump()
+
+        # Stop between the WAN drop (10 min) and its return (25 min).
+        site.run(duration_s=parse_duration("20m"), dt_s=10.0, pacer=SteppedPacer(),
+                 on_step=on_step)
+        wan = topics.telemetry_topic("it.router.rack_01.isr4321_01", "wan_state")
+        assert parse_telemetry(bus.last(wan).payload).value == "down"
+        # Local control is untouched: the bus is up, loads are served, telemetry
+        # keeps flowing and nothing shed itself.
+        assert site.context.ac_bus_energized is True
+        assert site.context.load_actual_kw > 0
+        assert site.stats.unserved_energy_kwh == pytest.approx(0.0, abs=1e-6)
+        assert [e for e in site.stats.events if "load_shed" in e] == []
+        soc = topics.telemetry_topic("energy.battery_bank.power_container.01", "soc_pct")
+        assert parse_telemetry(bus.last(soc).payload).quality == "good"
+
     def test_comms_loss_publishes_the_will_then_comes_back_online(self, settings):
         site, _runner, bus = run_scenario(settings, "comms_loss", duration_s="2h", step_s=60.0)
         topic = topics.availability_topic("energy.battery_bank.power_container.01")

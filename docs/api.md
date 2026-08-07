@@ -270,7 +270,7 @@ PLCs keep immediate equipment authority.
 | `POST` | `/api/v1/alarms/{alarm_id}/review` | Close with a review | operator |
 | `GET` | `/api/v1/alarms/definitions` | Definition set (`domain`, `severity`, `enabled_only`) | viewer |
 | `GET` | `/api/v1/alarms/definitions/{alarm_key}` | One definition with FR-008 context | viewer |
-| `POST` | `/api/v1/alarms/definitions/reload` | Reload from the design package (`strict`) | administrator |
+| `POST` | `/api/v1/alarms/definitions/reload` | Reload from the design package (`strict`) | maintainer |
 | `GET` | `/api/v1/incidents` | Correlated incidents (`state`, `severity`, `since`, `limit`) | viewer |
 | `GET` | `/api/v1/incidents/{incident_id}` | One incident with member alarms | viewer |
 | `GET` | `/api/v1/notifications` | Delivery log (`channel`, `status`, `incident_id`, `alarm_id`, `limit`) | viewer |

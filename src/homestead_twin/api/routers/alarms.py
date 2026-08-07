@@ -36,7 +36,13 @@ from homestead_twin.alarms.evaluator import (
     derive_reset,
 )
 from homestead_twin.alarms.notify import notification_detail
-from homestead_twin.api.deps import AppSettings, Bus, DbSession, OperatorPrincipal
+from homestead_twin.api.deps import (
+    AppSettings,
+    Bus,
+    DbSession,
+    MaintainerPrincipal,
+    OperatorPrincipal,
+)
 from homestead_twin.models.alarms import (
     ALARM_STATES,
     SEVERITIES,
@@ -536,7 +542,9 @@ def review_alarm(
 def reload_alarm_definitions(
     session: DbSession,
     settings: AppSettings,
-    principal: OperatorPrincipal,
+    # Reloading replaces safety-relevant trip thresholds, so this sits at the
+    # same level as POST /registry/reload rather than with operator actions.
+    principal: MaintainerPrincipal,
     strict: Annotated[
         bool, Query(description="Reject the reload if any point or asset does not resolve.")
     ] = True,

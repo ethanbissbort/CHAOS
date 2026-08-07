@@ -421,13 +421,20 @@ def test_notification_log_endpoint(client, raise_alarms):
     assert client.get("/api/v1/notifications?limit=1").json()["count"] == 1
 
 
-def test_definitions_reload_is_operator_only_and_idempotent(client, seeded, operator_headers):
+def test_definitions_reload_requires_maintainer_and_is_idempotent(
+    client, seeded, operator_headers, admin_headers
+):
     assert client.post("/api/v1/alarms/definitions/reload").status_code == 403
+    # Reloading replaces safety-relevant trip thresholds; an operator may
+    # acknowledge alarms but may not redefine them.
+    assert client.post(
+        "/api/v1/alarms/definitions/reload", headers=operator_headers
+    ).status_code == 403
 
-    response = client.post("/api/v1/alarms/definitions/reload", headers=operator_headers)
+    response = client.post("/api/v1/alarms/definitions/reload", headers=admin_headers)
     assert response.status_code == 200
     payload = response.json()
-    assert payload["reloaded_by"] == "test.operator"
+    assert payload["reloaded_by"] == "test.admin"
     assert payload["total"] == 40
     assert payload["created"] == []
     assert payload["updated"] == []
