@@ -35,7 +35,7 @@ FROM python:3.11-slim-bookworm AS runtime
 LABEL org.opencontainers.image.title="chaos" \
       org.opencontainers.image.description="Homestead Digital Twin and Master Control Platform" \
       org.opencontainers.image.licenses="Apache-2.0" \
-      org.opencontainers.image.source="https://github.com/ethanbissbort/chaos"
+      org.opencontainers.image.source="https://github.com/ethanbissbort/CHAOS"
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
