@@ -84,15 +84,15 @@ jobs:
       - name: Smoke-test the installed CLI
         run: |
           set -eux
-          homestead-twin --version
-          homestead-twin --help
-          homestead-twin validate
-          homestead-twin --database-url "sqlite:///$RUNNER_TEMP/ci.db" init-db
-          homestead-twin --database-url "sqlite:///$RUNNER_TEMP/ci.db" load-registry
-          homestead-twin --database-url "sqlite:///$RUNNER_TEMP/ci.db" status --json
-          homestead-twin --database-url "sqlite:///$RUNNER_TEMP/ci.db" export \
+          chaos --version
+          chaos --help
+          chaos validate
+          chaos --database-url "sqlite:///$RUNNER_TEMP/ci.db" init-db
+          chaos --database-url "sqlite:///$RUNNER_TEMP/ci.db" load-registry
+          chaos --database-url "sqlite:///$RUNNER_TEMP/ci.db" status --json
+          chaos --database-url "sqlite:///$RUNNER_TEMP/ci.db" export \
             --include registry --output "$RUNNER_TEMP/export.json"
-          homestead-twin --database-url "sqlite:///$RUNNER_TEMP/ci.db" backup \
+          chaos --database-url "sqlite:///$RUNNER_TEMP/ci.db" backup \
             --output "$RUNNER_TEMP/backup.tar.gz"
           test -s "$RUNNER_TEMP/export.json"
           tar tzf "$RUNNER_TEMP/backup.tar.gz" | grep -q '^manifest.json$'
@@ -100,7 +100,7 @@ jobs:
       - name: Fail on an unknown subcommand
         run: |
           set +e
-          homestead-twin definitely-not-a-command >/dev/null 2>&1
+          chaos definitely-not-a-command >/dev/null 2>&1
           rc=$?
           set -e
           test "$rc" -ne 0 || { echo "an unknown subcommand must exit non-zero"; exit 1; }
@@ -135,8 +135,8 @@ jobs:
           POSTGRES_USER=ci
           POSTGRES_PASSWORD=ci-placeholder
           POSTGRES_DB=homestead
-          HOMESTEAD_MQTT_USERNAME=ci-twin
-          HOMESTEAD_MQTT_PASSWORD=ci-placeholder
+          CHAOS_MQTT_USERNAME=ci-twin
+          CHAOS_MQTT_PASSWORD=ci-placeholder
           GRAFANA_ADMIN_PASSWORD=ci-placeholder
           SECONDARY_POSTGRES_PASSWORD=ci-placeholder-2
           SECONDARY_MQTT_USERNAME=ci-twin-secondary
@@ -224,7 +224,7 @@ jobs:
           file: deploy/Dockerfile
           push: false
           load: true
-          tags: homestead-twin:ci
+          tags: chaos:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -233,17 +233,17 @@ jobs:
       - name: Smoke-test the image
         run: |
           set -eux
-          docker run --rm homestead-twin:ci homestead-twin --version
-          docker run --rm homestead-twin:ci homestead-twin validate
-          docker run --rm homestead-twin:ci homestead-twin init-db
-          docker run --rm homestead-twin:ci homestead-twin status
+          docker run --rm chaos:ci chaos --version
+          docker run --rm chaos:ci chaos validate
+          docker run --rm chaos:ci chaos init-db
+          docker run --rm chaos:ci chaos status
           # Must run as a non-root user (SDD 15.2).
-          test "$(docker run --rm homestead-twin:ci id -u)" != "0"
+          test "$(docker run --rm chaos:ci id -u)" != "0"
 
       - name: Check the healthcheck responds
         run: |
           set -eux
-          docker run -d --name twin-ci -e HOMESTEAD_MQTT_ENABLED=false homestead-twin:ci
+          docker run -d --name twin-ci -e CHAOS_MQTT_ENABLED=false chaos:ci
           for i in $(seq 1 30); do
             status=$(docker inspect -f '{{.State.Health.Status}}' twin-ci 2>/dev/null || echo starting)
             [ "$status" = "healthy" ] && break

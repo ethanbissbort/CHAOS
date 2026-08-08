@@ -10,7 +10,7 @@ namespace Chaos.Host.Web;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Mirrors what <c>src/homestead_twin/api/app.py</c> does today: the assets are
+/// Mirrors what <c>src/chaos/api/app.py</c> does today: the assets are
 /// mounted at <c>/ui</c> and <c>/</c> serves <c>index.html</c>. The console
 /// resolves its own API root from the request path, so it works identically at
 /// <c>/</c> and <c>/ui/</c> without any rewriting here.

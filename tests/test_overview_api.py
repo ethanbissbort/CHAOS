@@ -12,7 +12,7 @@ import datetime as dt
 import pytest
 from sqlalchemy.orm import Session
 
-from homestead_twin.models import (
+from chaos.models import (
     Alarm,
     AlarmDefinition,
     Asset,
@@ -786,10 +786,10 @@ def test_interlocks_accept_the_command_services_record_shape(client, seeded, db_
 def test_overview_against_real_v03_registry(client, db_session):
     """The shipped v0.3 package: 90 planned assets, no coordinates, no telemetry."""
     pytest.importorskip(
-        "homestead_twin.registry.loader",
+        "chaos.registry.loader",
         reason="registry loader is built by another agent; skipped until present",
     )
-    from homestead_twin.registry.loader import load_package
+    from chaos.registry.loader import load_package
 
     load_package(db_session)
     db_session.commit()
@@ -819,8 +819,8 @@ def test_overview_survives_an_uninitialised_schema(tmp_path, settings):
     """
     from fastapi.testclient import TestClient
 
-    from homestead_twin.api.app import create_app
-    from homestead_twin.config import Settings
+    from chaos.api.app import create_app
+    from chaos.config import Settings
 
     empty = Settings(
         database_url=f"sqlite:///{tmp_path / 'no-schema.db'}",
@@ -870,7 +870,7 @@ def test_ui_has_no_external_network_references():
     """SDD 5.1: the operator UI must work with no internet at all."""
     import pathlib
 
-    web_dir = pathlib.Path(__file__).resolve().parents[1] / "src" / "homestead_twin" / "web"
+    web_dir = pathlib.Path(__file__).resolve().parents[1] / "src" / "chaos" / "web"
     files = [p for p in web_dir.rglob("*") if p.suffix in (".html", ".js", ".css")]
     assert files, "no web assets found"
     for path in files:

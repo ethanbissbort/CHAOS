@@ -14,11 +14,11 @@ import pytest
 from test_ems_shedding import ALL_LOADS, COMPUTE, CONTROL_CORE, SPA, WORKSHOP
 from test_ems_state_machine import HEALTHY_INPUTS, seed_current_state
 
-from homestead_twin.ems.loader import load_schedule
-from homestead_twin.ems.state_machine import ensure_snapshot
-from homestead_twin.models.base import utcnow
-from homestead_twin.models.energy import PowerBudgetLease
-from homestead_twin.models.registry import Asset
+from chaos.ems.loader import load_schedule
+from chaos.ems.state_machine import ensure_snapshot
+from chaos.models.base import utcnow
+from chaos.models.energy import PowerBudgetLease
+from chaos.models.registry import Asset
 
 
 @pytest.fixture()
@@ -62,7 +62,7 @@ def test_get_state_creates_and_returns_the_commissioning_default(client):
     body = response.json()
     assert body["state"] == "COMMISSIONING"
     assert body["latching"] is True
-    assert body["published_topic"] == "homestead/site/primary/site_01/energy_state"
+    assert body["published_topic"] == "chaos/site/primary/site_01/energy_state"
 
 
 def test_state_history_is_empty_then_records_operator_actions(client, operator_headers):
@@ -99,7 +99,7 @@ def test_freeze_is_bounded_and_published(client, operator_headers, bus, settings
     frozen_until = dt.datetime.fromisoformat(body["frozen_until"])
     assert (frozen_until - utcnow()).total_seconds() <= 3600 + 5
     assert "never suppresses EMERGENCY" in body["note"]
-    assert bus.last("homestead/site/primary/site_01/energy_state") is not None
+    assert bus.last("chaos/site/primary/site_01/energy_state") is not None
 
 
 def test_freeze_can_be_released(client, operator_headers):
@@ -184,11 +184,11 @@ def test_shed_actions_endpoint_is_empty_before_any_shedding(client, energy_db):
 
 
 def test_shed_actions_reflect_a_real_shed(client, energy_db, db_session, settings, bus):
-    from homestead_twin.ems import RecordingCommandPort
-    from homestead_twin.ems.config import EmsConfig
-    from homestead_twin.ems.derived import compute_derived
-    from homestead_twin.ems.inputs import gather_inputs
-    from homestead_twin.ems.shedding import ShedController
+    from chaos.ems import RecordingCommandPort
+    from chaos.ems.config import EmsConfig
+    from chaos.ems.derived import compute_derived
+    from chaos.ems.inputs import gather_inputs
+    from chaos.ems.shedding import ShedController
 
     config = EmsConfig()
     now = utcnow()
@@ -383,7 +383,7 @@ def test_dashboard_reports_data_quality_for_every_state_machine_value(client, en
 def test_dashboard_shows_impaired_observability(client, energy_db, db_session):
     from test_ems_state_machine import write_point
 
-    from homestead_twin.ems.inputs import SPEC_BY_KEY
+    from chaos.ems.inputs import SPEC_BY_KEY
 
     write_point(
         db_session,
@@ -412,11 +412,11 @@ def test_dashboard_lists_generator_leases_and_container(client, energy_db, db_se
 
 
 def test_dashboard_shows_shed_and_restoration_context(client, energy_db, db_session, settings, bus):
-    from homestead_twin.ems import RecordingCommandPort
-    from homestead_twin.ems.config import EmsConfig
-    from homestead_twin.ems.derived import compute_derived
-    from homestead_twin.ems.inputs import gather_inputs
-    from homestead_twin.ems.shedding import ShedController
+    from chaos.ems import RecordingCommandPort
+    from chaos.ems.config import EmsConfig
+    from chaos.ems.derived import compute_derived
+    from chaos.ems.inputs import gather_inputs
+    from chaos.ems.shedding import ShedController
 
     config = EmsConfig()
     now = utcnow()
@@ -446,8 +446,8 @@ def test_dashboard_is_readable_without_an_operator_header(client, energy_db):
 
 
 def test_service_tick_publishes_state_and_budgets(session_factory, bus, settings, energy_db, db_session):
-    from homestead_twin.ems import RecordingCommandPort
-    from homestead_twin.ems.service import EnergyManagerService
+    from chaos.ems import RecordingCommandPort
+    from chaos.ems.service import EnergyManagerService
 
     set_state(db_session, "NORMAL")
     service = EnergyManagerService(
@@ -457,22 +457,22 @@ def test_service_tick_publishes_state_and_budgets(session_factory, bus, settings
         command_port=RecordingCommandPort(),
     )
     assert service.name == "ems"
-    assert service.state_topic == "homestead/site/primary/site_01/energy_state"
+    assert service.state_topic == "chaos/site/primary/site_01/energy_state"
 
     result = service.tick(utcnow())
     assert result.state == "NORMAL"
     assert result.published_topic == service.state_topic
     assert bus.last(service.state_topic) is not None
     # A load budget is published per load (SDD 13: state plus load budget).
-    assert bus.last("homestead/energy/site/load_spa_01/power_budget_kw") is not None
+    assert bus.last("chaos/energy/site/load_spa_01/power_budget_kw") is not None
 
 
 def test_snapshot_derived_blob_is_readable_by_other_subsystems(
     session_factory, bus, settings, energy_db, db_session, client
 ):
     """The overview roll-up reads flat scalars; the EMS keeps the provenance."""
-    from homestead_twin.ems import RecordingCommandPort
-    from homestead_twin.ems.service import EnergyManagerService
+    from chaos.ems import RecordingCommandPort
+    from chaos.ems.service import EnergyManagerService
 
     set_state(db_session, "NORMAL")
     EnergyManagerService(
@@ -493,7 +493,7 @@ def test_snapshot_derived_blob_is_readable_by_other_subsystems(
 
 
 def test_service_tick_is_a_no_op_when_disabled(session_factory, bus, settings, energy_db):
-    from homestead_twin.ems.service import EnergyManagerService
+    from chaos.ems.service import EnergyManagerService
 
     service = EnergyManagerService(session_factory, bus, settings)  # ems_enabled False
     result = service.tick(utcnow())

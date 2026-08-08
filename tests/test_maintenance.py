@@ -6,11 +6,11 @@ import datetime as dt
 
 import pytest
 
-from homestead_twin.maintenance import commissioning, scheduler
-from homestead_twin.models.alarms import Alarm, AlarmDefinition
-from homestead_twin.models.maintenance import Inspection, MaintenancePlan, SparePart, WorkOrder
-from homestead_twin.models.registry import Asset, AssetClass, Point, PointBinding, PointDefinition
-from homestead_twin.models.telemetry import CurrentState
+from chaos.maintenance import commissioning, scheduler
+from chaos.models.alarms import Alarm, AlarmDefinition
+from chaos.models.maintenance import Inspection, MaintenancePlan, SparePart, WorkOrder
+from chaos.models.registry import Asset, AssetClass, Point, PointBinding, PointDefinition
+from chaos.models.telemetry import CurrentState
 
 NOW = dt.datetime(2026, 8, 7, 12, 0, tzinfo=dt.UTC)
 

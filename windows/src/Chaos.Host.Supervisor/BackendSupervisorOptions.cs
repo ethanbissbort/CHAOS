@@ -24,7 +24,7 @@ public sealed class BackendSupervisorOptions
 
     /// <summary>
     /// Repository root for the DEVELOPMENT layout — the directory holding
-    /// <c>src/homestead_twin/cli.py</c>. When null the resolver walks up from
+    /// <c>src/chaos/cli.py</c>. When null the resolver walks up from
     /// <see cref="InstallRoot"/> looking for it.
     /// </summary>
     public string? RepositoryRoot { get; set; }
@@ -68,10 +68,10 @@ public sealed class BackendSupervisorOptions
     /// <summary>Value for the CLI's global <c>--log-level</c> flag.</summary>
     public string LogLevel { get; set; } = "INFO";
 
-    /// <summary>Sets <c>HOMESTEAD_DATABASE_URL</c> when non-null.</summary>
+    /// <summary>Sets <c>CHAOS_DATABASE_URL</c> when non-null.</summary>
     public string? DatabaseUrl { get; set; }
 
-    /// <summary>Sets <c>HOMESTEAD_DATA_DIR</c> when non-null.</summary>
+    /// <summary>Sets <c>CHAOS_DATA_DIR</c> when non-null.</summary>
     public string? DataDirectory { get; set; }
 
     /// <summary>

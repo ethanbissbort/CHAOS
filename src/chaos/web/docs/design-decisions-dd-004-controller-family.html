@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<meta name="generator" content="tools/build_docs.py">
+<title>DD-004: Standard PLC / controller family for critical local control — Project CHAOS help</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http%3A//www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230e1a16'/%3E%3Cpath d='M6 18 16 8l10 10v8H6z' fill='none' stroke='%234ade80' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/docs.css">
+<noscript><style>.doc-page[hidden]{display:block!important}.site-searchbtn{display:none}</style></noscript>
+</head>
+<body data-page="design-decisions-dd-004-controller-family">
+<a class="skip-link" href="#content">Skip to the documentation</a>
+<header class="site-topbar">
+<button type="button" class="btn btn-icon site-navtoggle" id="nav-toggle" aria-controls="site-nav" aria-expanded="false" title="Documents"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span class="visually-hidden">Show the document list</span></button>
+<a class="site-identity" href="index.html"><span class="site-mark"><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M5 19 16 8l11 11v7H5z"/></svg></span><span class="site-titles"><h1>Project CHAOS help</h1><p>Central Homestead Automation and Operation System</p></span></a>
+<button type="button" class="site-searchbtn" id="search-open"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.3-4.3"/></svg><span>Search the documentation</span><span class="kbd-hint">/</span></button>
+<div class="site-tools">
+<button type="button" class="btn btn-sm" id="theme-toggle"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4"/></svg><span class="theme-label">System</span></button>
+<button type="button" class="btn btn-icon" id="print-page" onclick="window.print()" title="Print this page"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M7 9V4h10v5M7 18H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2"/><rect x="7" y="14" width="10" height="6" rx="1"/></svg><span class="visually-hidden">Print this page</span></button>
+</div>
+</header>
+<div class="site-shell">
+<nav class="site-nav" id="site-nav" aria-label="Documents"><h2>Overview</h2><ul><li><a href="index.html" data-page="index"><span class="nav-num">01</span><span>Project CHAOS documentation</span></a></li><li><a href="readme.html" data-page="readme"><span class="nav-num">02</span><span>Project CHAOS</span></a></li></ul><h2>Using CHAOS</h2><ul><li><a href="getting-started.html" data-page="getting-started"><span class="nav-num">03</span><span>Getting started</span></a></li><li><a href="visual-studio.html" data-page="visual-studio"><span class="nav-num">04</span><span>Building in Visual Studio 2026</span></a></li><li><a href="desktop-shell.html" data-page="desktop-shell"><span class="nav-num">05</span><span>The desktop shell</span></a></li><li><a href="operator-console.html" data-page="operator-console"><span class="nav-num">06</span><span>The operator console</span></a></li><li><a href="annunciator.html" data-page="annunciator"><span class="nav-num">07</span><span>The annunciator panel</span></a></li><li><a href="topology-view.html" data-page="topology-view"><span class="nav-num">08</span><span>Topology and blast radius</span></a></li><li><a href="rack-view.html" data-page="rack-view"><span class="nav-num">09</span><span>Rack elevation</span></a></li></ul><h2>How the platform works</h2><ul><li><a href="architecture.html" data-page="architecture"><span class="nav-num">10</span><span>Architecture</span></a></li><li><a href="alarms.html" data-page="alarms"><span class="nav-num">11</span><span>Alarms, incidents and notification</span></a></li><li><a href="control.html" data-page="control"><span class="nav-num">12</span><span>Control, interlocks and operating modes</span></a></li><li><a href="design-package.html" data-page="design-package"><span class="nav-num">13</span><span>The design package</span></a></li><li><a href="integration-findings.html" data-page="integration-findings"><span class="nav-num">14</span><span>Integration findings</span></a></li></ul><h2>Operating the property</h2><ul><li><a href="operations.html" data-page="operations"><span class="nav-num">15</span><span>Operations runbooks</span></a></li><li><a href="troubleshooting.html" data-page="troubleshooting"><span class="nav-num">16</span><span>Troubleshooting</span></a></li><li><a href="commissioning.html" data-page="commissioning"><span class="nav-num">17</span><span>Commissioning</span></a></li><li><a href="secondary-control-node.html" data-page="secondary-control-node"><span class="nav-num">18</span><span>Secondary control node</span></a></li><li><a href="network-and-trust-boundaries.html" data-page="network-and-trust-boundaries"><span class="nav-num">19</span><span>Network and trust boundaries</span></a></li><li><a href="water-control-narrative.html" data-page="water-control-narrative"><span class="nav-num">20</span><span>Water-system control narrative</span></a></li></ul><h2>Reference</h2><ul><li><a href="api.html" data-page="api"><span class="nav-num">21</span><span>API reference</span></a></li><li><a href="design-decisions.html" data-page="design-decisions"><span class="nav-num">22</span><span>Design Decision Records</span></a></li></ul><h2>Advanced — you do not need these</h2><ul><li><a href="advanced-command-line.html" data-page="advanced-command-line"><span class="nav-num">23</span><span>Command line</span></a></li><li><a href="advanced-container-deployment.html" data-page="advanced-container-deployment"><span class="nav-num">24</span><span>Container deployment</span></a></li><li><a href="advanced-windows-packaging.html" data-page="advanced-windows-packaging"><span class="nav-num">25</span><span>Windows packaging</span></a></li></ul><h2>Design Decisions</h2><ul><li><a href="design-decisions-dd-001-energy-capacity-revision.html" data-page="design-decisions-dd-001-energy-capacity-revision"><span class="nav-num">26</span><span>DD-001: Authoritative energy design revision</span></a></li><li><a href="design-decisions-dd-002-historian-selection.html" data-page="design-decisions-dd-002-historian-selection"><span class="nav-num">27</span><span>DD-002: Time-series historian selection</span></a></li><li><a href="design-decisions-dd-003-secondary-control-node-placement.html" data-page="design-decisions-dd-003-secondary-control-node-placement"><span class="nav-num">28</span><span>DD-003: Secondary control node placement</span></a></li><li><a href="design-decisions-dd-004-controller-family.html" data-page="design-decisions-dd-004-controller-family" aria-current="page"><span class="nav-num">29</span><span>DD-004: Standard PLC / controller family for critical local control</span></a></li></ul></nav>
+<main class="site-main" id="content" tabindex="-1">
+<article class="doc-page" id="design-decisions-dd-004-controller-family" data-page="design-decisions-dd-004-controller-family"><p class="doc-breadcrumb"><span>Design Decisions</span><span>DD-004: Standard PLC / controller family for critical local control</span></p><p class="doc-source">docs/design-decisions/DD-004-controller-family.md</p><div class="doc-body"><h1 id="dd-004-standard-plc--controller-family-for-critical-local-control" class="doc-h"><span class="doc-h-text">DD-004: Standard PLC / controller family for critical local control</span><a class="doc-anchor" href="#dd-004-standard-plc--controller-family-for-critical-local-control" aria-label="Link to this section"></a></h1>
+<p><strong>Status:</strong> proposed — awaiting owner ratification
+<strong>Date raised:</strong> 2026-08-07
+<strong>Decision owner:</strong> homestead owner
+<strong>SDD reference:</strong> §5.2, §5.3, §16.1, §22 item 5, §30.4; FR-203, FR-402, FR-601, FR-702, FR-703
+<strong>Blocks:</strong> every local control loop — water and freeze protection, irrigation, greenhouse, compost, nitrogen storage, spa; the <code>controller</code> asset class's <code>platform_status</code> field on every controller in the register and the water extension</p>
+<hr>
+<h2 id="context" class="doc-h"><span class="doc-h-text">Context</span><a class="doc-anchor" href="#context" aria-label="Link to this section"></a></h2>
+<p>SDD §22 item 5 asks for "the standard PLC/controller family for critical local control". This is not a
+purchasing detail. The architecture's central claim (§5.2, §5.3, §24) is that the homestead is a layered
+operational-technology system: hardwired protection at the bottom, <strong>autonomous local control above it</strong>, a message
+bus and asset model in the middle, and dashboards and optimisation at the top. The local control layer is the one
+that keeps the property alive when the middle and top are gone.</p>
+<h3 id="how-much-depends-on-it" class="doc-h"><span class="doc-h-text">How much depends on it</span><a class="doc-anchor" href="#how-much-depends-on-it" aria-label="Link to this section"></a></h3>
+<p>The design document assigns real safety-adjacent authority to local controllers:</p>
+<ul><li><strong>FR-203</strong> — pump inhibits on dry run, low source level, freeze lockout, overcurrent and unavailable discharge
+path. The water control narrative states these are enforced locally, not in the platform.</li><li><strong>FR-402</strong> — greenhouse freeze protection "independent of the central server".</li><li><strong>FR-601</strong> — nitrogen purge suspended when access doors are open. This one is a life-safety interlock: the
+storage containers are oxygen-displaced.</li><li><strong>FR-702 / FR-703</strong> — spa heater blocked without proven flow; pump blocked below minimum reservoir level.</li><li><strong>§30.4</strong> — "Fast motor interlocks: Local PLC/controller" owns them; the EMS only publishes permissives and
+budgets.</li><li><strong>§16.1</strong> — "Local controllers continue safe subsystem operation without the server rack."</li></ul>
+<h3 id="what-the-register-says-today" class="doc-h"><span class="doc-h-text">What the register says today</span><a class="doc-anchor" href="#what-the-register-says-today" aria-label="Link to this section"></a></h3>
+<p>The <code>controller</code> asset class exists (<code>dictionary_status: reconciled_v0_3</code>, source §9.2) with required properties
+<code>controller_role</code> and <code>platform_status</code>. The water extension adds three controllers —
+<code>water.controller.water_system.01</code>, <code>water.controller.freeze_protection.01</code>,
+<code>water.controller.irrigation.01</code> — each with <code>platform_status: TBD</code>, each with
+<code>must_operate_without_central_server: true</code>, and each carrying <code>controller_platform</code> in its open fields. Every
+future subsystem will add more.</p>
+<h3 id="why-standardising-matters-more-than-the-specific-choice" class="doc-h"><span class="doc-h-text">Why standardising matters more than the specific choice</span><a class="doc-anchor" href="#why-standardising-matters-more-than-the-specific-choice" aria-label="Link to this section"></a></h3>
+<p>One operator, twenty-plus years, a dozen subsystems. Every distinct controller family means another programming
+tool, another firmware lifecycle, another spares holding, another set of wiring conventions, another way to be
+locked out of your own equipment at 3 a.m. in February. §18 already requires maintenance, spares and calibration
+tracking; §5.6 requires versioned configuration. Both get much harder per additional family.</p>
+<p>The decision is therefore mostly about <strong>repairability over decades</strong>, and only secondly about capability.</p>
+<hr>
+<h2 id="options" class="doc-h"><span class="doc-h-text">Options</span><a class="doc-anchor" href="#options" aria-label="Link to this section"></a></h2>
+<h3 id="option-1--industrial-plc-family-compact-industrial-line-from-one-established-vendor" class="doc-h"><span class="doc-h-text">Option 1 — Industrial PLC family (compact industrial line from one established vendor)</span><a class="doc-anchor" href="#option-1--industrial-plc-family-compact-industrial-line-from-one-established-vendor" aria-label="Link to this section"></a></h3>
+<p><strong>For</strong></p>
+<ul><li>Designed for exactly this: DIN rail, 24 VDC, wide temperature range, deterministic scan, decades of service life.</li><li>Native Modbus TCP/RTU, which is what the inverters, BMS and most process instruments will speak, and which the
+point-binding model already anticipates.</li><li>Long product lifecycles and long spare availability. A ten-year-old industrial PLC is still buyable; a ten-year-
+old hobby board is not.</li><li>Safety-rated variants exist for the interlocks that genuinely need them (FR-601 in particular).</li><li>Configuration is a file that can be versioned and restored, satisfying §5.6 and FR-805.</li></ul>
+<p><strong>Against</strong></p>
+<ul><li>Highest hardware cost per I/O point, by a large margin.</li><li>Vendor programming environments are often proprietary, Windows-only, licensed and sometimes expensive. That is a
+direct threat to the §4.1 repairability goal: a controller you cannot reprogram because the licence lapsed is
+worse than one that was cheaper.</li><li>Steeper learning curve, especially for an owner coming from a software rather than a controls background.</li><li>Some ecosystems make the toolchain a per-seat commercial dependency, which sits badly with the local-first,
+independence-oriented design philosophy.</li></ul>
+<h3 id="option-2--open-standard-programmable-controller-iec-61131-3-on-open-hardware-or-an-open-runtime" class="doc-h"><span class="doc-h-text">Option 2 — Open-standard programmable controller (IEC 61131-3 on open hardware, or an open runtime)</span><a class="doc-anchor" href="#option-2--open-standard-programmable-controller-iec-61131-3-on-open-hardware-or-an-open-runtime" aria-label="Link to this section"></a></h3>
+<p><strong>For</strong></p>
+<ul><li>Standardised programming languages (ladder, structured text, function block) that are not tied to one vendor, so
+logic is portable if the hardware line is discontinued.</li><li>Industrial form factors and I/O modules are available without a proprietary toolchain.</li><li>Typically lower cost than Option 1 while keeping DIN-rail and 24 VDC conventions.</li><li>Open toolchains have no licence expiry, which matters over a twenty-year horizon more than it seems today.</li></ul>
+<p><strong>Against</strong></p>
+<ul><li>Smaller ecosystems, so hardware availability and long-term support are less certain than Option 1's.</li><li>Safety-rated options are rarer; a genuinely safety-rated interlock may still need a separate device.</li><li>More integration work: the owner assembles a stack rather than buying one.</li><li>Community support rather than vendor support when something is broken at 3 a.m.</li></ul>
+<h3 id="option-3--industrial-grade-embedded-linux-controllers-edge-controllers-industrial-single-board-computers" class="doc-h"><span class="doc-h-text">Option 3 — Industrial-grade embedded Linux controllers (edge controllers, industrial single-board computers)</span><a class="doc-anchor" href="#option-3--industrial-grade-embedded-linux-controllers-edge-controllers-industrial-single-board-computers" aria-label="Link to this section"></a></h3>
+<p><strong>For</strong></p>
+<ul><li>Same operating system, same language and same tooling as the rest of the platform, so there is one skill set
+rather than two. On a one-operator site this is a serious advantage.</li><li>Excellent protocol flexibility: MQTT, Modbus, HTTP, LoRa and one-off vendor protocols all live comfortably in the
+same runtime.</li><li>Cheap, easy to replicate, easy to image and restore, easy to version in the same repository as everything else.</li><li>Fits the existing platform's deployment and configuration-management approach with no new machinery.</li></ul>
+<p><strong>Against</strong></p>
+<ul><li><strong>A general-purpose OS is not a deterministic control platform.</strong> Filesystem corruption on power loss, unattended
+updates, kernel panics, memory pressure and multi-second scheduling jitter are all ordinary Linux behaviours and
+all unacceptable for an interlock.</li><li>Weaker environmental tolerance unless specifically industrial hardware is chosen, and SD-card-based storage fails
+in ways that are hard to detect until they matter.</li><li>Using this class of device for FR-601 oxygen-displacement interlocks would be an error. That interlock protects a
+person entering a low-oxygen container.</li><li>Long-term hardware availability is much worse than Option 1's.</li></ul>
+<h3 id="option-4--tiered-hardwired-safety-industrial-plcs-for-critical-process-linux-edge-controllers-for-the-rest" class="doc-h"><span class="doc-h-text">Option 4 — Tiered: hardwired safety, industrial PLCs for critical process, Linux edge controllers for the rest</span><a class="doc-anchor" href="#option-4--tiered-hardwired-safety-industrial-plcs-for-critical-process-linux-edge-controllers-for-the-rest" aria-label="Link to this section"></a></h3>
+<p>Three explicit tiers with a stated rule for which tier a function belongs to.</p>
+<p><strong>For</strong></p>
+<ul><li>Matches the architecture the design document already describes (§5.3, §5.5, §24, §30.4): hardwired protection,
+then autonomous local control, then supervisory.</li><li>Puts cost where risk is: a life-safety interlock gets a rated device, a compost blower does not.</li><li>Keeps the number of <em>critical</em> control families to one, while allowing cheap flexible hardware everywhere the
+failure consequence is an inconvenience.</li><li>Directly answers §5.5's "fail safe and fail understandable": the tier boundary tells an operator what fails
+gracefully and what does not.</li></ul>
+<p><strong>Against</strong></p>
+<ul><li>Two toolchains and two spares holdings, which is exactly what standardising was meant to avoid.</li><li>Requires a written and enforced tier-assignment rule, or everything drifts into the cheap tier over time. That
+drift is the real risk, and it is a governance problem, not a technical one.</li><li>More design work up front: every control function must be classified before it is built.</li></ul>
+<hr>
+<h2 id="recommendation" class="doc-h"><span class="doc-h-text">Recommendation</span><a class="doc-anchor" href="#recommendation" aria-label="Link to this section"></a></h2>
+<p><strong>Option 4 — a tiered standard, with exactly one industrial PLC family chosen for the critical tier.</strong></p>
+<p>Reasoning:</p>
+<ol><li><p><strong>The design document already specifies a tiered architecture; this decision should implement it, not flatten
+it.</strong> §5.3 explicitly warns against fragile central control and §30.4 assigns fast interlocks to local
+controllers while keeping equipment-native protection sovereign. Forcing every control function into one
+technology contradicts a design whose central idea is that different layers have different failure obligations.</p></li><li><p><strong>The tier boundary should be drawn by consequence of failure, not by subsystem.</strong> Proposed rule:</p>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Tier</th><th scope="col">Rule</th><th scope="col">Technology</th><th scope="col">Examples</th></tr></thead><tbody><tr><td>0</td><td>Failure can injure a person or destroy plant, and must work with all software dead</td><td>Hardwired / safety-rated device</td><td>Nitrogen container entry interlock (FR-601), emergency stop, spa heater flow proof (FR-702), high-limit thermostats</td></tr><tr><td>1</td><td>Failure causes unrecoverable or expensive damage, or loss of an essential service</td><td>One industrial PLC family</td><td>Pump interlocks (FR-203), freeze protection and winter drainage (FR-204), greenhouse freeze protection (FR-402), battery-zone environmental protection</td></tr><tr><td>2</td><td>Failure is an inconvenience recoverable by a human within hours</td><td>Linux edge controllers</td><td>Irrigation scheduling, compost aeration, mower coordination, environmental monitoring, LoRa field gateways</td></tr></tbody></table></div></li><li><p><strong>One family in tier 1, chosen for toolchain longevity over feature set.</strong> The selection criterion should be
+"can I still program this in fifteen years without a licence server", not "which has the best IDE today". That
+argues for a vendor with a free or perpetually-licensed toolchain, or for the Option 2 open-standard route
+<em>within</em> tier 1. Either is acceptable; two different tier-1 families are not.</p></li><li><p><strong>Tier 2 is where the platform's existing skills pay off.</strong> Irrigation scheduling and compost aeration in the
+same language and deployment pipeline as the rest of the platform is a genuine productivity win, and their
+failure mode is a dry zone or a cool pile — recoverable, visible, and not dangerous.</p></li><li><p><strong>Write the tier rule down and enforce it at review.</strong> The failure mode of Option 4 is drift: everything
+gradually lands in tier 2 because tier 2 is easier. The counter is that the <code>controller</code> asset class already
+requires a <code>controller_role</code> property; add a required <code>control_tier</code> property so a tier-1 function cannot be
+implemented on tier-2 hardware without the register showing it.</p></li></ol>
+<p><strong>One thing this record should not defer:</strong> FR-601 oxygen-displacement entry interlocking is a life-safety
+function. It belongs in tier 0 on a rated device regardless of how DD-004 is otherwise resolved, and it should not
+wait for this decision.</p>
+<hr>
+<h2 id="consequences" class="doc-h"><span class="doc-h-text">Consequences</span><a class="doc-anchor" href="#consequences" aria-label="Link to this section"></a></h2>
+<h3 id="if-accepted" class="doc-h"><span class="doc-h-text">If accepted</span><a class="doc-anchor" href="#if-accepted" aria-label="Link to this section"></a></h3>
+<ul><li>The <code>controller</code> asset class needs a <code>control_tier</code> required property, and every existing controller record needs
+a tier assigned. This is a change to <code>data/asset_class_dictionary.yaml</code>, which is a v0.3 baseline document and
+therefore itself needs a versioned revision.</li><li>The three water controllers get tiers: <code>water.controller.water_system.01</code> and
+<code>water.controller.freeze_protection.01</code> in tier 1, <code>water.controller.irrigation.01</code> in tier 2.</li><li>Spares policy splits: tier-1 spares are held on site (they are already flagged by <code>spares_policy_required</code> in
+<code>data/asset_lifecycle.yaml</code> for every critical asset); tier-2 spares can be next-day.</li><li>Configuration backup (FR-805) must cover both toolchains, and the tier-1 backup must be restorable without
+network access.</li><li>Commissioning (§19) must test each tier's independence separately: tier 1 with the platform stopped, tier 0 with
+everything stopped.</li><li>The point-binding model already separates identity from vendor binding, so a tier-1 controller can be replaced
+without disturbing any <code>asset_id</code> or <code>point_name</code>. That protection only holds if the binding discipline is kept.</li></ul>
+<h3 id="if-a-single-family-is-chosen-instead-options-1-2-or-3-alone" class="doc-h"><span class="doc-h-text">If a single family is chosen instead (Options 1, 2 or 3 alone)</span><a class="doc-anchor" href="#if-a-single-family-is-chosen-instead-options-1-2-or-3-alone" aria-label="Link to this section"></a></h3>
+<ul><li>One toolchain and one spares holding, which is simpler to operate.</li><li>Option 1 alone means paying industrial prices for compost blower control, which will create pressure to
+improvise, and improvisation outside the standard is worse than a planned second tier.</li><li>Option 3 alone means an oxygen-displacement interlock on a general-purpose operating system. That should not
+happen.</li></ul>
+<h3 id="common-to-every-option" class="doc-h"><span class="doc-h-text">Common to every option</span><a class="doc-anchor" href="#common-to-every-option" aria-label="Link to this section"></a></h3>
+<p>The specific vendor and model remain open. DD-004 recommends a <em>structure</em>, not a product. The
+<code>controller_platform</code> open field stays open on every controller asset until a family is named.</p>
+<hr>
+<h2 id="what-would-settle-this" class="doc-h"><span class="doc-h-text">What would settle this</span><a class="doc-anchor" href="#what-would-settle-this" aria-label="Link to this section"></a></h2>
+<ol><li><strong>Classify every known control function into tiers 0, 1 and 2.</strong> The water narrative already lists its
+interlocks; do the same for greenhouse, nitrogen storage, spa and compost. Count the tier-1 I/O points. If tier
+1 turns out to be small, a single premium family is affordable and Option 1 becomes attractive on its own.</li><li><strong>Establish the owner's controls background.</strong> Someone comfortable with ladder logic and someone comfortable
+only with Python will maintain these systems very differently, and the maintainable choice beats the elegant one.</li><li><strong>Test the toolchain licensing terms before buying anything.</strong> Download the programming environment for each
+candidate, confirm it runs offline, confirm it does not expire and confirm a configuration can be exported to a
+plain file and restored to a replacement unit. A controller that cannot be restored offline fails §5.1.</li><li><strong>Confirm Modbus and protocol coverage</strong> against the actual instrument list once DD-001 settles inverter and BMS
+selection, since those are the highest-value integrations.</li><li><strong>Get a code and insurance opinion on the tier-0 functions</strong>, specifically the nitrogen-displacement entry
+interlock. That answer may be prescriptive, and if so it decides tier 0 without further debate.</li><li><strong>Price a fifteen-year spares holding</strong> for each candidate tier-1 family. Long-term parts availability is the
+criterion most likely to be decisive and least likely to be checked.</li></ol>
+<hr>
+<h2 id="related-records" class="doc-h"><span class="doc-h-text">Related records</span><a class="doc-anchor" href="#related-records" aria-label="Link to this section"></a></h2>
+<ul><li><a href="design-decisions-dd-003-secondary-control-node-placement.html">DD-003</a> — local controllers are the other half of the §16.1
+common-mode mitigation, and matter more than the secondary node when the container is lost.</li><li><a href="design-decisions-dd-001-energy-capacity-revision.html">DD-001</a> — inverter and BMS selection determines the protocols tier 1 must
+speak.</li><li>SDD §22 item 8 — which system owns scheduling when Home Assistant, Node-RED and subsystem controllers overlap.
+That question is downstream of the tier rule proposed here.</li><li><code>docs/water-control-narrative.md</code> §2 and §6 — the first concrete set of tier-1 interlocks.</li></ul></div><nav class="doc-pager" aria-label="Reading order"><a class="pager-prev" href="design-decisions-dd-003-secondary-control-node-placement.html" data-page="design-decisions-dd-003-secondary-control-node-placement"><span class="pager-role">Previous</span>DD-003: Secondary control node placement</a></nav></article>
+</main>
+<aside class="site-toc" aria-label="On this page"><h2>On this page</h2><ul><li data-level="2"><a href="#context" data-anchor="context">Context</a></li><li data-level="3"><a href="#how-much-depends-on-it" data-anchor="how-much-depends-on-it">How much depends on it</a></li><li data-level="3"><a href="#what-the-register-says-today" data-anchor="what-the-register-says-today">What the register says today</a></li><li data-level="3"><a href="#why-standardising-matters-more-than-the-specific-choice" data-anchor="why-standardising-matters-more-than-the-specific-choice">Why standardising matters more than the specific choice</a></li><li data-level="2"><a href="#options" data-anchor="options">Options</a></li><li data-level="3"><a href="#option-1--industrial-plc-family-compact-industrial-line-from-one-established-vendor" data-anchor="option-1--industrial-plc-family-compact-industrial-line-from-one-established-vendor">Option 1 — Industrial PLC family (compact industrial line from one established vendor)</a></li><li data-level="3"><a href="#option-2--open-standard-programmable-controller-iec-61131-3-on-open-hardware-or-an-open-runtime" data-anchor="option-2--open-standard-programmable-controller-iec-61131-3-on-open-hardware-or-an-open-runtime">Option 2 — Open-standard programmable controller (IEC 61131-3 on open hardware, or an open runtime)</a></li><li data-level="3"><a href="#option-3--industrial-grade-embedded-linux-controllers-edge-controllers-industrial-single-board-computers" data-anchor="option-3--industrial-grade-embedded-linux-controllers-edge-controllers-industrial-single-board-computers">Option 3 — Industrial-grade embedded Linux controllers (edge controllers, industrial single-board computers)</a></li><li data-level="3"><a href="#option-4--tiered-hardwired-safety-industrial-plcs-for-critical-process-linux-edge-controllers-for-the-rest" data-anchor="option-4--tiered-hardwired-safety-industrial-plcs-for-critical-process-linux-edge-controllers-for-the-rest">Option 4 — Tiered: hardwired safety, industrial PLCs for critical process, Linux edge controllers for the rest</a></li><li data-level="2"><a href="#recommendation" data-anchor="recommendation">Recommendation</a></li><li data-level="2"><a href="#consequences" data-anchor="consequences">Consequences</a></li><li data-level="3"><a href="#if-accepted" data-anchor="if-accepted">If accepted</a></li><li data-level="3"><a href="#if-a-single-family-is-chosen-instead-options-1-2-or-3-alone" data-anchor="if-a-single-family-is-chosen-instead-options-1-2-or-3-alone">If a single family is chosen instead (Options 1, 2 or 3 alone)</a></li><li data-level="3"><a href="#common-to-every-option" data-anchor="common-to-every-option">Common to every option</a></li><li data-level="2"><a href="#what-would-settle-this" data-anchor="what-would-settle-this">What would settle this</a></li><li data-level="2"><a href="#related-records" data-anchor="related-records">Related records</a></li></ul></aside>
+</div>
+<div class="site-search" id="search-overlay" hidden role="dialog" aria-modal="true" aria-label="Search the documentation">
+<div class="site-search-panel">
+<div class="site-search-head">
+<svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.3-4.3"/></svg>
+<input type="search" id="search-input" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="true" aria-controls="search-results" placeholder="Search every page — try black start, dead letter, interlock">
+<button type="button" class="btn btn-sm" id="search-close">Close</button>
+</div>
+<p class="site-search-status" id="search-status" role="status">Type to search every page of this help set.</p>
+<ul class="site-results" id="search-results" role="listbox" aria-label="Search results"></ul>
+<div class="site-search-foot"><span><span class="kbd-hint">&#8593;</span> <span class="kbd-hint">&#8595;</span> move</span><span><span class="kbd-hint">Enter</span> open</span><span><span class="kbd-hint">Esc</span> close</span><span><span class="kbd-hint">/</span> search from anywhere</span></div>
+</div>
+</div>
+<script src="assets/search-index.js"></script>
+<script src="assets/docs.js"></script>
+</body>
+</html>

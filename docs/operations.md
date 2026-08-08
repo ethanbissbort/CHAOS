@@ -1,101 +1,121 @@
 # Operations runbooks
 
-Procedures for running the platform. Each runbook states what it assumes, what to
-do, and what it does **not** cover.
+Procedures for running the property. Each runbook states what it assumes, what
+to do, and what it does **not** cover.
 
-Read this first: **the platform is a supervisor, not a protection system.** If a
-runbook here conflicts with what the equipment in front of you is telling you,
-the equipment wins. Level 0 protection — breakers, relief valves, float switches,
-high-limit thermostats, emergency stops — is not something software gets a vote
-on (SDD sections 5.5, 6).
+These are organised by **event**. If you are staring at a symptom and want to
+know what is wrong, go to [Troubleshooting](./troubleshooting.md) instead.
+
+---
+
+## Read this first
+
+**The platform is a supervisor, not a protection system.** If a runbook here
+conflicts with what the equipment in front of you is telling you, the equipment
+wins. Level 0 protection — breakers, relief valves, float switches, high-limit
+thermostats, emergency stops — is not something software gets a vote on.
+
+**Nothing in this repository has ever been connected to real plant.** Every
+runbook below has been exercised against the simulator and the in-memory bus.
+None has been exercised against real equipment, because no part of this platform
+has. That changes one subsystem at a time as
+[commissioning](./commissioning.md) proceeds.
 
 ---
 
 ## 0. Daily and weekly
 
-**Daily (2 minutes)**
+### Daily — two minutes, on the console's Home screen
 
-```sh
-homestead-twin status
-```
+Look at four things:
 
-Look at four things: active alarms, `ingest_dead_letters`, the EMS state and its
-evaluation age, and the count of stale points on the platform dashboard. A
-dead-letter count that grows every day is a binding that was never commissioned
-properly, not noise.
+| Look at | Bad sign |
+|---|---|
+| Active alarms | Anything critical or major that nobody has acknowledged |
+| The dead-letter count | A count that **grows every day**. That is a binding that was never commissioned properly, not noise |
+| The energy state and how old its evaluation is | A state derived from stale inputs. The screen shows the data quality alongside the state precisely so this is visible |
+| The stale-point count | Points the platform admits it cannot see |
 
-**Weekly**
+The freshness indicator in the top-right tells you whether what you are reading
+is live at all. If the *API unreachable* banner is showing, you are looking at a
+snapshot — see [Troubleshooting § The console has no data](./troubleshooting.md#6-the-console-loads-but-has-no-data).
 
-- Confirm the nightly backup ran: `ls -lt /var/backups/homestead | head`, then
-  read the newest `MANIFEST` for `failures : 0`.
-- Confirm the secondary node's replica is current: run `homestead-twin status`
-  there and compare counts with the primary.
-- Skim the platform dashboard's "Point bindings by status" panel. Anything still
+### Also worth a glance: the annunciator
+
+The `OUT OF SVC` count in the panel header is the honest measure of alarm
+coverage. If it changes, something changed in the design package. See
+[The annunciator panel](./annunciator.md).
+
+### Weekly
+
+- **Confirm the nightly backup ran** and its manifest reports no failures. There
+  is no backup action in the console today — see section 4.
+- **Confirm the secondary node's replica is current.** Point the desktop shell's
+  **Settings → Gateway** at the secondary node and compare its Assets counts
+  with the primary's. Change it back afterwards.
+- **Check the binding statuses** on the console's Assets screen. Anything still
   `tbd` is un-commissioned, whatever the wiring looks like.
 
-**Monthly**
+### Monthly
 
-- Restore the latest backup into a scratch database and confirm the counts match
-  the manifest. A backup you have never restored is a hypothesis (SDD MVP
-  criterion 10).
+- **Restore the latest backup into a scratch database and confirm the counts
+  match the manifest.** A backup you have never restored is a hypothesis.
 
 ---
 
-## 1. Black start — recovery from a de-energized property
+## 1. Black start
 
-**SDD section 35. Read it before you need it.**
+Recovery from a de-energized property.
 
-This runbook covers the platform's part only. The electrical sequence is executed
-at the equipment by Level 0/1 controls, and SDD 35.2 requires that at least one
-local controller can execute it **without the primary server rack**. If the
-platform is required for a black start, the black start design is wrong.
+This runbook covers **the platform's part only**. The electrical sequence is
+executed at the equipment by Level 0/1 controls, and at least one local
+controller must be able to execute it **without the primary server rack**. If
+the platform is required for a black start, the black start design is wrong.
 
-### Prerequisites (SDD 35.2 — verify physically, not on a screen)
+### Prerequisites — verify physically, not on a screen
 
-1. BMS and inverter controls have protected DC power or an approved manual source.
+1. BMS and inverter controls have protected DC power or an approved manual
+   source.
 2. Battery temperature and voltage are within black-start limits.
 3. Fire, smoke and emergency-stop conditions are clear.
 4. Critical distribution can be isolated from non-critical branches.
 5. A local controller can run the sequence unaided.
 
-### Sequence (SDD 35.3) — platform steps only
+### The sequence — platform steps only
 
-| SDD step | Action | Platform involvement |
+| Step | Action | Platform involvement |
 |---:|---|---|
-| 1–4 | Verify isolation and safety; energise BMS/inverter control power; close the battery contactor via native precharge; start the master inverter group | **None.** Do not attempt any of this from the API |
+| 1–4 | Verify isolation and safety; energise BMS/inverter control power; close the battery contactor via native precharge; start the master inverter group | **None.** Do not attempt any of this from the console |
 | 5 | Energise the critical control/communications bus | None |
-| 6 | Start the secondary control node, core switch/router, minimum MQTT and time services | Start the secondary stack: `make secondary-up`. NTP first — see section 6 |
-| 7 | Validate battery, inverter, frequency and critical-bus measurements | Read them at the equipment. Then, once ingest is up, cross-check against `homestead-twin status` and the energy dashboard |
-| 8 | Energise minimum refrigeration, water protection, greenhouse survival and security loads, staggered | Manual. SDD 33.2 forbids simultaneous restoration; the EMS is not running yet |
+| 6 | Start the secondary control node, core switch/router, minimum broker and time services | Start the secondary node. Time first — see section 6 |
+| 7 | Validate battery, inverter, frequency and critical-bus measurements | **Read them at the equipment.** Then, once ingest is up, cross-check on the console's Energy screen |
+| 8 | Energise minimum refrigeration, water protection, greenhouse survival and security loads, **staggered** | Manual. Simultaneous restoration is forbidden, and the energy manager is not running yet |
 | 9 | Start the generator if reserve or battery limits require it | At the generator controller |
-| 10 | Start primary rack services once the critical bus and container environment are stable | `make up`, then `homestead-twin status` |
-| 11 | Reconcile actual asset states with the digital twin | Section 1.1 below |
+| 10 | Start primary rack services once the critical bus and container environment are stable | Launch the desktop shell; press **Start platform** if it is not already up |
+| 11 | Reconcile actual asset states with the digital twin | Section 1.1 |
 
-### 1.1 State reconciliation (SDD 35.4)
+### 1.1 State reconciliation
 
-**The platform must not assume retained desired state equals physical state.**
+**The platform must not assume that retained desired state equals physical
+state.**
 
-After the primary stack is up:
+Once the platform is up:
 
-```sh
-homestead-twin status
-```
-
-1. **Expire stale commands.** Anything in `pending` or `dispatched` from before
-   the outage is meaningless. Check `/api/v1/commands?state=pending`; cancel what
-   has not expired on its own TTL.
-2. **Distrust retained MQTT state.** Retained topics may describe the world as it
+1. **Expire stale commands.** Anything pending or dispatched from before the
+   outage is meaningless. On the console's Control screen, cancel anything that
+   has not already expired on its own time-to-live.
+2. **Distrust retained bus state.** Retained topics may describe the world as it
    was before the lights went out.
-3. **Find what the platform cannot see.** The platform dashboard's stale-points
-   panel, or `GET /api/v1/telemetry/stale`. Every point there is unknown, not
-   normal.
+3. **Find what the platform cannot see.** The stale-point list. Every point there
+   is *unknown*, not *normal*.
 4. **Walk the plant.** Confirm actual breaker, valve and equipment states against
-   what the twin believes. Correct the twin, not the plant.
-5. **Only then** re-enable the EMS. It must not begin dispatching against a state
-   model that is a mixture of pre-outage memory and post-outage guesswork.
+   what the twin believes. **Correct the twin, not the plant.**
+5. **Only then** let the energy manager resume. It must not begin dispatching
+   against a state model that is a mixture of pre-outage memory and post-outage
+   guesswork.
 
 Do not restart workshop machinery, spa equipment or any attended load
-unattended after a black start (SDD 35.3).
+unattended after a black start.
 
 ---
 
@@ -103,264 +123,247 @@ unattended after a black start (SDD 35.3).
 
 ### 2.1 A gateway goes quiet
 
-**Symptom:** points stale; a last-will `availability` message arrived; alarms
-firing for one asset group.
+**Symptom:** points stale for one asset group; an availability message arrived;
+alarms firing for that group.
 
-1. Is it the gateway or the network? `homestead-twin status` — if `ingest` counts
-   are still rising for other assets, the broker and ingest are fine.
-2. Check the broker: `docker compose -f deploy/docker-compose.yml logs mosquitto | tail -50`.
-   A gateway that reconnects in a loop is usually a credential or ACL problem, not
-   a radio problem.
-3. Check for `Denied PUBLISH` — an ACL that was edited without re-testing.
-4. **The subsystem keeps running.** Level 1 retains control (SDD 5.2). Loss of
-   telemetry is loss of visibility, not loss of control. Do not start
-   power-cycling equipment to restore a dashboard.
-5. Record the outage against the asset. If it recurs, it is a commissioning step 6
-   failure that was passed too generously.
+1. **Is it the gateway or the network?** If ingest counts are still rising for
+   other assets, the broker and ingest are fine and the problem is that device.
+2. **Check the broker's log for repeated reconnects.** A gateway that reconnects
+   in a loop is usually a credential or topic-permission problem, not a radio
+   problem.
+3. **Check for denied publishes** — a topic permission that was edited without
+   being re-tested.
+4. **The subsystem keeps running.** Level 1 retains control. **Loss of telemetry
+   is loss of visibility, not loss of control.** Do not start power-cycling
+   equipment to restore a dashboard.
+5. **Record the outage against the asset.** If it recurs, it is a
+   communications-loss commissioning step that was passed too generously.
 
 ### 2.2 Broker loss
 
 Every gateway's telemetry stops at once, and commands cannot be dispatched.
 
-1. `docker compose -f deploy/docker-compose.yml ps mosquitto`
-2. Restart: `docker compose -f deploy/docker-compose.yml restart mosquitto`.
-   Persistent sessions and queued messages survive (`persistence true`).
-3. If the broker will not start, check the volume: a missing
-   `/mosquitto/config/local/passwd` stops it dead, and that is by design.
-4. Expect a burst of retained-state and queued-message traffic on recovery, and
-   expect state reconciliation (section 1.1) to matter.
+1. Restart the broker. Persistent sessions and queued messages survive.
+2. If it will not start, check its configuration volume — a missing password
+   file stops it dead, and that is by design.
+3. Expect a burst of retained-state and queued traffic on recovery, and expect
+   state reconciliation (section 1.1) to matter.
+
+Broker administration is a headless task; see
+[Container deployment](./advanced-container-deployment.md).
 
 ### 2.3 Internet loss
 
-**The platform is unaffected.** Local-first is the point (SDD 5.1, FR-006).
+**The platform is unaffected.** Local-first is the point.
 
-What stops: outbound email and push notification, upstream NTP, remote VPN
-access. What continues: ingest, EMS, alarms, dashboards, commands, local
-notification.
+| Stops | Continues |
+|---|---|
+| Outbound email and push | Ingest |
+| Upstream time synchronisation | The energy manager |
+| Remote VPN access | Alarm evaluation |
+| | The console and the annunciator |
+| | Commands |
+| | Local notification |
 
-SDD MVP criterion 4 requires critical alarms to work during internet loss. If
-`HOMESTEAD_NOTIFICATION_BACKENDS` is only `log` and `email`, that criterion is
-**not met** — a log line is not an alert. Local voice (CUCM) or an independent
-device path is needed. Currently unresolved; see `docs/architecture.md`.
+The console fetches **nothing** from the internet — no CDN, no fonts, no map
+tiles, no charting library — so it renders identically with the uplink down.
+
+**But:** the MVP criterion requiring critical alarms to work during internet
+loss is **not met**, because only the `log` notification channel is implemented
+and a log line is not an alert. See
+[Alarms § Notification](./alarms.md#7-notification-and-the-honest-part).
 
 ### 2.4 Loss of the primary node
 
-See `docs/secondary-control-node.md` section 3. Summary: the secondary node
-observes and alerts; local controllers keep the property running; nothing
-automatically takes over supervisory control, and that is deliberate.
+See [Secondary control node § What it can and cannot do](./secondary-control-node.md#3-what-it-can-and-cannot-do-when-the-power-container-is-lost).
+
+Summary: the secondary node observes and alerts; local controllers keep the
+property running; **nothing automatically takes over supervisory control**, and
+that is deliberate.
+
+To look at the secondary node from the desktop shell, point **Settings →
+Gateway** at it. It will report its role as secondary, with the energy manager
+suppressed and physical control disabled.
 
 ---
 
 ## 3. Alarm floods
 
-**Symptom:** dozens or hundreds of alarms in seconds. Usually one root cause —
-a power event, a comms failure, a gateway reboot.
+**Symptom:** dozens or hundreds of alarms in seconds. Usually one root cause — a
+power event, a comms failure, a gateway reboot.
 
 ### Do not
 
-- Do not bulk-acknowledge to clear the screen. Acknowledgement is a record that a
-  human saw it (SDD 14.2); bulk-acknowledging destroys the only evidence of what
-  the operator actually knew.
-- Do not suppress the alarm definition. That hides the next occurrence too.
+- **Do not bulk-acknowledge to clear the screen.** Acknowledgement is a record
+  that a human saw it; bulk-acknowledging destroys the only evidence of what the
+  operator actually knew.
+- **Do not suppress the alarm definition.** That hides the next occurrence too.
 
 ### Do
 
-1. **Find the incident, not the alarms.** The platform correlates related alarms
-   into incidents precisely so one container outage does not produce hundreds of
-   independent notifications: `GET /api/v1/incidents`, or the platform dashboard.
+1. **Find the incident, not the alarms.** The console's Alarms screen groups by
+   incident first, precisely so one container outage does not read as hundreds
+   of independent events. The annunciator shows the same thing as a panel: one
+   lit window per condition.
 2. **Sort by severity and time.** The earliest critical alarm is usually the
    cause; the rest are consequences.
-3. **Check whether the platform is the problem.** A flood with no plant symptoms
-   is often ingest: a gateway republishing history with old timestamps, or a
-   binding pointed at the wrong point.
-4. **If notification volume is the emergency**, reduce the notification backends
-   rather than the alarms — the alarms are the record.
+3. **Ask whether the platform is the problem.** A flood with no plant symptoms is
+   often ingest: a gateway republishing history with old timestamps, or a binding
+   pointed at the wrong point. Check the dead-letter list.
+4. **Silence, then acknowledge, in that order.** On the annunciator, SILENCE HORN
+   quiets the room without touching a single lamp, so you can think. Then
+   acknowledge deliberately, tile by tile or as a set.
+5. **Afterwards, review.** A flood is usually an alarm-design failure: a missing
+   dead-band, a missing on-delay, or an alarm on a derived value that should have
+   been an alarm on its input. Fix `data/alarm_definitions.yaml` and re-import
+   from the launcher's **Run again**.
 
-   ```sh
-   docker compose -f deploy/docker-compose.yml exec twin \
-     env HOMESTEAD_NOTIFICATION_BACKENDS=log homestead-twin status   # inspect only
-   ```
+### Planned work: use maintenance mode, not suppression
 
-   Changing it for real means editing `deploy/.env` and recreating the service.
-   Write down that you did it, and when you undid it.
-5. **Afterwards**, review. A flood is usually an alarm-design failure: missing
-   dead-band, missing on-delay, or an alarm on a derived value that should have
-   been an alarm on its input. Fix `data/alarm_definitions.yaml`, then
-   `homestead-twin load-all`.
+On the console's Control screen, set the scope's operating mode to
+`maintenance`. That inhibits automatic starts and modifies alarms **with the
+lockout visible**.
 
-### Suppression during planned work
-
-Use maintenance mode, not suppression:
-
-```
-POST /api/v1/operating-modes/{domain}   {"mode": "maintenance", "reason": "...", ...}
-```
-
-Maintenance mode inhibits automatic starts and modifies alarms with the lockout
-visible (SDD 11). Suppressing an alarm makes the lockout invisible, which is how
-a subsystem gets left in maintenance mode for three weeks.
+Suppressing an alarm makes the lockout invisible, which is how a subsystem gets
+left in maintenance mode for three weeks.
 
 ---
 
 ## 4. Backup and restore
 
-### 4.1 Taking a backup
+**There is no backup action in the console or the shell today.** Backups are
+produced by the platform's own tooling on a schedule, which is the right shape
+for a task that should run unattended at 02:00 — but it does mean this section
+points at [Command line](./advanced-command-line.md#5-backup) and
+[Container deployment](./advanced-container-deployment.md#7-backups) for the
+mechanics.
 
-```sh
-deploy/backup/backup.sh                    # full set
-homestead-twin backup                      # registry + config only, portable
-```
+What matters operationally:
 
-The full set contains `postgres.dump`, `twin-registry.tar.gz`,
-`mosquitto-config.tar.gz` (**sensitive**), `grafana.tar.gz`,
-`deploy-config.tar.gz`, a `MANIFEST` and `SHA256SUMS`. `deploy/.env` is excluded
-deliberately: a backup that quietly contains every credential on the property is
-a liability.
+### 4.1 What a backup set contains
 
-Three copies (SDD 15.8, 16.1): local, on the secondary node in another structure,
-and offline/off-property.
+A database dump, a portable registry-and-configuration archive, the broker
+configuration (**sensitive**), the dashboard configuration, the deployment
+configuration, a manifest and a checksum file.
 
-### 4.2 Verifying
+The environment file holding live secrets is **excluded deliberately**: a backup
+that quietly contains every credential on the property is a liability.
 
-```sh
-cd /var/backups/homestead/<timestamp>
-sha256sum -c SHA256SUMS
-cat MANIFEST                      # failures : 0
-tar tzf twin-registry.tar.gz | head
-```
+### 4.2 Keep three copies
 
-### 4.3 Restoring the database
+Local, **on the secondary node in another structure**, and offline/off-property.
 
-```sh
-COMPOSE="docker compose -f deploy/docker-compose.yml"
+A backup written to a disk inside the power container is not a backup. It is a
+second copy in the same failure domain — and that domain is the one the whole
+design assumes can be destroyed.
 
-$COMPOSE stop twin                                   # stop writers first
-$COMPOSE exec -T postgres dropdb   -U "$POSTGRES_USER" homestead
-$COMPOSE exec -T postgres createdb -U "$POSTGRES_USER" homestead
-$COMPOSE exec -T postgres psql -U "$POSTGRES_USER" -d homestead \
-  -f /docker-entrypoint-initdb.d/10-homestead.sql
-$COMPOSE exec -T postgres pg_restore -U "$POSTGRES_USER" -d homestead \
-  --no-owner --no-privileges < postgres.dump
-$COMPOSE start twin
-$COMPOSE exec twin homestead-twin status             # counts vs. MANIFEST
-```
+### 4.3 Verify
+
+Check the checksums and read the manifest for a failure count of zero. Then,
+monthly, **restore it into a scratch database and compare the counts against the
+manifest.** A backup you have never restored is a hypothesis.
 
 ### 4.4 Rebuilding from the design package instead
 
-Faster, and often better: the design package in Git is the source of truth for
-registry content. History is not recoverable this way.
+Often faster and often better: `data/` in version control is the source of truth
+for registry content. Point a fresh install's **Settings → Data directory** at
+it and let first-run setup import it.
 
-```sh
-homestead-twin init-db
-homestead-twin load-all
-homestead-twin status
-```
+**History is not recoverable this way** — only the registry.
 
 ### 4.5 Restoring onto a machine with nothing
 
-`twin-registry.tar.gz` is JSON plus YAML. Untar it and read it. This is the
-SDD 16.1 mitigation-3 case: the container is gone and you have a laptop.
+The portable archive is JSON plus YAML. Untar it and read it: a manifest with
+counts, provenance and node role; a restore procedure; one JSON file per table;
+and the design package the registry was built from.
 
-```sh
-tar xzf twin-registry.tar.gz
-cat manifest.json                # counts, provenance, node role
-cat RESTORE.txt                  # procedure
-ls tables/                       # one JSON array per table
-ls design-package/data/          # the YAML the registry was built from
-```
+That is the case where the container is gone and you have a laptop.
 
 ### 4.6 Credentials are re-issued, not restored
 
-MQTT identities, Grafana admin, database passwords. If the container was
+Broker identities, dashboard admin, database passwords. If the container was
 destroyed or compromised, the secrets inside it should be assumed readable.
-Re-issue them (`deploy/mosquitto/README.md`), and record the new identities as
-`ExternalIdentifier` rows.
+**Re-issue them**, and record the new identities in the registry.
 
 ---
 
 ## 5. Data retention
 
-SDD 16.4:
-
 | Class | Policy |
 |---|---|
-| Raw high-frequency telemetry | 90 days (`HOMESTEAD_HISTORIAN_RAW_RETENTION_DAYS`) |
+| Raw high-frequency telemetry | 90 days |
 | Downsampled 1-minute | 2 years |
 | Downsampled hourly/daily | Indefinite |
-| Alarm and command audit | **Indefinite — never pruned** |
+| **Alarm and command audit** | **Indefinite — never pruned** |
 | Maintenance and asset history | Indefinite |
 | Camera footage | Separate policy, outside this platform |
 
-```sh
-homestead-twin retention --dry-run       # default; computes and rolls back
-homestead-twin retention --apply
-```
+Retention runs as a scheduled task, not from the console —
+[Command line § Retention](./advanced-command-line.md#6-retention).
 
-Schedule daily:
+Two things worth knowing:
 
-```
-30 3 * * * docker compose -f /srv/homestead-twin/deploy/docker-compose.yml \
-             exec -T twin homestead-twin retention --apply
-```
+- The dry run rolls its transaction back, so **check the printed counts, not
+  just the exit code**.
+- Retention is a **deletion**. Run it on a schedule, after backups, and never
+  for the first time on a full production historian without a dump in hand.
 
-Two things worth knowing. The dry run rolls the transaction back, so an
-implementation that commits internally would still persist — check the printed
-counts, not just the exit code. And retention is a **deletion**: run it on a
-schedule, after backups, never for the first time on a full production historian
-without a dump in hand.
-
-Open decision SDD 22.10 (retention limits based on storage and power budget) is
-unresolved; 90 days is the SDD's initial policy, not a measured one.
+The retention limits are an initial policy, not a measured one — the decision
+about what storage and power budget can actually support is unresolved.
 
 ---
 
 ## 6. Time synchronisation
 
-SDD 16.3: all servers, gateways, PLCs, cameras and field nodes use the homestead
-NTP service, with an external source when available and a local holdover source
-when isolated.
+Every timestamp the platform stores is UTC; display conversion happens in the
+interface.
 
-Every platform timestamp is UTC (`models/base.py`); display conversion happens in
-the UI. `deploy/postgres/init.sql` sets the database to UTC.
+**Clock skew is a subtle failure.** It makes alarm correlation wrong, command
+expiries wrong, and time-windowed queries silently return nothing. **If a screen
+is empty while ingest counts are rising, check clocks before anything else.**
 
-Clock skew is a subtle failure: it makes alarm correlation wrong, command TTLs
-wrong, and `$__timeFilter` in Grafana silently return nothing. If a dashboard is
-empty and ingest counts are rising, check clocks before anything else.
+All servers, gateways, PLCs, cameras and field nodes should use the homestead's
+own time service, with an external source when available and a local holdover
+source when isolated.
 
-The NTP service itself is **not deployed by this repository**. Nothing here
-provides holdover.
+**That time service is not deployed by this repository, and nothing here
+provides holdover.** It is an open item.
 
 ---
 
 ## 7. Enabling physical control
 
-Do not skip to this section.
+**Do not skip to this section.**
 
-1. The subsystem has passed all twelve SDD section 19 steps —
-   `docs/commissioning.md`, and `GET /api/v1/commissioning/{asset_id}/status`.
-2. `POST /api/v1/commissioning/bindings/{point_id}` sets
-   `automatic_control_allowed` for that binding. The platform refuses if the
-   prerequisites have not passed.
-3. Only then set `HOMESTEAD_ALLOW_PHYSICAL_CONTROL=true` in `deploy/.env` and
-   recreate the `twin` service.
-4. Verify: `homestead-twin status` shows `physical control : ENABLED`.
-5. Issue one command, watch it acknowledge, and read the audit record before
+1. The subsystem has passed all twelve commissioning steps. Confirm it on the
+   console — the commissioning status for the asset must report supervisory
+   control permitted.
+2. Enable the specific binding through the commissioning endpoint. **The
+   platform refuses if the prerequisites have not passed**, and that refusal is
+   the point of the endpoint.
+3. Only then turn on the platform-wide gate, and restart the platform so it
+   takes effect.
+4. **Verify** that the platform reports physical control as enabled — the
+   console's Control screen and `/health` both carry it.
+5. **Issue one command**, watch it acknowledge, and read the audit record before
    issuing a second.
 
-To revoke, in an emergency:
+Turning on the global gate does not arm anything that has not been commissioned.
+That is deliberate: one switch should not be able to arm the property. See
+[Control § The two safety gates](./control.md#6-the-two-safety-gates).
 
-```sh
-# Fastest: revoke at the broker. Application state is irrelevant if the
-# command cannot leave the bus.
-docker compose -f deploy/docker-compose.yml exec mosquitto \
-  sh -c 'sed -i "s|^topic write homestead/+/+/+/cmd/+|# REVOKED &|" /mosquitto/config/local/acl'
-docker compose -f deploy/docker-compose.yml kill -s HUP mosquitto
+### Revoking it in an emergency
 
-# Then, properly:
-# set HOMESTEAD_ALLOW_PHYSICAL_CONTROL=false in deploy/.env and recreate `twin`.
-```
+**Fastest: revoke at the broker.** Remove the command-topic write permission for
+the affected identity and reload the broker. Application state is irrelevant if
+the command cannot leave the bus.
 
-Then find out why, and write it down.
+**Then, properly:** turn the platform-wide gate off and restart the platform.
+
+Then find out why, and **write it down**.
+
+The broker step is a headless action; the exact commands are in
+[Container deployment](./advanced-container-deployment.md).
 
 ---
 
@@ -369,12 +372,23 @@ Then find out why, and write it down.
 - **Electrical work.** Black start, generator start, transfer switching, battery
   isolation. Equipment procedures, not platform procedures.
 - **Water, greenhouse, spa, nitrogen storage.** No coordinator exists for these
-  yet (`docs/architecture.md`).
+  yet. The water system's *design* is written up in
+  [Water-system control narrative](./water-control-narrative.md); nothing
+  implements it.
 - **Camera and NVR operations.** Not integrated.
 - **Network device recovery.** Switch, router and firewall procedures.
-- **Anything requiring hardware that has never been connected.** Every runbook
-  above has been exercised against the simulator and the in-memory bus. None has
-  been exercised against real plant, because no part of this platform has.
+- **Anything requiring hardware that has never been connected.** Which is
+  everything, today.
 
-That last point is the honest state of this document, and it changes one
-subsystem at a time as commissioning proceeds.
+---
+
+## 9. Related reading
+
+| Document | Why |
+|---|---|
+| [Troubleshooting](./troubleshooting.md) | Same problems, indexed by symptom |
+| [Commissioning](./commissioning.md) | The path from "observing" to "controlling" |
+| [Control](./control.md) | Interlocks, modes and the safety gates |
+| [Alarms](./alarms.md) | The model behind floods and incidents |
+| [Secondary control node](./secondary-control-node.md) | What survives losing the power container |
+| [Command line](./advanced-command-line.md) | Backup, retention and export mechanics |

@@ -1,10 +1,19 @@
 # Network and trust boundaries
 
-SDD section 49 work-queue item 3: *"Produce the network and trust-boundary
-diagram with firewall flows and service identities."*
+The zones, the boundaries between them, the flows that are permitted across
+each, and the identities that use them.
 
-Sources: SDD sections 3.3 (VLAN scheme), 15.1 (network placement), 15.2
-(identity and access), 15.3 (remote access), 8.2 (broker authorisation), and
+This matters for one reason above all others: **the platform API does not
+authenticate anyone.** It records who an action was taken by; deciding who may
+reach it at all is this document's job.
+
+Related: [Architecture](./architecture.md) ·
+[API reference § Identity and roles](./api.md#2-identity-and-roles) ·
+[Secondary control node](./secondary-control-node.md) ·
+[Container deployment](./advanced-container-deployment.md)
+
+Sources: the design document's VLAN scheme, network placement, identity and
+access, remote access and broker authorisation sections, and
 `data/homestead_asset_register.yaml` for the equipment.
 
 ---
@@ -277,7 +286,7 @@ An MQTT username, an SNMPv3 user or a Home Assistant entity ID is a **binding**,
 not an identity (SDD 25.3 rule 7). Record them as `ExternalIdentifier` rows
 against the asset (`id_type: mqtt_username`, `snmp_v3_user`, `ha_entity_id`), so
 they survive in the same place as the equipment they belong to and are captured
-by `homestead-twin backup`. A spreadsheet of device credentials is a spreadsheet
+by `chaos backup`. A spreadsheet of device credentials is a spreadsheet
 that will be wrong within a year.
 
 Secrets themselves are never stored in the registry, never in Git, and never in
@@ -343,3 +352,15 @@ threat model should include the latter, the secondary node wants its own zone
 with a narrow allow-list: inbound MQTT bridge, database replication, outbound
 notification. Recommended, not decided — SDD 22.13 has not chosen the host
 structure yet, and that choice constrains this one.
+
+---
+
+## 7. Related reading
+
+| Document | Why |
+|---|---|
+| [Architecture](./architecture.md) | Why the platform backend is on loopback and the gateway is the only listener |
+| [API reference](./api.md) | The role model these identities map onto |
+| [Secondary control node](./secondary-control-node.md) | Item 7 above, in its own context |
+| [Container deployment](./advanced-container-deployment.md) | Where the bind addresses and broker identities are actually configured |
+| [Commissioning](./commissioning.md) | Step 12 re-runs the broker permission verification for each new identity |

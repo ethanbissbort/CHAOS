@@ -15,7 +15,7 @@ public readonly record struct BackendLogLine(LogLevel Level, string? Logger, str
 /// </summary>
 /// <remarks>
 /// The platform logs a lot, in two shapes: <c>logging.basicConfig</c> lines from
-/// <c>homestead_twin.cli</c> ("2026-08-07 16:26:45,130 INFO homestead_twin.mqtt: …")
+/// <c>chaos.cli</c> ("2026-08-07 16:26:45,130 INFO chaos.mqtt: …")
 /// and uvicorn's own ("INFO:     Started server process [13780]"). Both go to
 /// stderr. Mapping every stderr line to Warning would cry wolf on ordinary INFO
 /// traffic; mapping it all to Information would bury a traceback. So we read

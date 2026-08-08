@@ -12,11 +12,11 @@ import datetime as dt
 import pytest
 from sqlalchemy import select
 
-from homestead_twin.api.routers.annunciator import BAY_ORDER, LEGENDS, engrave
-from homestead_twin.models.alarms import Alarm, AlarmDefinition
-from homestead_twin.models.registry import Point
+from chaos.api.routers.annunciator import BAY_ORDER, LEGENDS, engrave
+from chaos.models.alarms import Alarm, AlarmDefinition
+from chaos.models.registry import Point
 
-UI = "src/homestead_twin/web"
+UI = "src/chaos/web"
 
 
 # --------------------------------------------------------------- legends --
@@ -87,8 +87,8 @@ def seeded_registry_and_alarms(db_session, settings):
     convenient fixture, because the properties under test are about how the
     package and the platform disagree.
     """
-    load_package = pytest.importorskip("homestead_twin.registry.loader").load_package
-    sync_definitions = pytest.importorskip("homestead_twin.alarms.definitions").sync_definitions
+    load_package = pytest.importorskip("chaos.registry.loader").load_package
+    sync_definitions = pytest.importorskip("chaos.alarms.definitions").sync_definitions
 
     load_package(db_session)
     sync_definitions(db_session, settings=settings, strict=False)

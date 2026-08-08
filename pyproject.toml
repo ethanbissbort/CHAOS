@@ -3,7 +3,7 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "homestead-twin"
+name = "chaos"
 version = "0.4.0"
 description = "Project CHAOS — Central Homestead Automation and Operation System"
 readme = "README.md"
@@ -27,11 +27,30 @@ postgres = ["psycopg[binary]>=3.1", "alembic>=1.13"]
 dev = ["pytest>=8.0", "pytest-asyncio>=0.23", "httpx>=0.27"]
 
 [project.scripts]
-homestead-twin = "homestead_twin.cli:main"
+chaos = "chaos.cli:main"
 homestead-simulator = "simulator.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+# Setuptools ships only .py files unless told otherwise, and the operator
+# console is not Python. api/app.py mounts /ui from <package>/web, so without
+# this the installed platform serves its own console as a 404 -- and the
+# Windows build's post-install check for
+# site-packages/chaos/web/annunciator.html fails, which is the one place this
+# would have been noticed.
+#
+# The generated help site under web/docs is included deliberately: it is what
+# someone opens when the platform is down, so it has to be on disk already.
+[tool.setuptools.package-data]
+chaos = [
+    "web/*.html",
+    "web/*.css",
+    "web/*.js",
+    "web/views/*.js",
+    "web/docs/*.html",
+    "web/docs/assets/*",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

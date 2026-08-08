@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<meta name="generator" content="tools/build_docs.py">
+<title>Alarms, incidents and notification — Project CHAOS help</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http%3A//www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230e1a16'/%3E%3Cpath d='M6 18 16 8l10 10v8H6z' fill='none' stroke='%234ade80' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/docs.css">
+<noscript><style>.doc-page[hidden]{display:block!important}.site-searchbtn{display:none}</style></noscript>
+</head>
+<body data-page="alarms">
+<a class="skip-link" href="#content">Skip to the documentation</a>
+<header class="site-topbar">
+<button type="button" class="btn btn-icon site-navtoggle" id="nav-toggle" aria-controls="site-nav" aria-expanded="false" title="Documents"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span class="visually-hidden">Show the document list</span></button>
+<a class="site-identity" href="index.html"><span class="site-mark"><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M5 19 16 8l11 11v7H5z"/></svg></span><span class="site-titles"><h1>Project CHAOS help</h1><p>Central Homestead Automation and Operation System</p></span></a>
+<button type="button" class="site-searchbtn" id="search-open"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.3-4.3"/></svg><span>Search the documentation</span><span class="kbd-hint">/</span></button>
+<div class="site-tools">
+<button type="button" class="btn btn-sm" id="theme-toggle"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4"/></svg><span class="theme-label">System</span></button>
+<button type="button" class="btn btn-icon" id="print-page" onclick="window.print()" title="Print this page"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M7 9V4h10v5M7 18H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2"/><rect x="7" y="14" width="10" height="6" rx="1"/></svg><span class="visually-hidden">Print this page</span></button>
+</div>
+</header>
+<div class="site-shell">
+<nav class="site-nav" id="site-nav" aria-label="Documents"><h2>Overview</h2><ul><li><a href="index.html" data-page="index"><span class="nav-num">01</span><span>Project CHAOS documentation</span></a></li><li><a href="readme.html" data-page="readme"><span class="nav-num">02</span><span>Project CHAOS</span></a></li></ul><h2>Using CHAOS</h2><ul><li><a href="getting-started.html" data-page="getting-started"><span class="nav-num">03</span><span>Getting started</span></a></li><li><a href="visual-studio.html" data-page="visual-studio"><span class="nav-num">04</span><span>Building in Visual Studio 2026</span></a></li><li><a href="desktop-shell.html" data-page="desktop-shell"><span class="nav-num">05</span><span>The desktop shell</span></a></li><li><a href="operator-console.html" data-page="operator-console"><span class="nav-num">06</span><span>The operator console</span></a></li><li><a href="annunciator.html" data-page="annunciator"><span class="nav-num">07</span><span>The annunciator panel</span></a></li><li><a href="topology-view.html" data-page="topology-view"><span class="nav-num">08</span><span>Topology and blast radius</span></a></li><li><a href="rack-view.html" data-page="rack-view"><span class="nav-num">09</span><span>Rack elevation</span></a></li></ul><h2>How the platform works</h2><ul><li><a href="architecture.html" data-page="architecture"><span class="nav-num">10</span><span>Architecture</span></a></li><li><a href="alarms.html" data-page="alarms" aria-current="page"><span class="nav-num">11</span><span>Alarms, incidents and notification</span></a></li><li><a href="control.html" data-page="control"><span class="nav-num">12</span><span>Control, interlocks and operating modes</span></a></li><li><a href="design-package.html" data-page="design-package"><span class="nav-num">13</span><span>The design package</span></a></li><li><a href="integration-findings.html" data-page="integration-findings"><span class="nav-num">14</span><span>Integration findings</span></a></li></ul><h2>Operating the property</h2><ul><li><a href="operations.html" data-page="operations"><span class="nav-num">15</span><span>Operations runbooks</span></a></li><li><a href="troubleshooting.html" data-page="troubleshooting"><span class="nav-num">16</span><span>Troubleshooting</span></a></li><li><a href="commissioning.html" data-page="commissioning"><span class="nav-num">17</span><span>Commissioning</span></a></li><li><a href="secondary-control-node.html" data-page="secondary-control-node"><span class="nav-num">18</span><span>Secondary control node</span></a></li><li><a href="network-and-trust-boundaries.html" data-page="network-and-trust-boundaries"><span class="nav-num">19</span><span>Network and trust boundaries</span></a></li><li><a href="water-control-narrative.html" data-page="water-control-narrative"><span class="nav-num">20</span><span>Water-system control narrative</span></a></li></ul><h2>Reference</h2><ul><li><a href="api.html" data-page="api"><span class="nav-num">21</span><span>API reference</span></a></li><li><a href="design-decisions.html" data-page="design-decisions"><span class="nav-num">22</span><span>Design Decision Records</span></a></li></ul><h2>Advanced — you do not need these</h2><ul><li><a href="advanced-command-line.html" data-page="advanced-command-line"><span class="nav-num">23</span><span>Command line</span></a></li><li><a href="advanced-container-deployment.html" data-page="advanced-container-deployment"><span class="nav-num">24</span><span>Container deployment</span></a></li><li><a href="advanced-windows-packaging.html" data-page="advanced-windows-packaging"><span class="nav-num">25</span><span>Windows packaging</span></a></li></ul><h2>Design Decisions</h2><ul><li><a href="design-decisions-dd-001-energy-capacity-revision.html" data-page="design-decisions-dd-001-energy-capacity-revision"><span class="nav-num">26</span><span>DD-001: Authoritative energy design revision</span></a></li><li><a href="design-decisions-dd-002-historian-selection.html" data-page="design-decisions-dd-002-historian-selection"><span class="nav-num">27</span><span>DD-002: Time-series historian selection</span></a></li><li><a href="design-decisions-dd-003-secondary-control-node-placement.html" data-page="design-decisions-dd-003-secondary-control-node-placement"><span class="nav-num">28</span><span>DD-003: Secondary control node placement</span></a></li><li><a href="design-decisions-dd-004-controller-family.html" data-page="design-decisions-dd-004-controller-family"><span class="nav-num">29</span><span>DD-004: Standard PLC / controller family for critical local control</span></a></li></ul></nav>
+<main class="site-main" id="content" tabindex="-1">
+<article class="doc-page" id="alarms" data-page="alarms"><p class="doc-breadcrumb"><span>How the platform works</span><span>Alarms, incidents and notification</span></p><p class="doc-source">docs/alarms.md</p><div class="doc-body"><h1 id="alarms-incidents-and-notification" class="doc-h"><span class="doc-h-text">Alarms, incidents and notification</span><a class="doc-anchor" href="#alarms-incidents-and-notification" aria-label="Link to this section"></a></h1>
+<p>How CHAOS decides something is wrong, how it stops one failure becoming a
+hundred messages, and what it does — and honestly does not do — about telling a
+human.</p>
+<p>Related: <a href="annunciator.html">The annunciator panel</a> ·
+<a href="operator-console.html#43-alarms">The operator console § Alarms</a> ·
+<a href="operations.html#3-alarm-floods">Operations § Alarm floods</a> ·
+<a href="troubleshooting.html#3-an-alarm-never-fires">Troubleshooting § An alarm never fires</a></p>
+<hr>
+<h2 id="1-where-the-definitions-come-from" class="doc-h"><span class="doc-h-text">1. Where the definitions come from</span><a class="doc-anchor" href="#1-where-the-definitions-come-from" aria-label="Link to this section"></a></h2>
+<p>Forty alarm definitions ship in the design package
+(<code>data/alarm_definitions.yaml</code>) and are loaded into the platform by first-run
+setup. Each definition carries severity, scope, a trigger, a reset condition,
+operating-context behaviour, correlation hints, escalation and the operator
+context.</p>
+<p>You see them on the console's <strong>Alarms</strong> screen and, as a fixed grid, on
+<a href="annunciator.html">the annunciator panel</a>.</p>
+<p><strong>The platform is not the safety system.</strong> Nothing in the alarm engine executes
+a protective action. Where a definition describes an <code>automatic_action</code>, that is
+a description of what the <em>equipment</em> does on its own, recorded so an operator
+knows what to expect — not an instruction the platform carries out.</p>
+<hr>
+<h2 id="2-severity" class="doc-h"><span class="doc-h-text">2. Severity</span><a class="doc-anchor" href="#2-severity" aria-label="Link to this section"></a></h2>
+<p><code>info</code> · <code>warning</code> · <code>major</code> · <code>critical</code> · <code>emergency</code></p>
+<p>Severity chooses notification channels and orders every list and every bay on
+the annunciator. It is never carried by colour alone anywhere in the interface.</p>
+<hr>
+<h2 id="3-lifecycle" class="doc-h"><span class="doc-h-text">3. Lifecycle</span><a class="doc-anchor" href="#3-lifecycle" aria-label="Link to this section"></a></h2>
+<div class="doc-code" data-lang="text"><div class="doc-code-bar"><span class="doc-code-lang">text</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-text">detected → active → acknowledged → mitigated → cleared → reviewed</code></pre></div>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">State</th><th scope="col">Means</th></tr></thead><tbody><tr><td><code>detected</code></td><td>The condition crossed. The on-delay has not elapsed</td></tr><tr><td><code>active</code></td><td>The condition has held for its on-delay. This is a real alarm</td></tr><tr><td><code>acknowledged</code></td><td>A named human has seen it. The condition may still be present</td></tr><tr><td><code>mitigated</code></td><td>A mitigating action was recorded</td></tr><tr><td><code>cleared</code></td><td>The condition returned to normal</td></tr><tr><td><code>reviewed</code></td><td>Closed out, with a review note</td></tr></tbody></table></div>
+<h3 id="delays-are-states-not-timers" class="doc-h"><span class="doc-h-text">Delays are states, not timers</span><a class="doc-anchor" href="#delays-are-states-not-timers" aria-label="Link to this section"></a></h3>
+<p>A threshold crossing creates the alarm in <code>detected</code> <strong>immediately</strong>, and it
+only reaches <code>active</code> once the condition has held for its on-delay. A crossing
+that goes away first is closed out as a transient and never notified — <strong>but it
+is still a row</strong>, because "the sensor twitched fourteen times last night" is
+operational information.</p>
+<h3 id="reset-is-a-separate-condition-not-the-negation-of-the-trigger" class="doc-h"><span class="doc-h-text">Reset is a separate condition, not the negation of the trigger</span><a class="doc-anchor" href="#reset-is-a-separate-condition-not-the-negation-of-the-trigger" aria-label="Link to this section"></a></h3>
+<p>Every definition carries its own reset operator and value; where it does not,
+the reset is derived from the trigger plus hysteresis. Either way there is a
+real deadband, so a value hovering on the trip point cannot chatter.</p>
+<h3 id="bad-data-is-not-good-news" class="doc-h"><span class="doc-h-text">Bad data is not good news</span><a class="doc-anchor" href="#bad-data-is-not-good-news" aria-label="Link to this section"></a></h3>
+<p>A dead sensor must not look like a healthy in-range reading. A process alarm
+whose input quality is <code>bad</code> or <code>stale</code> is <strong>not evaluated at all</strong>; the
+definition's data-quality alarm is raised against that specific point instead.</p>
+<p>That rule is why <code>sensor_data_invalid</code> and <code>energy_meter_data_invalid</code> exist as
+definitions in their own right.</p>
+<h3 id="maintenance-mode-modifies-alarms-it-does-not-delete-them" class="doc-h"><span class="doc-h-text">Maintenance mode modifies alarms; it does not delete them</span><a class="doc-anchor" href="#maintenance-mode-modifies-alarms-it-does-not-delete-them" aria-label="Link to this section"></a></h3>
+<p>A suppressed alarm is stored with a machine-readable reason, so an operator can
+see what was hidden and why. Suppressing an alarm definition, by contrast, hides
+the next occurrence too — which is why the runbook for planned work is
+maintenance mode, not suppression. See
+<a href="control.html#5-operating-modes">Control § Operating modes</a>.</p>
+<hr>
+<h2 id="4-operator-context--the-fr-008-payload" class="doc-h"><span class="doc-h-text">4. Operator context — the FR-008 payload</span><a class="doc-anchor" href="#4-operator-context--the-fr-008-payload" aria-label="Link to this section"></a></h2>
+<p>Every definition can be asked for its operating procedure, affected assets,
+dependencies and manual controls.</p>
+<p><strong>An alarm that arrives without that is a noise generator.</strong> It is also a
+commissioning step: step 10 requires confirming that the alarm links to its
+context before the subsystem is signed off.</p>
+<hr>
+<h2 id="5-correlation-and-incidents" class="doc-h"><span class="doc-h-text">5. Correlation and incidents</span><a class="doc-anchor" href="#5-correlation-and-incidents" aria-label="Link to this section"></a></h2>
+<blockquote><p>A power-container outage should not create hundreds of separate notifications
+without a parent incident.</p></blockquote>
+<p>Three mechanisms, applied in that order of authority:</p>
+<p><strong>1. Declared parentage.</strong> A definition names a parent alarm key. When that
+parent is open and in scope, the child is a symptom: it joins the parent's
+incident and is not notified on its own.</p>
+<p><strong>2. Dependency correlation.</strong> The registry's typed relationships — <code>feeds</code>,
+<code>contains</code>, <code>hosts</code>, <code>located_in</code>, <code>part_of</code>, <code>depends_on</code>, <code>managed_by</code> —
+describe which assets sit downstream of which. An alarm on an asset downstream
+of an already-alarming asset, inside the correlation window, joins that asset's
+incident.</p>
+<p>This is a <strong>real graph walk over the register</strong>, not a table of alarm keys, so a
+relationship added to the register tomorrow correlates without a code change. It
+is the same walk the <a href="topology-view.html#3-blast-radius">topology screen's blast radius</a>
+performs, which is why the set you see on the canvas is the set the correlator
+will fold.</p>
+<p><strong>3. Flood guard.</strong> More than <em>N</em> open alarms of the same definition, or more
+than <em>N</em> inside one subtree, inside the window opens a single incident and
+suppresses the per-alarm notification.</p>
+<h3 id="suppressed-never-means-discarded" class="doc-h"><span class="doc-h-text">Suppressed never means discarded</span><a class="doc-anchor" href="#suppressed-never-means-discarded" aria-label="Link to this section"></a></h3>
+<p>Incident membership marks member alarms with a <code>symptom:</code> or <code>flood:</code> reason.
+That flag means <em>do not notify this alarm on its own</em> — the incident is notified
+instead. The alarm is still a row, still queryable, still on the record.</p>
+<h3 id="some-alarms-refuse-to-be-anybodys-symptom" class="doc-h"><span class="doc-h-text">Some alarms refuse to be anybody's symptom</span><a class="doc-anchor" href="#some-alarms-refuse-to-be-anybodys-symptom" aria-label="Link to this section"></a></h3>
+<p>Folding certain alarms into an incident would hide exactly the thing they exist
+to report. Those definitions declare no parent and are marked as incident
+anchors instead:</p>
+<ul><li>the <strong>secondary control node unreachable</strong> alarm — the whole point of that
+node is that it is independent;</li><li>the <strong>local alarm beacon unavailable</strong> alarm — it has to be able to speak for
+itself;</li><li>the <strong>BMS discharge inhibit</strong> alarm — a live load with a battery that will not
+discharge is not a symptom of anything.</li></ul>
+<p>There is a hard irony worth knowing: the alarm beacon is itself inside the
+container it reports on, so it dies with the fire it would announce. See
+<a href="topology-view.html#4-the-answer-the-design-document-asks-for">Topology § The answer the design document asks for</a>.</p>
+<hr>
+<h2 id="6-serviceability-a-dark-tile-is-a-claim" class="doc-h"><span class="doc-h-text">6. Serviceability: a dark tile is a claim</span><a class="doc-anchor" href="#6-serviceability-a-dark-tile-is-a-claim" aria-label="Link to this section"></a></h2>
+<p>The annunciator gives every definition a tile, always. That makes a dark tile a
+positive claim that the condition is normal — which is only true if the tile can
+light at all.</p>
+<p>So serviceability is computed per definition, and a definition that <strong>cannot
+fire</strong> is reported <code>out_of_service</code> rather than dark. See
+<a href="annunciator.html#6-out-of-service--the-honest-dark-tile">The annunciator panel § Out of service</a>
+for the full rules and the list.</p>
+<p>On the shipped definition set, <strong>ten of the forty cannot fire</strong>, including all
+three in the SAFETY bay. Each is enabled, appears healthy in the alarm list, and
+has a trigger point that does not exist for its asset.</p>
+<p>This is the single most important thing to understand about the current alarm
+coverage. Full write-up:
+<a href="integration-findings.html#f-007--ten-of-the-forty-alarms-can-never-fire">Integration findings F-007</a>.</p>
+<hr>
+<h2 id="7-notification-and-the-honest-part" class="doc-h"><span class="doc-h-text">7. Notification, and the honest part</span><a class="doc-anchor" href="#7-notification-and-the-honest-part" aria-label="Link to this section"></a></h2>
+<p><strong>Only the <code>log</code> channel has a working implementation.</strong></p>
+<p><code>email</code>, <code>push</code> and <code>voice</code> are honest stubs. They record a delivery-log row with
+status <code>not_configured</code> and a detail explaining exactly what is missing. <strong>They
+never return success</strong>, and nothing reports that an alert was delivered when it
+was not.</p>
+<p>An alerting path you believe in but that does not exist is worse than no
+alerting path.</p>
+<h3 id="routing-rules" class="doc-h"><span class="doc-h-text">Routing rules</span><a class="doc-anchor" href="#routing-rules" aria-label="Link to this section"></a></h3>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Rule</th><th scope="col">Detail</th></tr></thead><tbody><tr><td><strong>The incident is the unit of notification, not the alarm</strong></td><td>A member alarm of an incident is suppressed by the correlator and never notified individually. That is what stops a container outage becoming a hundred messages</td></tr><tr><td><strong>Severity chooses the channels</strong></td><td>A definition's escalation path can override the routing per stage</td></tr><tr><td><strong>Escalation is time-driven and explicit</strong></td><td>Stage <em>N</em> fires once its delay has elapsed since the alarm activated, and <strong>only while the alarm is still unacknowledged</strong></td></tr><tr><td><strong>Acknowledging stops escalation</strong></td><td>It does not clear the alarm</td></tr><tr><td><strong>Re-notification</strong></td><td>Repeats the highest reached stage at a fixed interval for alarms that stay unacknowledged</td></tr></tbody></table></div>
+<p><strong>Every attempt on every channel is a row</strong>, so <em>"why did nobody get called"</em> is
+answerable after the fact. That log is on the console.</p>
+<h3 id="what-this-means-for-the-acceptance-criteria" class="doc-h"><span class="doc-h-text">What this means for the acceptance criteria</span><a class="doc-anchor" href="#what-this-means-for-the-acceptance-criteria" aria-label="Link to this section"></a></h3>
+<p>One of the platform's MVP criteria requires critical alarms to work during
+internet loss. With only <code>log</code> wired, that criterion is <strong>not met</strong> — a log line
+is not an alert. Meeting it needs a local audible or voice path, or an
+independent device path such as the environmental appliance's own alerting.
+Recorded as an open item in
+<a href="secondary-control-node.html#6-open-decisions">Secondary control node § Open decisions</a>.</p>
+<hr>
+<h2 id="8-where-to-act-on-an-alarm" class="doc-h"><span class="doc-h-text">8. Where to act on an alarm</span><a class="doc-anchor" href="#8-where-to-act-on-an-alarm" aria-label="Link to this section"></a></h2>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Surface</th><th scope="col">Best for</th></tr></thead><tbody><tr><td><a href="annunciator.html">The annunciator panel</a></td><td>Deciding whether anything is wrong, at a glance, from across the room. Acknowledge and reset</td></tr><tr><td><a href="operator-console.html#43-alarms">The console's Alarms screen</a></td><td>Working an incident: the member alarms, their history, mitigate and review</td></tr><tr><td><a href="operations.html#3-alarm-floods">Operations § Alarm floods</a></td><td>What to do — and what not to do — when dozens arrive at once</td></tr></tbody></table></div>
+<p>Every action collects a mandatory reason. The API requires it, and the dialog
+exists so you learn that from the interface rather than from a rejection.</p>
+<hr>
+<h2 id="9-related-reading" class="doc-h"><span class="doc-h-text">9. Related reading</span><a class="doc-anchor" href="#9-related-reading" aria-label="Link to this section"></a></h2>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Document</th><th scope="col">Why</th></tr></thead><tbody><tr><td><a href="annunciator.html">The annunciator panel</a></td><td>The panel view, the sequence, out-of-service tiles</td></tr><tr><td><a href="integration-findings.html">Integration findings</a></td><td>F-007 and F-007a: the alarms that cannot fire</td></tr><tr><td><a href="control.html">Control</a></td><td>Operating modes, and why maintenance mode beats suppression</td></tr><tr><td><a href="commissioning.html#step-10--alarm_and_notification_test">Commissioning § Step 10</a></td><td>Proving an alarm end to end before signing off a subsystem</td></tr><tr><td><a href="api.html#9-alarms">API reference § Alarms</a></td><td>The endpoints behind all of it</td></tr></tbody></table></div></div><nav class="doc-pager" aria-label="Reading order"><a class="pager-prev" href="architecture.html" data-page="architecture"><span class="pager-role">Previous</span>Architecture</a><a class="pager-next" href="control.html" data-page="control"><span class="pager-role">Next</span>Control, interlocks and operating modes</a></nav></article>
+</main>
+<aside class="site-toc" aria-label="On this page"><h2>On this page</h2><ul><li data-level="2"><a href="#1-where-the-definitions-come-from" data-anchor="1-where-the-definitions-come-from">1. Where the definitions come from</a></li><li data-level="2"><a href="#2-severity" data-anchor="2-severity">2. Severity</a></li><li data-level="2"><a href="#3-lifecycle" data-anchor="3-lifecycle">3. Lifecycle</a></li><li data-level="3"><a href="#delays-are-states-not-timers" data-anchor="delays-are-states-not-timers">Delays are states, not timers</a></li><li data-level="3"><a href="#reset-is-a-separate-condition-not-the-negation-of-the-trigger" data-anchor="reset-is-a-separate-condition-not-the-negation-of-the-trigger">Reset is a separate condition, not the negation of the trigger</a></li><li data-level="3"><a href="#bad-data-is-not-good-news" data-anchor="bad-data-is-not-good-news">Bad data is not good news</a></li><li data-level="3"><a href="#maintenance-mode-modifies-alarms-it-does-not-delete-them" data-anchor="maintenance-mode-modifies-alarms-it-does-not-delete-them">Maintenance mode modifies alarms; it does not delete them</a></li><li data-level="2"><a href="#4-operator-context--the-fr-008-payload" data-anchor="4-operator-context--the-fr-008-payload">4. Operator context — the FR-008 payload</a></li><li data-level="2"><a href="#5-correlation-and-incidents" data-anchor="5-correlation-and-incidents">5. Correlation and incidents</a></li><li data-level="3"><a href="#suppressed-never-means-discarded" data-anchor="suppressed-never-means-discarded">Suppressed never means discarded</a></li><li data-level="3"><a href="#some-alarms-refuse-to-be-anybodys-symptom" data-anchor="some-alarms-refuse-to-be-anybodys-symptom">Some alarms refuse to be anybody's symptom</a></li><li data-level="2"><a href="#6-serviceability-a-dark-tile-is-a-claim" data-anchor="6-serviceability-a-dark-tile-is-a-claim">6. Serviceability: a dark tile is a claim</a></li><li data-level="2"><a href="#7-notification-and-the-honest-part" data-anchor="7-notification-and-the-honest-part">7. Notification, and the honest part</a></li><li data-level="3"><a href="#routing-rules" data-anchor="routing-rules">Routing rules</a></li><li data-level="3"><a href="#what-this-means-for-the-acceptance-criteria" data-anchor="what-this-means-for-the-acceptance-criteria">What this means for the acceptance criteria</a></li><li data-level="2"><a href="#8-where-to-act-on-an-alarm" data-anchor="8-where-to-act-on-an-alarm">8. Where to act on an alarm</a></li><li data-level="2"><a href="#9-related-reading" data-anchor="9-related-reading">9. Related reading</a></li></ul></aside>
+</div>
+<div class="site-search" id="search-overlay" hidden role="dialog" aria-modal="true" aria-label="Search the documentation">
+<div class="site-search-panel">
+<div class="site-search-head">
+<svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.3-4.3"/></svg>
+<input type="search" id="search-input" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="true" aria-controls="search-results" placeholder="Search every page — try black start, dead letter, interlock">
+<button type="button" class="btn btn-sm" id="search-close">Close</button>
+</div>
+<p class="site-search-status" id="search-status" role="status">Type to search every page of this help set.</p>
+<ul class="site-results" id="search-results" role="listbox" aria-label="Search results"></ul>
+<div class="site-search-foot"><span><span class="kbd-hint">&#8593;</span> <span class="kbd-hint">&#8595;</span> move</span><span><span class="kbd-hint">Enter</span> open</span><span><span class="kbd-hint">Esc</span> close</span><span><span class="kbd-hint">/</span> search from anywhere</span></div>
+</div>
+</div>
+<script src="assets/search-index.js"></script>
+<script src="assets/docs.js"></script>
+</body>
+</html>

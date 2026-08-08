@@ -20,21 +20,21 @@ import datetime as dt
 import pytest
 import yaml
 
-from homestead_twin.alarms.correlation import CorrelationEngine, DependencyGraph
-from homestead_twin.alarms.definitions import sync_definitions
-from homestead_twin.alarms.evaluator import AlarmEvaluator, SuppressionReason
-from homestead_twin.alarms.notify import Notifier, build_channels, notification_detail
-from homestead_twin.alarms.service import AlarmEngineService
-from homestead_twin.config import DATA_DIR
-from homestead_twin.models.alarms import Alarm, AlarmDefinition, Incident, NotificationLog
-from homestead_twin.models.registry import (
+from chaos.alarms.correlation import CorrelationEngine, DependencyGraph
+from chaos.alarms.definitions import sync_definitions
+from chaos.alarms.evaluator import AlarmEvaluator, SuppressionReason
+from chaos.alarms.notify import Notifier, build_channels, notification_detail
+from chaos.alarms.service import AlarmEngineService
+from chaos.config import DATA_DIR
+from chaos.models.alarms import Alarm, AlarmDefinition, Incident, NotificationLog
+from chaos.models.registry import (
     Asset,
     AssetClass,
     AssetRelationship,
     Point,
     PointDefinition,
 )
-from homestead_twin.models.telemetry import CurrentState
+from chaos.models.telemetry import CurrentState
 
 T0 = dt.datetime(2026, 8, 7, 12, 0, 0, tzinfo=dt.UTC)
 
@@ -493,7 +493,7 @@ def test_alarms_outside_the_correlation_window_are_not_grouped(db_session, engin
 
 
 def test_unconfigured_channels_record_an_honest_failure(db_session, settings, definitions, registry):
-    from homestead_twin.config import Settings
+    from chaos.config import Settings
 
     configured = Settings(
         database_url="sqlite://",
@@ -551,7 +551,7 @@ def test_critical_alarm_escalates_then_stops_on_acknowledgement(db_session, engi
 
 
 def test_unacknowledged_critical_alarm_is_re_notified(db_session, engine_parts):
-    from homestead_twin.alarms.definitions import definition_meta
+    from chaos.alarms.definitions import definition_meta
 
     evaluator, correlator, notifier = engine_parts
     definition = db_session.get(AlarmDefinition, "generator_start_failed")
@@ -577,7 +577,7 @@ def test_unacknowledged_critical_alarm_is_re_notified(db_session, engine_parts):
 
 
 def test_maintenance_suppressed_alarms_are_not_notified(db_session, engine_parts):
-    from homestead_twin.models.commands import OperatingMode
+    from chaos.models.commands import OperatingMode
 
     evaluator, correlator, notifier = engine_parts
     db_session.add(OperatingMode(scope_type="domain", scope_id="security", mode="maintenance", changed_at=T0))

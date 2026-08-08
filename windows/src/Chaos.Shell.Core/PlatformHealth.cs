@@ -21,6 +21,30 @@ public sealed record PlatformHealth
     /// </summary>
     public bool? PhysicalControlEnabled { get; init; }
 
+    /// <summary>
+    /// The gateway's <c>backend</c> field — <c>up</c>, <c>down</c> or
+    /// <c>starting</c> — exactly as it was sent. Null when this response came
+    /// from something that does not report one.
+    /// </summary>
+    public string? Backend { get; init; }
+
+    /// <summary>The gateway's sentence about the backend, when it sent one.</summary>
+    public string? BackendDetail { get; init; }
+
+    /// <summary>
+    /// <see cref="Backend"/> mapped to a state. A word this shell does not
+    /// recognise becomes <see cref="BackendState.Unknown"/>, never
+    /// <see cref="BackendState.Up"/>: an unreadable answer about the process
+    /// that runs the alarm engine is not an assurance that it is running.
+    /// </summary>
+    public BackendState BackendState => Backend?.Trim().ToLowerInvariant() switch
+    {
+        "up" or "ok" or "running" or "healthy" => BackendState.Up,
+        "starting" or "start_pending" or "startpending" => BackendState.Starting,
+        "down" or "stopped" or "failed" or "unavailable" => BackendState.Down,
+        _ => BackendState.Unknown,
+    };
+
     public bool IsOk => string.Equals(Status, "ok", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
@@ -66,13 +90,32 @@ public sealed record PlatformHealth
                 return false;
             }
 
+            // The gateway nests its own version under "host" and the backend's
+            // sentence under "backendDetail"; the Python platform answers a
+            // flatter shape. Both are read, because the shell probes whichever
+            // is in front of it.
+            var host = root.TryGetProperty("host", out var hostElement)
+                && hostElement.ValueKind == JsonValueKind.Object
+                    ? hostElement
+                    : default;
+
+            var backendDetail = root.TryGetProperty("backendDetail", out var detailElement)
+                && detailElement.ValueKind == JsonValueKind.Object
+                    ? detailElement
+                    : default;
+
             health = new PlatformHealth
             {
                 Status = status,
-                Version = ReadString(root, "version"),
+                Version = ReadString(root, "version")
+                    ?? (host.ValueKind == JsonValueKind.Object ? ReadString(host, "version") : null),
                 NodeRole = ReadString(root, "node_role"),
                 SiteId = ReadString(root, "site_id"),
                 PhysicalControlEnabled = ReadBool(root, "physical_control_enabled"),
+                Backend = ReadString(root, "backend"),
+                BackendDetail = backendDetail.ValueKind == JsonValueKind.Object
+                    ? ReadString(backendDetail, "detail")
+                    : null,
             };
             return true;
         }

@@ -26,7 +26,7 @@ public interface IBackendHealthProbe
 
 /// <summary>
 /// Polls the platform's <c>/health</c> endpoint
-/// (<c>src/homestead_twin/api/app.py</c>), which answers:
+/// (<c>src/chaos/api/app.py</c>), which answers:
 /// <c>{"status":"ok","version":…,"node_role":…,"site_id":…,"physical_control_enabled":…}</c>.
 /// </summary>
 /// <remarks>

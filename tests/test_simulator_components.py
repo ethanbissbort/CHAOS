@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from homestead_twin.envelope import CommandEnvelope
+from chaos.envelope import CommandEnvelope
 from simulator.clock import (
     DEFAULT_START,
     RealTimePacer,

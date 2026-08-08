@@ -12,18 +12,18 @@ import datetime as dt
 
 import pytest
 
-from homestead_twin.ems.config import EmsConfig
-from homestead_twin.ems.derived import compute_derived
-from homestead_twin.ems.inputs import ALL_SPECS, SPEC_BY_KEY, EmsInputs, InputReading, gather_inputs
-from homestead_twin.ems.state_machine import (
+from chaos.ems.config import EmsConfig
+from chaos.ems.derived import compute_derived
+from chaos.ems.inputs import ALL_SPECS, SPEC_BY_KEY, EmsInputs, InputReading, gather_inputs
+from chaos.ems.state_machine import (
     EnergyStateMachine,
     LatchError,
     ensure_snapshot,
     publish_state,
     select_candidate,
 )
-from homestead_twin.models.energy import LATCHING_ENERGY_STATES, EnergyStateTransition
-from homestead_twin.models.telemetry import CurrentState
+from chaos.models.energy import LATCHING_ENERGY_STATES, EnergyStateTransition
+from chaos.models.telemetry import CurrentState
 
 T0 = dt.datetime(2026, 8, 7, 12, 0, 0, tzinfo=dt.UTC)
 
@@ -190,8 +190,8 @@ def test_healthy_site_selects_normal(config):
 
 
 def test_all_ten_states_are_reachable_in_the_severity_model():
-    from homestead_twin.ems.state_machine import STATE_SEVERITY
-    from homestead_twin.models.energy import ENERGY_STATES
+    from chaos.ems.state_machine import STATE_SEVERITY
+    from chaos.models.energy import ENERGY_STATES
 
     assert set(STATE_SEVERITY) == set(ENERGY_STATES)
 
@@ -620,7 +620,7 @@ def test_state_is_published_on_the_documented_topic(machine, db_session, setting
     snapshot.data_quality = "good"
     topic = publish_state(bus, settings, snapshot, now=T0, reason="reserve declining")
 
-    assert topic == "homestead/site/primary/site_01/energy_state"
+    assert topic == "chaos/site/primary/site_01/energy_state"
     message = bus.last(topic)
     assert message is not None and message.retain
     payload = json.loads(message.text)
@@ -648,7 +648,7 @@ def test_published_quality_reflects_degraded_data(machine, db_session, settings,
 
 @pytest.fixture()
 def blackstart(config):
-    from homestead_twin.ems.blackstart import BlackStartCoordinator
+    from chaos.ems.blackstart import BlackStartCoordinator
 
     return BlackStartCoordinator(config)
 
@@ -680,7 +680,7 @@ def test_black_start_prerequisites_are_reported_honestly(blackstart):
 
 
 def test_black_start_sequence_runs_in_order_and_completes(blackstart):
-    from homestead_twin.ems.blackstart import BLACK_START_STEPS
+    from chaos.ems.blackstart import BLACK_START_STEPS
 
     state = blackstart.begin(
         make_inputs(), actor="op", reason="total AC blackout", now=T0, prerequisites_attested=True
@@ -712,11 +712,11 @@ def test_black_start_reconciliation_does_not_assume_retained_state(
     blackstart, db_session, config, settings, bus
 ):
     """SDD 35.4: retained desired state is not physical state."""
-    from homestead_twin.ems import RecordingCommandPort
-    from homestead_twin.ems.loader import load_schedule
-    from homestead_twin.ems.shedding import ShedController, current_load_states
-    from homestead_twin.models.energy import PowerBudgetLease
-    from homestead_twin.models.registry import Asset
+    from chaos.ems import RecordingCommandPort
+    from chaos.ems.loader import load_schedule
+    from chaos.ems.shedding import ShedController, current_load_states
+    from chaos.models.energy import PowerBudgetLease
+    from chaos.models.registry import Asset
 
     for asset_id in ("energy.load.site.opportunistic_compute_01", "energy.load.site.tool_charging_01"):
         db_session.add(
@@ -780,7 +780,7 @@ def test_manager_command_port_never_raises_and_never_claims_success(settings, bu
     It also never raises into the shed sequence: a supervisory allocator that
     crashes mid-shed is worse than one that reports a blocked command.
     """
-    from homestead_twin.ems import CommandOutcome, CommandRequest, ManagerCommandPort
+    from chaos.ems import CommandOutcome, CommandRequest, ManagerCommandPort
 
     port = ManagerCommandPort(settings=settings, bus=bus)
     outcome = port.issue(
@@ -795,7 +795,7 @@ def test_manager_command_port_never_raises_and_never_claims_success(settings, bu
 
 
 def test_recording_port_can_script_a_per_asset_failure():
-    from homestead_twin.ems import CommandOutcome, CommandRequest, RecordingCommandPort
+    from chaos.ems import CommandOutcome, CommandRequest, RecordingCommandPort
 
     port = RecordingCommandPort(
         responses={"energy.load.site.spa_01": CommandOutcome.refused("rejected", "manual")}

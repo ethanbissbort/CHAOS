@@ -11,8 +11,12 @@ namespace Chaos.Host.Supervisor.Tests;
 /// </summary>
 public sealed class PythonRuntimeResolverTests
 {
-    private const string InstallRoot = "/opt/chaos";
-    private const string RepositoryRoot = "/home/dev/homestead-twin";
+    // Normalised through Path() like every other path here. Left unnormalised
+    // these are POSIX roots, and on Windows the resolver then joins a "/"-rooted
+    // string to "\"-separated tails: "/opt/chaos\python\bin\python3". The
+    // resolver is right and the expectation was wrong.
+    private static readonly string InstallRoot = Path("/opt/chaos");
+    private static readonly string RepositoryRoot = Path("/home/dev/chaos");
 
     [Fact]
     public void The_embedded_runtime_wins_when_it_is_present()
@@ -20,7 +24,7 @@ public sealed class PythonRuntimeResolverTests
         var files = new FakeFileSystem()
             .AddDirectory(Path("/opt/chaos/python"))
             .AddFile(Path("/opt/chaos/python/bin/python3"))
-            .AddFile(Path("/opt/chaos/app/src/homestead_twin/cli.py"))
+            .AddFile(Path("/opt/chaos/app/src/chaos/cli.py"))
             .AddOnPath("python3", "/usr/bin/python3");
 
         var resolution = new PythonRuntimeResolver(files, isWindows: false)
@@ -60,7 +64,7 @@ public sealed class PythonRuntimeResolverTests
         // unknown dependency versions while looking healthy.
         var files = new FakeFileSystem()
             .AddDirectory(Path("/opt/chaos/python"))
-            .AddFile(Path("/home/dev/homestead-twin/src/homestead_twin/cli.py"))
+            .AddFile(Path("/home/dev/chaos/src/chaos/cli.py"))
             .AddOnPath("python3", "/usr/bin/python3");
 
         var resolution = new PythonRuntimeResolver(files, isWindows: false)
@@ -80,20 +84,20 @@ public sealed class PythonRuntimeResolverTests
     public void With_no_embedded_directory_at_all_the_development_layout_is_used()
     {
         var files = new FakeFileSystem()
-            .AddFile(Path("/home/dev/homestead-twin/src/homestead_twin/cli.py"))
+            .AddFile(Path("/home/dev/chaos/src/chaos/cli.py"))
             .AddOnPath("python3", "/usr/bin/python3");
 
         var resolution = new PythonRuntimeResolver(files, isWindows: false)
             .Resolve(new BackendSupervisorOptions
             {
-                InstallRoot = Path("/home/dev/homestead-twin/windows/src/Chaos.Host/bin"),
+                InstallRoot = Path("/home/dev/chaos/windows/src/Chaos.Host/bin"),
             });
 
         Assert.True(resolution.Succeeded);
         Assert.Equal(BackendRuntimeLayout.Development, resolution.Runtime!.Layout);
         Assert.Equal("/usr/bin/python3", resolution.Runtime.Executable);
-        Assert.Equal(Path("/home/dev/homestead-twin/src"), resolution.Runtime.Environment["PYTHONPATH"]);
-        Assert.Equal(Path("/home/dev/homestead-twin"), resolution.Runtime.WorkingDirectory);
+        Assert.Equal(Path("/home/dev/chaos/src"), resolution.Runtime.Environment["PYTHONPATH"]);
+        Assert.Equal(Path("/home/dev/chaos"), resolution.Runtime.WorkingDirectory);
 
         // The trail says why, so "which Python am I actually running?" is never
         // a guess.
@@ -106,7 +110,7 @@ public sealed class PythonRuntimeResolverTests
     public void RequireEmbeddedRuntime_refuses_to_consider_the_development_layout()
     {
         var files = new FakeFileSystem()
-            .AddFile(Path("/home/dev/homestead-twin/src/homestead_twin/cli.py"))
+            .AddFile(Path("/home/dev/chaos/src/chaos/cli.py"))
             .AddOnPath("python3", "/usr/bin/python3");
 
         var resolution = new PythonRuntimeResolver(files, isWindows: false)
@@ -130,7 +134,7 @@ public sealed class PythonRuntimeResolverTests
             .Resolve(new BackendSupervisorOptions
             {
                 InstallRoot = InstallRoot,
-                RepositoryRoot = "/wrong/place",
+                RepositoryRoot = Path("/wrong/place"),
             });
 
         Assert.False(resolution.Succeeded);
@@ -141,7 +145,7 @@ public sealed class PythonRuntimeResolverTests
     public void No_interpreter_anywhere_is_reported_with_every_place_that_was_tried()
     {
         var files = new FakeFileSystem()
-            .AddFile(Path("/home/dev/homestead-twin/src/homestead_twin/cli.py"));
+            .AddFile(Path("/home/dev/chaos/src/chaos/cli.py"));
 
         var resolution = new PythonRuntimeResolver(files, isWindows: false)
             .Resolve(new BackendSupervisorOptions
@@ -161,7 +165,7 @@ public sealed class PythonRuntimeResolverTests
     public void An_explicitly_configured_interpreter_that_does_not_exist_is_not_silently_replaced()
     {
         var files = new FakeFileSystem()
-            .AddFile(Path("/home/dev/homestead-twin/src/homestead_twin/cli.py"))
+            .AddFile(Path("/home/dev/chaos/src/chaos/cli.py"))
             .AddOnPath("python3", "/usr/bin/python3");
 
         var resolution = new PythonRuntimeResolver(files, isWindows: false)

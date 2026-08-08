@@ -1,0 +1,109 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    ===========================================================================
+    Chaos.Runtime - the project that builds the things that are not .NET.
+
+    THE POINT OF THIS PROJECT: the owner builds and tests this product in
+    Visual Studio and does not use a command line. Two parts of the product
+    were previously only producible by typing PowerShell:
+
+      * the embedded Python interpreter that ships inside the installer
+        (windows\build\python-runtime.ps1), and
+      * the offline documentation site (tools\build_docs.py).
+
+    Both are now produced by BUILDING THIS PROJECT. Build the solution, or
+    right-click Chaos.Runtime in Solution Explorer and choose Build, and they
+    appear. No terminal, and no separate procedure to remember.
+
+    WHY A PROJECT RATHER THAN A TARGET BOLTED ONTO Chaos.Host
+    ========================================================
+      * It is visible. It has a node in Solution Explorer, with Build, Rebuild
+        and Clean on its context menu, and it can be checked and unchecked in
+        Build > Configuration Manager. A target hidden inside the gateway's
+        .csproj is discoverable only by reading the .csproj.
+      * It is separable. Building the gateway does not build a Python
+        interpreter. If the runtime build fails - no internet, say - Chaos.Host
+        still builds and still runs, because nothing in it depends on this
+        project. There is deliberately no ProjectReference anywhere to here.
+      * The two jobs are the same kind of job: run a reviewed script, report
+        what it did. They belong together and away from the C#.
+
+    It compiles no code. The empty assembly in bin\ is a side effect of using
+    the standard SDK - which is worth it, because it means the project loads,
+    builds and behaves in Visual Studio exactly like every other project here.
+
+    WHAT RUNS WHEN
+    ==============
+      Build    Builds the embedded Python runtime IF it is missing or out of
+               date (2-5 minutes and a ~55 MB download, once), verifies it if
+               it has not been verified since it was built, and regenerates the
+               documentation site if any .md file has changed (seconds).
+               Otherwise: does nothing at all, and says so.
+      Rebuild  Forces both from scratch: deletes the stamps, rebuilds the
+               interpreter with -Force and re-runs the full verification.
+               This is the "force a rebuild" button, and it is a normal Visual
+               Studio command.
+      Clean    Leaves the runtime and the documentation alone. Clean Solution
+               is a reflex; it must not cost a 55 MB download.
+
+    The mechanics live in the two .targets files imported at the bottom, next
+    to the scripts they call. Read those for the incrementality rules and the
+    escape hatches.
+
+    NON-WINDOWS
+    ===========
+    The runtime build is skipped (it runs python.exe and needs the Windows
+    SDK); the documentation build is not, because it is just Python. A
+    repository-wide `dotnet build` on Linux stays green either way.
+    ===========================================================================
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>$(ChaosTargetFramework)</TargetFramework>
+    <AssemblyName>Chaos.Runtime</AssemblyName>
+    <RootNamespace>Chaos.Runtime</RootNamespace>
+
+    <!-- No code here, and nothing to publish, pack or test. -->
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <IsPackable>false</IsPackable>
+    <IsPublishable>false</IsPublishable>
+    <IsTestProject>false</IsTestProject>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+
+    <!--
+      TURN THE PYTHON RUNTIME BUILD OFF HERE.
+
+      Set this to false to work on the .NET side of the product without ever
+      building the interpreter - on a machine with no internet, for example.
+      Everything else in the solution is unaffected: no project depends on this
+      one. Unchecking Chaos.Runtime in Build > Configuration Manager does the
+      same thing without editing anything.
+
+      Leave it empty to get the default, which is "on Windows, yes".
+    -->
+    <!-- <ChaosBuildPythonRuntime>false</ChaosBuildPythonRuntime> -->
+
+    <!-- And the same switch for the documentation site. -->
+    <!-- <ChaosBuildDocs>false</ChaosBuildDocs> -->
+
+    <!-- A documentation problem (a dead cross-reference, say) is reported and
+         does not break the build. Set this to true for a release build, where
+         a manual that does not regenerate IS a reason to stop. -->
+    <!-- <ChaosDocsGenerationFailsBuild>true</ChaosDocsGenerationFailsBuild> -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The scripts and the generator, in Solution Explorer, so they can be
+         opened and read from the IDE. None of them is compiled or copied. -->
+    <None Include="..\..\build\python-runtime.ps1" Link="scripts\python-runtime.ps1" Visible="true" />
+    <None Include="..\..\build\verify-runtime.ps1" Link="scripts\verify-runtime.ps1" Visible="true" />
+    <None Include="..\..\build\python-runtime.lock.json" Link="scripts\python-runtime.lock.json" Visible="true" />
+    <None Include="..\..\build\Chaos.PythonRuntime.targets" Link="targets\Chaos.PythonRuntime.targets" Visible="true" />
+    <None Include="..\..\build\Chaos.Docs.targets" Link="targets\Chaos.Docs.targets" Visible="true" />
+  </ItemGroup>
+
+  <Import Project="..\..\build\Chaos.PythonRuntime.targets" />
+  <Import Project="..\..\build\Chaos.Docs.targets" />
+
+</Project>

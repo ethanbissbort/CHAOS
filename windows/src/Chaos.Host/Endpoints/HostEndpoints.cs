@@ -1,7 +1,10 @@
 using Chaos.Host.Abstractions;
 using Chaos.Host.Configuration;
+using Chaos.Host.Docs;
 using Chaos.Host.Health;
+using Chaos.Host.Http;
 using Chaos.Host.Routing;
+using Chaos.Host.Setup;
 using Chaos.Host.Web;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -13,7 +16,8 @@ namespace Chaos.Host.Endpoints;
 
 /// <summary>
 /// The gateway's own endpoints: <c>/health</c>, <c>/health/live</c>,
-/// <c>/host/info</c> and <c>/host/routes</c>.
+/// <c>/host/info</c>, <c>/host/routes</c>, <c>/host/setup</c> and
+/// <c>/host/setup/run</c>.
 /// </summary>
 /// <remarks>
 /// These are the only .NET-owned routes today, and each is backed by a row in
@@ -34,8 +38,86 @@ public static class HostEndpoints
         endpoints.MapGet("/health/live", GetLiveness).ExcludeFromDescription();
         endpoints.MapGet("/host/info", GetInfo).ExcludeFromDescription();
         endpoints.MapGet("/host/routes", GetRoutes).ExcludeFromDescription();
+        endpoints.MapGet("/host/setup", GetSetup).ExcludeFromDescription();
+        endpoints.MapPost("/host/setup/run", PostSetupRun).ExcludeFromDescription();
 
         return endpoints;
+    }
+
+    /// <summary>
+    /// First-run setup state: what the gateway found, what it did, and what an
+    /// operator has to do next if anything.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Always 200.</b> This is a report, and a report that a machine needs
+    /// setting up is a successful report. The state is in the body, in
+    /// <c>state</c>: <c>not_started</c>, <c>checking</c>, <c>running</c>,
+    /// <c>ready</c>, <c>failed</c> or <c>needs_attention</c>. Health is
+    /// <c>/health</c>'s job, and it carries this state too.
+    /// </para>
+    /// <para>
+    /// Safe to poll: it reads an immutable snapshot and never touches the
+    /// database.
+    /// </para>
+    /// </remarks>
+    private static IResult GetSetup(HttpContext context)
+    {
+        var services = context.RequestServices;
+        var coordinator = services.GetRequiredService<PlatformSetupCoordinator>();
+        var options = services.GetRequiredService<IOptions<ChaosHostOptions>>().Value;
+
+        return Results.Json(SetupPayload.Create(
+            coordinator.Snapshot,
+            options,
+            coordinator.RecordPath,
+            DateTimeOffset.UtcNow));
+    }
+
+    /// <summary>
+    /// Runs setup now — the shell's "Set up now" and "Retry" button.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Idempotent and safe to call twice. On an already-set-up machine the run
+    /// completes as a no-op and says so; it never re-imports. While a run is in
+    /// flight a second call is declined rather than queued, so two clicks cannot
+    /// produce two concurrent imports.
+    /// </para>
+    /// <para>
+    /// <b>Status codes.</b> 202 when this call started a run; 200 when it did
+    /// not, with <c>accepted: false</c> and a <c>reason</c> of
+    /// <c>already_running</c> or <c>auto_setup_disabled</c>. Both carry the full
+    /// <c>/host/setup</c> body under <c>setup</c>, so the shell needs one round
+    /// trip rather than two.
+    /// </para>
+    /// <para>
+    /// <c>?force=true</c> proceeds when automatic setup is off, or when the
+    /// database was assessed as needing attention. It never makes setup
+    /// destructive: the same <c>init-db</c> and <c>load-all --skip-missing</c>
+    /// run either way, and neither drops anything.
+    /// </para>
+    /// </remarks>
+    private static IResult PostSetupRun(HttpContext context)
+    {
+        var services = context.RequestServices;
+        var coordinator = services.GetRequiredService<PlatformSetupCoordinator>();
+        var options = services.GetRequiredService<IOptions<ChaosHostOptions>>().Value;
+
+        var force = QueryFlags.IsTrue(context.Request.Query["force"]);
+        var acceptance = coordinator.RequestRun("api", force);
+
+        return Results.Json(
+            SetupPayload.ForRun(
+                acceptance,
+                force,
+                coordinator.Snapshot,
+                options,
+                coordinator.RecordPath,
+                DateTimeOffset.UtcNow),
+            statusCode: acceptance.Accepted
+                ? StatusCodes.Status202Accepted
+                : StatusCodes.Status200OK);
     }
 
     /// <summary>
@@ -53,6 +135,17 @@ public static class HostEndpoints
     /// status-code-only monitor that an off-grid site with no alarm engine is
     /// fine. Use <c>/health/live</c> to ask only whether this process is alive.
     /// </para>
+    /// <para>
+    /// <b>Setup counts too.</b> A gateway reporting healthy over a platform with
+    /// no database is the same lie in a different costume, so a setup state of
+    /// <c>failed</c> or <c>needs_attention</c> forces <c>degraded</c>, and
+    /// <c>checking</c> or <c>running</c> forces <c>starting</c>, whatever the
+    /// backend says. <c>not_started</c> forces nothing: it means the gateway has
+    /// not looked, which is not evidence either way, and the backend probe is
+    /// already reporting whether the platform answers. The <c>setup</c> object
+    /// is additive — every field that was on this payload before is still here,
+    /// unchanged.
+    /// </para>
     /// </remarks>
     private static IResult GetHealth(HttpContext context)
     {
@@ -60,6 +153,7 @@ public static class HostEndpoints
         var health = services.GetRequiredService<BackendHealthState>();
         var options = services.GetRequiredService<IOptions<ChaosHostOptions>>().Value;
         var supervisor = services.GetRequiredService<IBackendSupervisor>();
+        var setup = services.GetRequiredService<PlatformSetupCoordinator>().Snapshot;
 
         var now = DateTimeOffset.UtcNow;
         var report = BackendHealthReport.Create(health, options, now);
@@ -73,6 +167,14 @@ public static class HostEndpoints
             "starting" => "starting",
             _ => "degraded",
         };
+
+        // Setup can only ever make the answer worse, never better: a ready
+        // database does not redeem an unreachable backend.
+        var fromSetup = SetupPayload.HealthContribution(setup.State);
+        if (fromSetup == "degraded" || (fromSetup == "starting" && status == "ok"))
+        {
+            status = fromSetup;
+        }
 
         var payload = new
         {
@@ -102,11 +204,12 @@ public static class HostEndpoints
                 platformVersionContract = HostVersion.PlatformVersionContract,
             },
             supervisor = DescribeSupervisor(supervisor),
+            setup = SetupPayload.ForHealth(setup),
         };
 
         return Results.Json(
             payload,
-            statusCode: report.BackendIsUp && !versionMismatch
+            statusCode: status == "ok"
                 ? StatusCodes.Status200OK
                 : StatusCodes.Status503ServiceUnavailable);
     }
@@ -138,6 +241,7 @@ public static class HostEndpoints
         var table = services.GetRequiredService<RouteOwnershipTable>();
         var supervisor = services.GetRequiredService<IBackendSupervisor>();
         var webRoot = services.GetRequiredService<WebRootResolution>();
+        var documentation = services.GetRequiredService<DocumentationSiteState>();
         var health = services.GetRequiredService<BackendHealthState>();
         var report = BackendHealthReport.Create(health, options, DateTimeOffset.UtcNow);
         var snapshot = report.Snapshot;
@@ -178,6 +282,10 @@ public static class HostEndpoints
                 source = webRoot.Source,
                 searched = webRoot.SearchedPaths,
             },
+
+            // Where the manuals are. The shell and the console link to this, so
+            // an operator never has to remember a second port number.
+            documentation = DocumentationPayload.Create(documentation, context.Request.Host),
             windowsService = new
             {
                 running = WindowsServiceIntegration.IsRunningAsWindowsService(),
@@ -245,6 +353,8 @@ public static class HostEndpoints
             notOwnedByTheManifest = new[]
             {
                 "/ and /ui/** - the operator console, served from this host's static-file pipeline.",
+                "The documentation site - a SEPARATE listener on its own port (see documentation on /host/info). "
+              + "It is not reachable through this listener at all, so no manifest row could describe it.",
             },
         });
     }

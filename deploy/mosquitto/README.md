@@ -22,7 +22,7 @@ ACL, every authenticated client can publish to every topic. On this property
 that means:
 
 - A compromised ESP32 in a greenhouse could publish
-  `homestead/energy/power_container/inverter_01/cmd/stop` and shut down the
+  `chaos/energy/power_container/inverter_01/cmd/stop` and shut down the
   inverters.
 - The same node could publish a fake `battery_soc_pct` of 100 and starve the
   EMS of the truth it needs to protect the battery.
@@ -36,21 +36,21 @@ owns. The topic grammar is what makes this cheap to express.
 
 ### The one-character rule
 
-From `src/homestead_twin/topics.py` (SDD 10.1, 26.2):
+From `src/chaos/topics.py` (SDD 10.1, 26.2):
 
 ```
-homestead/<domain>/<location>/<class>_<instance>/<point_name>     telemetry   1 level
-homestead/<domain>/<location>/<class>_<instance>/availability     last will   1 level
-homestead/<domain>/<location>/<class>_<instance>/event/<name>     event       2 levels
-homestead/<domain>/<location>/<class>_<instance>/cmd/<name>       command     2 levels
-homestead/<domain>/<location>/<class>_<instance>/cmd/<name>/ack   ack         3 levels
+chaos/<domain>/<location>/<class>_<instance>/<point_name>     telemetry   1 level
+chaos/<domain>/<location>/<class>_<instance>/availability     last will   1 level
+chaos/<domain>/<location>/<class>_<instance>/event/<name>     event       2 levels
+chaos/<domain>/<location>/<class>_<instance>/cmd/<name>       command     2 levels
+chaos/<domain>/<location>/<class>_<instance>/cmd/<name>/ack   ack         3 levels
 ```
 
 Commands live one level deeper than telemetry. So:
 
 ```
-topic write homestead/energy/power_container/inverter_01/+     # telemetry only
-topic write homestead/energy/power_container/inverter_01/#     # telemetry AND commands
+topic write chaos/energy/power_container/inverter_01/+     # telemetry only
+topic write chaos/energy/power_container/inverter_01/#     # telemetry AND commands
 ```
 
 The first grants a gateway everything it needs to report. The second lets it
@@ -137,7 +137,7 @@ so the broker can never come up serving plaintext on the TLS port.
 2. Place `ca.crt`, `server.crt`, `server.key` in
    `/mosquitto/config/local/certs/` with mode `600`.
 3. Uncomment the `listener 8883` block.
-4. Set `HOMESTEAD_MQTT_TLS=true` in `deploy/.env`.
+4. Set `CHAOS_MQTT_TLS=true` in `deploy/.env`.
 5. Once every gateway holds a client certificate, set `require_certificate true`
    and `use_identity_as_username true`. That binds the broker identity to the
    certificate rather than to a password, which is what SDD 15.2 means by

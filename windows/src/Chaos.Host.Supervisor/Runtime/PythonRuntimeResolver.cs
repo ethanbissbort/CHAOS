@@ -154,7 +154,7 @@ public sealed class PythonRuntimeResolver : IPythonRuntimeResolver
         else
         {
             workingDirectory = installRoot;
-            sourceNote = "homestead_twin expected in the embedded interpreter's site-packages";
+            sourceNote = "chaos expected in the embedded interpreter's site-packages";
             attempts.Add($"embedded: no '{CliPath(appSource)}', assuming an installed package");
         }
 
@@ -246,10 +246,10 @@ public sealed class PythonRuntimeResolver : IPythonRuntimeResolver
 
         attempts.Add(
             $"development: walked {RepositorySearchDepth.ToString(System.Globalization.CultureInfo.InvariantCulture)} " +
-            $"levels up from '{installRoot}' without finding src/homestead_twin/cli.py");
+            $"levels up from '{installRoot}' without finding src/chaos/cli.py");
         failure =
             "No platform source found. There is no embedded runtime and no checkout above " +
-            $"'{installRoot}' containing src/homestead_twin/cli.py. Set " +
+            $"'{installRoot}' containing src/chaos/cli.py. Set " +
             $"{nameof(BackendSupervisorOptions.RepositoryRoot)} or install the packaged runtime.";
         return null;
     }
@@ -305,5 +305,5 @@ public sealed class PythonRuntimeResolver : IPythonRuntimeResolver
         Path.Combine(installRoot, EmbeddedRuntimeDirectoryName);
 
     private static string CliPath(string sourceRoot) =>
-        Path.Combine(sourceRoot, "homestead_twin", "cli.py");
+        Path.Combine(sourceRoot, "chaos", "cli.py");
 }

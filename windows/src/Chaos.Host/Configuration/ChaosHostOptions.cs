@@ -42,9 +42,16 @@ public sealed class ChaosHostOptions
     /// Where the operator console assets live. Empty means "probe" — see
     /// <see cref="Web.WebRootResolver"/>: the packaged <c>web</c> folder beside
     /// the executable first, then the repository's
-    /// <c>src/homestead_twin/web</c> for development. Set explicitly to pin it.
+    /// <c>src/chaos/web</c> for development. Set explicitly to pin it.
     /// </summary>
     public string? WebRootPath { get; set; }
+
+    /// <summary>
+    /// The documentation listener — the offline manuals, on their own port
+    /// (8090 by default), with no API, no proxy and no write endpoints. See
+    /// <see cref="DocumentationOptions"/>.
+    /// </summary>
+    public DocumentationOptions Docs { get; set; } = new();
 
     /// <summary>
     /// How long a single proxied request may take end to end, including
@@ -122,6 +129,106 @@ public sealed class ChaosHostOptions
     /// reported on <c>/health</c> and <c>/host/info</c> whether or not it is enforced.
     /// </summary>
     public bool RefuseIncompatibleBackend { get; set; }
+
+    // -- First-run setup ---------------------------------------------------
+    //
+    // The owner does not want to use a CLI. These settings are what makes
+    // "launch the shell" the whole installation procedure, and what lets an
+    // operator who manages a node by hand turn that off.
+
+    /// <summary>
+    /// Whether the gateway checks the platform database at startup and sets it
+    /// up if it is empty. <b>On by default</b>, because a fresh install must be
+    /// usable without anyone opening a terminal.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Turn it off (<c>CHAOS_AutoSetup=false</c>) on a node an operator manages
+    /// by hand: with it off the gateway neither reads nor writes the platform
+    /// database on its own, and <c>GET /host/setup</c> reports
+    /// <c>not_started</c> — which is a statement about the gateway, not a claim
+    /// that the database is missing.
+    /// </para>
+    /// <para>
+    /// It never authorises anything destructive either way. Setup only ever runs
+    /// the platform's <c>init-db</c> and <c>load-all --skip-missing</c>, and only
+    /// against a database with nothing in it.
+    /// </para>
+    /// </remarks>
+    public bool AutoSetup { get; set; } = true;
+
+    /// <summary>
+    /// Whether the gateway launches and supervises the Python backend as a
+    /// child process. <b>On by default</b>, because the gateway proxies
+    /// <c>/api/v1</c> to that backend and without it there is nothing behind
+    /// the console: the product's whole promise is that starting the desktop
+    /// shell is sufficient.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Turn it off (<c>CHAOS_SuperviseBackend=false</c>) when the backend is
+    /// started by something else — a developer running it under a debugger, or
+    /// a node where it is managed separately. With it off the gateway keeps
+    /// proxying to <see cref="BackendUrl"/>, it simply does not start or stop
+    /// whatever is listening there, and <c>/health</c> reports the backend from
+    /// probing alone.
+    /// </para>
+    /// <para>
+    /// Tests turn it off so that constructing a host never launches a real
+    /// interpreter.
+    /// </para>
+    /// </remarks>
+    public bool SuperviseBackend { get; set; } = true;
+
+    /// <summary>
+    /// The platform database, as a SQLAlchemy URL — for example
+    /// <c>sqlite:///C:/ProgramData/Project CHAOS/homestead.db</c>. Empty means
+    /// "whatever the platform's own default is", which the gateway then reports
+    /// rather than guesses. Passed to the platform CLI as
+    /// <c>CHAOS_DATABASE_URL</c>.
+    /// </summary>
+    public string? DatabaseUrl { get; set; }
+
+    /// <summary>
+    /// The design package directory (<c>data/</c>) the registry is built from.
+    /// Empty means "derive it from the resolved Python runtime, and let the
+    /// platform use its own default". Passed to the platform CLI as
+    /// <c>CHAOS_DATA_DIR</c> only when set explicitly.
+    /// </summary>
+    public string? DataDirectory { get; set; }
+
+    /// <summary>
+    /// Where the setup transcript is written — every command, its full output
+    /// and its exit code. Empty derives
+    /// <c>&lt;LocalApplicationData&gt;/Project CHAOS/chaos-setup.log</c>. The
+    /// path is reported on <c>GET /host/setup</c> so a failure is actionable
+    /// without a stack trace.
+    /// </summary>
+    public string? SetupLogPath { get; set; }
+
+    /// <summary>
+    /// Where the gateway records what it last set up, so it can answer "is the
+    /// registry still in step with <c>data/</c>". Empty derives
+    /// <c>&lt;LocalApplicationData&gt;/Project CHAOS/chaos-setup-state.json</c>.
+    /// Deleting it loses only that answer, which then reads as unknown.
+    /// </summary>
+    public string? SetupStateFile { get; set; }
+
+    /// <summary>Overall budget for one setup run, across every command in it.</summary>
+    public TimeSpan SetupTimeout { get; set; } = TimeSpan.FromMinutes(15);
+
+    /// <summary>
+    /// Budget for the read-only <c>status --json</c> probe. Short: it only opens
+    /// the database and counts rows, and a hung probe must not look like a long
+    /// import.
+    /// </summary>
+    public TimeSpan SetupProbeTimeout { get; set; } = TimeSpan.FromMinutes(2);
+
+    /// <summary>
+    /// Budget for a single setup command. <c>load-all</c> imports the whole
+    /// design package, which on a slow disk is minutes rather than seconds.
+    /// </summary>
+    public TimeSpan SetupCommandTimeout { get; set; } = TimeSpan.FromMinutes(10);
 
     /// <summary>The backend base address, parsed. </summary>
     /// <returns>The parsed absolute URI.</returns>

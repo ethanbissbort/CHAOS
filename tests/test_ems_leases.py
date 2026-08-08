@@ -14,13 +14,13 @@ import pytest
 from test_ems_shedding import ALL_LOADS, COMPUTE, CONTROL_CORE, IRRIGATION, SPA, WORKSHOP
 from test_ems_state_machine import T0, at, make_derived, make_inputs
 
-from homestead_twin.ems import RecordingCommandPort
-from homestead_twin.ems.config import EmsConfig
-from homestead_twin.ems.leases import LeaseManager
-from homestead_twin.ems.loader import effective_tier, load_schedule
-from homestead_twin.ems.state_machine import ensure_snapshot
-from homestead_twin.models.energy import PowerBudgetLease, PowerLoadProfile
-from homestead_twin.models.registry import Asset
+from chaos.ems import RecordingCommandPort
+from chaos.ems.config import EmsConfig
+from chaos.ems.leases import LeaseManager
+from chaos.ems.loader import effective_tier, load_schedule
+from chaos.ems.state_machine import ensure_snapshot
+from chaos.models.energy import PowerBudgetLease, PowerLoadProfile
+from chaos.models.registry import Asset
 
 
 @pytest.fixture()
@@ -201,7 +201,7 @@ def test_revocation_withdraws_allocation_only(manager, db_session, config):
     assert lease.state == "revoked"
     assert "test.operator" in lease.revoked_reason
     # No shed action and no command were produced by the revocation.
-    from homestead_twin.models.energy import LoadShedAction
+    from chaos.models.energy import LoadShedAction
 
     assert db_session.query(LoadShedAction).count() == 0
 
@@ -337,7 +337,7 @@ def test_sweep_expires_tier_overrides(manager, db_session, loads):
 def test_service_tick_with_an_expiring_lease_issues_no_commands(
     db_session, session_factory, bus, settings, config, loads, manager
 ):
-    from homestead_twin.ems.service import EnergyManagerService
+    from chaos.ems.service import EnergyManagerService
 
     snapshot = ensure_snapshot(db_session, now=T0)
     snapshot.state = "NORMAL"

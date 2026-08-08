@@ -51,6 +51,14 @@ internal sealed class ChaosHostFactory : WebApplicationFactory<Program>
             // trigger the probe and pick up whatever happens to be on disk.
             _settings["Chaos:WebRootPath"] = Path.Combine(Path.GetTempPath(), "chaos-host-tests-absent-webroot");
 
+            // First-run setup off unless a test asks for it. On, it would launch
+            // the platform CLI as a real child process and create a real
+            // database - the opposite of hermetic. Setup has its own factory
+            // (SetupHostFactory) that injects a fake command runner instead.
+            _settings["Chaos:AutoSetup"] = "false";
+            // Never launch a real interpreter from a test host.
+            _settings["Chaos:SuperviseBackend"] = "false";
+
             // Keep the "starting" grace window short so backend-down states are
             // reached immediately instead of after a minute.
             _settings["Chaos:BackendStartTimeout"] = "00:00:00.100";

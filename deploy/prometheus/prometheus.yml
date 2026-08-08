@@ -49,7 +49,7 @@ scrape_configs:
 
   # Digital twin API. Enable once the application exposes /metrics.
   # Until then, use the PostgreSQL datasource in Grafana and /health for liveness.
-  # - job_name: homestead-twin
+  # - job_name: chaos
   #   metrics_path: /metrics
   #   static_configs:
   #     - targets: ["twin:8000"]

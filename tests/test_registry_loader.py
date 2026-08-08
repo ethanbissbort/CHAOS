@@ -18,10 +18,10 @@ import sqlalchemy as sa
 import yaml
 from sqlalchemy.orm import sessionmaker
 
-from homestead_twin import topics
-from homestead_twin.config import Settings
-from homestead_twin.db import build_engine
-from homestead_twin.models import (
+from chaos import topics
+from chaos.config import Settings
+from chaos.db import build_engine
+from chaos.models import (
     Asset,
     AssetClass,
     AssetRelationship,
@@ -34,10 +34,10 @@ from homestead_twin.models import (
     PointProfile,
     PointSampleIndex,
 )
-from homestead_twin.models.base import Base
-from homestead_twin.registry import points as points_module
-from homestead_twin.registry import service
-from homestead_twin.registry.loader import (
+from chaos.models.base import Base
+from chaos.registry import points as points_module
+from chaos.registry import service
+from chaos.registry.loader import (
     LoadResult,
     RegistryLoadError,
     load_package,
@@ -482,7 +482,7 @@ def test_binding_keeps_tbd_addresses_and_adds_the_topic_projection(db_session, l
     assert binding.quality_policy == "reject_invalid"
     # The MQTT projection is derived, because it follows from identity.
     assert binding.mqtt_topic == topics.telemetry_topic(INVERTER, "power_ac_output_kw")
-    assert binding.mqtt_topic == "homestead/energy/power_container/inverter_01/power_ac_output_kw"
+    assert binding.mqtt_topic == "chaos/energy/power_container/inverter_01/power_ac_output_kw"
     # Not control capable -> no command topic.
     assert binding.command_topic is None
 
@@ -874,7 +874,7 @@ def test_resolve_topic_maps_mqtt_back_to_the_binding(db_session, loaded_registry
     assert binding.point_id == f"{INVERTER}/power_ac_output_kw"
     assert binding.asset_id == INVERTER
 
-    assert service.resolve_topic(db_session, "homestead/energy/nowhere/thing_01/x") is None
+    assert service.resolve_topic(db_session, "chaos/energy/nowhere/thing_01/x") is None
 
     command = service.resolve_command_topic(
         db_session, topics.command_topic("energy.load.site.server_rack_01", "power_budget_kw")

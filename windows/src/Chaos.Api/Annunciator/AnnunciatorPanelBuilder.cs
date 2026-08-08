@@ -9,7 +9,7 @@ namespace Chaos.Api.Annunciator;
 /// </summary>
 /// <remarks>
 /// Port of <c>annunciator_panel()</c> in
-/// <c>src/homestead_twin/api/routers/annunciator.py</c>. Keeping it free of I/O
+/// <c>src/chaos/api/routers/annunciator.py</c>. Keeping it free of I/O
 /// is what lets the serviceability rules be tested exhaustively instead of only
 /// through whatever the seeded design package happens to contain.
 /// </remarks>

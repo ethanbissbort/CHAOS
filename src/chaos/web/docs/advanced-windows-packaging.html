@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<meta name="generator" content="tools/build_docs.py">
+<title>Windows packaging — Project CHAOS help</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http%3A//www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230e1a16'/%3E%3Cpath d='M6 18 16 8l10 10v8H6z' fill='none' stroke='%234ade80' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/docs.css">
+<noscript><style>.doc-page[hidden]{display:block!important}.site-searchbtn{display:none}</style></noscript>
+</head>
+<body data-page="advanced-windows-packaging">
+<a class="skip-link" href="#content">Skip to the documentation</a>
+<header class="site-topbar">
+<button type="button" class="btn btn-icon site-navtoggle" id="nav-toggle" aria-controls="site-nav" aria-expanded="false" title="Documents"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span class="visually-hidden">Show the document list</span></button>
+<a class="site-identity" href="index.html"><span class="site-mark"><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M5 19 16 8l11 11v7H5z"/></svg></span><span class="site-titles"><h1>Project CHAOS help</h1><p>Central Homestead Automation and Operation System</p></span></a>
+<button type="button" class="site-searchbtn" id="search-open"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.3-4.3"/></svg><span>Search the documentation</span><span class="kbd-hint">/</span></button>
+<div class="site-tools">
+<button type="button" class="btn btn-sm" id="theme-toggle"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4"/></svg><span class="theme-label">System</span></button>
+<button type="button" class="btn btn-icon" id="print-page" onclick="window.print()" title="Print this page"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M7 9V4h10v5M7 18H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2"/><rect x="7" y="14" width="10" height="6" rx="1"/></svg><span class="visually-hidden">Print this page</span></button>
+</div>
+</header>
+<div class="site-shell">
+<nav class="site-nav" id="site-nav" aria-label="Documents"><h2>Overview</h2><ul><li><a href="index.html" data-page="index"><span class="nav-num">01</span><span>Project CHAOS documentation</span></a></li><li><a href="readme.html" data-page="readme"><span class="nav-num">02</span><span>Project CHAOS</span></a></li></ul><h2>Using CHAOS</h2><ul><li><a href="getting-started.html" data-page="getting-started"><span class="nav-num">03</span><span>Getting started</span></a></li><li><a href="visual-studio.html" data-page="visual-studio"><span class="nav-num">04</span><span>Building in Visual Studio 2026</span></a></li><li><a href="desktop-shell.html" data-page="desktop-shell"><span class="nav-num">05</span><span>The desktop shell</span></a></li><li><a href="operator-console.html" data-page="operator-console"><span class="nav-num">06</span><span>The operator console</span></a></li><li><a href="annunciator.html" data-page="annunciator"><span class="nav-num">07</span><span>The annunciator panel</span></a></li><li><a href="topology-view.html" data-page="topology-view"><span class="nav-num">08</span><span>Topology and blast radius</span></a></li><li><a href="rack-view.html" data-page="rack-view"><span class="nav-num">09</span><span>Rack elevation</span></a></li></ul><h2>How the platform works</h2><ul><li><a href="architecture.html" data-page="architecture"><span class="nav-num">10</span><span>Architecture</span></a></li><li><a href="alarms.html" data-page="alarms"><span class="nav-num">11</span><span>Alarms, incidents and notification</span></a></li><li><a href="control.html" data-page="control"><span class="nav-num">12</span><span>Control, interlocks and operating modes</span></a></li><li><a href="design-package.html" data-page="design-package"><span class="nav-num">13</span><span>The design package</span></a></li><li><a href="integration-findings.html" data-page="integration-findings"><span class="nav-num">14</span><span>Integration findings</span></a></li></ul><h2>Operating the property</h2><ul><li><a href="operations.html" data-page="operations"><span class="nav-num">15</span><span>Operations runbooks</span></a></li><li><a href="troubleshooting.html" data-page="troubleshooting"><span class="nav-num">16</span><span>Troubleshooting</span></a></li><li><a href="commissioning.html" data-page="commissioning"><span class="nav-num">17</span><span>Commissioning</span></a></li><li><a href="secondary-control-node.html" data-page="secondary-control-node"><span class="nav-num">18</span><span>Secondary control node</span></a></li><li><a href="network-and-trust-boundaries.html" data-page="network-and-trust-boundaries"><span class="nav-num">19</span><span>Network and trust boundaries</span></a></li><li><a href="water-control-narrative.html" data-page="water-control-narrative"><span class="nav-num">20</span><span>Water-system control narrative</span></a></li></ul><h2>Reference</h2><ul><li><a href="api.html" data-page="api"><span class="nav-num">21</span><span>API reference</span></a></li><li><a href="design-decisions.html" data-page="design-decisions"><span class="nav-num">22</span><span>Design Decision Records</span></a></li></ul><h2>Advanced — you do not need these</h2><ul><li><a href="advanced-command-line.html" data-page="advanced-command-line"><span class="nav-num">23</span><span>Command line</span></a></li><li><a href="advanced-container-deployment.html" data-page="advanced-container-deployment"><span class="nav-num">24</span><span>Container deployment</span></a></li><li><a href="advanced-windows-packaging.html" data-page="advanced-windows-packaging" aria-current="page"><span class="nav-num">25</span><span>Windows packaging</span></a></li></ul><h2>Design Decisions</h2><ul><li><a href="design-decisions-dd-001-energy-capacity-revision.html" data-page="design-decisions-dd-001-energy-capacity-revision"><span class="nav-num">26</span><span>DD-001: Authoritative energy design revision</span></a></li><li><a href="design-decisions-dd-002-historian-selection.html" data-page="design-decisions-dd-002-historian-selection"><span class="nav-num">27</span><span>DD-002: Time-series historian selection</span></a></li><li><a href="design-decisions-dd-003-secondary-control-node-placement.html" data-page="design-decisions-dd-003-secondary-control-node-placement"><span class="nav-num">28</span><span>DD-003: Secondary control node placement</span></a></li><li><a href="design-decisions-dd-004-controller-family.html" data-page="design-decisions-dd-004-controller-family"><span class="nav-num">29</span><span>DD-004: Standard PLC / controller family for critical local control</span></a></li></ul></nav>
+<main class="site-main" id="content" tabindex="-1">
+<article class="doc-page" id="advanced-windows-packaging" data-page="advanced-windows-packaging"><p class="doc-breadcrumb"><span>Advanced — you do not need these</span><span>Windows packaging</span></p><p class="doc-source">docs/advanced-windows-packaging.md</p><div class="doc-body"><h1 id="windows-packaging" class="doc-h"><span class="doc-h-text">Windows packaging</span><a class="doc-anchor" href="#windows-packaging" aria-label="Link to this section"></a></h1>
+<p>How Project CHAOS is packaged into an installable product: the embedded Python
+runtime, the build scripts and the MSI.</p>
+<blockquote><p><strong>Advanced. You do not need this to build, run or test CHAOS.</strong></p>
+<p>Building the solution and running the tests is done in Visual Studio 2026 —
+see <a href="visual-studio.html">Building in Visual Studio 2026</a>. Installing and
+running the product is <a href="getting-started.html">Getting started</a>.</p>
+<p>This document is for <strong>producing the installer</strong>. It is build engineering, and
+it is PowerShell by nature: the packaging pipeline runs unattended in CI and on
+a release machine, not from a menu. Read it when you are cutting a build,
+changing the pinned Python, or diagnosing a runtime that shipped broken.</p></blockquote>
+<blockquote><p><strong>Scope note.</strong> This document currently covers the <strong>embedded Python runtime</strong>
+— the <code>python\</code> tree that lets the product run on a machine with no Python
+installed. The .NET publish, MSI authoring, service registration and
+commissioning sections belong to the host/installer work and slot in around
+these; add them, do not replace them.</p></blockquote>
+<p>Related: <a href="visual-studio.html">Building in Visual Studio 2026</a> ·
+<a href="advanced-command-line.html">Command line</a> ·
+<a href="getting-started.html">Getting started</a></p>
+<hr>
+<h2 id="the-build-tasks" class="doc-h"><span class="doc-h-text">The build tasks</span><a class="doc-anchor" href="#the-build-tasks" aria-label="Link to this section"></a></h2>
+<p><code>windows\build\build.ps1</code> drives the whole pipeline. One task per stage, and
+<code>-Task all</code> runs the four that produce a product:</p>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Task</th><th scope="col">Does</th></tr></thead><tbody><tr><td><code>restore</code></td><td>Restore <code>windows\CHAOS.sln</code></td></tr><tr><td><code>build</code></td><td>Build the whole solution, including the WinUI 3 shell</td></tr><tr><td><code>test</code></td><td>Run the .NET test suite across the solution</td></tr><tr><td><code>runtime</code></td><td>Build the embedded Python tree (the rest of this document)</td></tr><tr><td><code>publish</code></td><td>Publish <code>Chaos.Host</code> and <code>Chaos.Shell</code>, self-contained</td></tr><tr><td><code>stage</code></td><td>Assemble the complete install tree in <code>out\stage</code></td></tr><tr><td><code>package</code></td><td>Build the MSI from <code>out\stage</code></td></tr><tr><td><code>smoke</code></td><td>Run the staged tree and check it actually serves</td></tr><tr><td><code>all</code></td><td><code>runtime</code> + <code>publish</code> + <code>stage</code> + <code>package</code></td></tr><tr><td><code>clean</code></td><td>Delete <code>windows\build\out</code></td></tr></tbody></table></div>
+<p>Order matters in one place only: <code>stage</code> lays down <code>app\</code> before the runtime is
+copied in, and <code>smoke</code> needs a staged tree to run against.</p>
+<p><strong><code>restore</code>, <code>build</code> and <code>test</code> duplicate what Visual Studio already does.</strong>
+They exist for CI and for a release machine with no IDE. If you are at a
+keyboard with Visual Studio open, use Solution Explorer and Test Explorer
+instead.</p>
+<hr>
+<h2 id="embedded-python-runtime" class="doc-h"><span class="doc-h-text">Embedded Python runtime</span><a class="doc-anchor" href="#embedded-python-runtime" aria-label="Link to this section"></a></h2>
+<h3 id="why-it-exists" class="doc-h"><span class="doc-h-text">Why it exists</span><a class="doc-anchor" href="#why-it-exists" aria-label="Link to this section"></a></h3>
+<p>The product must not require Python to be preinstalled. Nobody is going to
+babysit a Python install on a machine in a container next to a battery bank, and
+"the operator upgraded Python and the control plane stopped starting" is not an
+acceptable failure mode. So the product carries its own interpreter, built from
+the official Windows embeddable CPython distribution.</p>
+<p>The .NET gateway (<code>Chaos.Host</code>) is built to supervise that interpreter as a
+child process, and its first-run setup already runs the platform's own commands
+through it. <code>PythonRuntimeResolver</code> resolves exactly
+<code>&lt;install root&gt;\python\python.exe</code> and, finding a <code>python\</code> directory without an
+interpreter in it, treats the install as <strong>damaged</strong> and refuses to fall back to
+a system Python. That refusal is deliberate: borrowing the machine's Python would
+run the control plane against dependency versions nobody tested.</p>
+<p>(The gateway's shipped entry point does not currently register the process
+supervisor, so the backend is started by something else — see
+<a href="architecture.html#process-supervision">Architecture § The gap: process supervision</a>
+and <a href="visual-studio.html#what-happens-when-you-press-f5">Visual Studio § What happens when you press F5</a>.
+Nothing in this document depends on that; the interpreter is resolved the same
+way either way.)</p>
+<h3 id="building-it-from-visual-studio" class="doc-h"><span class="doc-h-text">Building it from Visual Studio</span><a class="doc-anchor" href="#building-it-from-visual-studio" aria-label="Link to this section"></a></h3>
+<p><strong>You do not have to type any of the commands below.</strong> Building the solution
+builds this runtime, because <code>Chaos.Runtime</code> owns it: Build builds it if it is
+missing or out of date, Rebuild forces it from scratch, and Clean deliberately
+leaves it alone so that a reflexive Clean Solution does not cost a 55 MB
+download. See
+<a href="visual-studio.html#6-chaosruntime-the-parts-that-are-not-net">Visual Studio § Chaos.Runtime</a>.</p>
+<p>The rest of this section is what that project runs, and what to do when it
+fails.</p>
+<h3 id="the-two-commands-it-runs" class="doc-h"><span class="doc-h-text">The two commands it runs</span><a class="doc-anchor" href="#the-two-commands-it-runs" aria-label="Link to this section"></a></h3>
+<p>From a normal PowerShell prompt (Windows PowerShell 5.1 or PowerShell 7 — both
+are supported), in <code>windows\build</code>:</p>
+<div class="doc-code" data-lang="powershell"><div class="doc-code-bar"><span class="doc-code-lang">powershell</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-powershell">.\build.ps1 <span class="t-o">-Task</span> runtime      <span class="t-c"># build it</span>
+.\verify-runtime.ps1           <span class="t-c"># prove it works</span></code></pre></div>
+<p>The first produces <code>windows\build\out\stage\python\</code>. The second runs ten checks
+against that tree with the interpreter under test and prints <code>All 10 checks passed.</code> or a <code>[FAIL]</code> line naming the likely cause.</p>
+<p><code>verify-runtime.ps1</code> also works against an installed product, which is how you
+tell "the install is broken" from "the product is broken":</p>
+<div class="doc-code" data-lang="powershell"><div class="doc-code-bar"><span class="doc-code-lang">powershell</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-powershell">.\verify-runtime.ps1 <span class="t-o">-Path</span> <span class="t-s">"$env:ProgramFiles\Project CHAOS\python"</span></code></pre></div>
+<p>Requirements: outbound HTTPS <strong>at build time only</strong> (the installed product never
+downloads anything), and no compiler — see <em>Wheels only</em>, below. Administrator
+rights are not needed for either command.</p>
+<h3 id="what-gets-produced" class="doc-h"><span class="doc-h-text">What gets produced</span><a class="doc-anchor" href="#what-gets-produced" aria-label="Link to this section"></a></h3>
+<div class="doc-code" data-lang="text"><div class="doc-code-bar"><span class="doc-code-lang">text</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-text">&lt;install root&gt;\python\
+    python.exe                       &lt;- the supervisor resolves THIS path
+    pythonw.exe
+    python311.dll   python3.dll
+    python311.zip                    the stdlib, .pyc only, 649 modules
+    python311._pth                   rewritten by the build; see below
+    vcruntime140.dll                 shipped by CPython; no VC++ redist needed
+    vcruntime140_1.dll
+    libssl-3.dll  libcrypto-3.dll    OpenSSL 3, for TLS
+    sqlite3.dll                      the product's database engine
+    libffi-8.dll
+    _socket.pyd  _ssl.pyd  _sqlite3.pyd  _ctypes.pyd  _decimal.pyd
+    _asyncio.pyd  _hashlib.pyd  _queue.pyd  _overlapped.pyd  ...
+    LICENSE.txt
+    Lib\
+      site-packages\
+        sitecustomize.py             isolation; see below
+        chaos\                       the platform, from a locally built wheel
+          web\                       the operator UI, copied in explicitly
+        simulator\
+        fastapi\ starlette\ uvicorn\ sqlalchemy\ pydantic\ pydantic_core\
+        paho\ yaml\ jsonschema\ httpx\ httpcore\ anyio\ greenlet\ ...
+        __pycache__\ everywhere      precompiled, unchecked-hash
+    Scripts\
+      chaos.exe                      the operator CLI entry point
+      homestead-simulator.exe
+      uvicorn.exe  httpx.exe  jsonschema.exe  dotenv.exe  fastapi.exe</code></pre></div>
+<p><code>Lib\site-packages</code> and <code>Scripts</code> are the standard Windows (<code>nt</code>) sysconfig
+scheme for a prefix, so pip puts things there without being told.</p>
+<p><strong>There is no <code>python\Lib\</code> beyond <code>site-packages</code>, no <code>DLLs\</code>, and no
+<code>tcl\</code></strong> — an embeddable distribution keeps the stdlib in <code>python311.zip</code> and
+puts every <code>.pyd</code> flat in the root. There is also no <code>venv</code> module and no
+<code>ensurepip</code>. That is normal and is why the build works the way it does.</p>
+<h3 id="the-layout-contract-with-the-supervisor" class="doc-h"><span class="doc-h-text">The layout contract with the supervisor</span><a class="doc-anchor" href="#the-layout-contract-with-the-supervisor" aria-label="Link to this section"></a></h3>
+<p><code>PythonRuntimeResolver.TryEmbedded</code> does two things:</p>
+<ol><li>Looks for <code>&lt;install root&gt;\python\python.exe</code>. The build produces exactly that.</li><li>If <code>&lt;install root&gt;\app\src\chaos\cli.py</code> <strong>also</strong> exists, it sets
+<code>PYTHONPATH=&lt;install root&gt;\app\src</code>.</li></ol>
+<p>Point 2 matters, because <strong>a <code>._pth</code> interpreter discards <code>PYTHONPATH</code></strong>. In that
+layout the supervisor would report that it is running the platform from
+<code>app\src</code> while actually importing it from <code>Lib\site-packages</code>, and an operator
+who edits <code>app\src</code> on the property to fix something would see no effect at all.</p>
+<p><code>build.ps1 -Task stage</code> stages <code>app\data</code>, <code>app\schemas</code>, <code>app\tools</code> and
+<code>app\web</code> — <strong>not</strong> <code>app\src</code> — so the resolver takes its site-packages branch
+and everything is consistent. Because that consistency was accidental rather
+than enforced, <code>python-runtime.ps1</code> now fails the build if <code>app\src\chaos\cli.py</code>
+appears in the staged tree. The resolver is tested and correct; the package is
+what must not put it in that position.</p>
+<p>The supervisor launches the backend as:</p>
+<div class="doc-code" data-lang="text"><div class="doc-code-bar"><span class="doc-code-lang">text</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-text">python.exe -m chaos.cli --log-level &lt;level&gt; serve --host &lt;addr&gt; --port &lt;port&gt;</code></pre></div>
+<p>so <code>python -m chaos.cli --help</code> is a check in its own right, and
+<code>verify-runtime.ps1</code> runs it.</p>
+<h3 id="the-pth-file-and-what-it-silently-changes" class="doc-h"><span class="doc-h-text">The <code>._pth</code> file, and what it silently changes</span><a class="doc-anchor" href="#the-pth-file-and-what-it-silently-changes" aria-label="Link to this section"></a></h3>
+<p>An embeddable distribution ships <code>python311._pth</code>, which upstream contains:</p>
+<div class="doc-code" data-lang="text"><div class="doc-code-bar"><span class="doc-code-lang">text</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-text">python311.zip
+.
+
+# Uncomment to run site.main() automatically
+#import site</code></pre></div>
+<p>The build rewrites it whole (not with a regex against upstream) to:</p>
+<div class="doc-code" data-lang="text"><div class="doc-code-bar"><span class="doc-code-lang">text</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-text">python311.zip
+.
+Lib\site-packages
+
+# ... comment block ...
+import site</code></pre></div>
+<p>From CPython 3.11.9 <code>Modules/getpath.py</code>, the presence of any <code>._pth</code> sets
+<code>isolated = 1</code>, <code>use_environment = 0</code>, <code>site_import = 0</code> (unless a line reads
+exactly <code>import site</code>) and <code>safe_path = 1</code>. In practice:</p>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Environment variable</th><th scope="col">Effect in this runtime</th></tr></thead><tbody><tr><td><code>PYTHONPATH</code></td><td><strong>Ignored.</strong> Nothing can inject a path through the environment.</td></tr><tr><td><code>PYTHONHOME</code></td><td><strong>Ignored.</strong></td></tr><tr><td><code>PYTHONUNBUFFERED</code></td><td>Honoured — read before <code>getpath</code> runs.</td></tr><tr><td><code>PYTHONIOENCODING</code></td><td>Honoured.</td></tr><tr><td><code>PYTHONDONTWRITEBYTECODE</code></td><td>Honoured.</td></tr><tr><td><code>PYTHONUTF8</code></td><td>Honoured (pre-config, earlier still).</td></tr></tbody></table></div>
+<p>The last four matter because <code>BackendSupervisor.BuildStartSpec</code> sets three of
+them. They were confirmed by running a real 3.11 interpreter under a <code>._pth</code>
+file, not inferred from the documentation.</p>
+<p>If you ever need to add a directory to the runtime's <code>sys.path</code>, add a line to
+<code>._pth</code> or drop a <code>.pth</code> file in <code>Lib\site-packages</code>. Setting <code>PYTHONPATH</code> will
+do nothing and will not warn you.</p>
+<h3 id="isolation-from-the-operators-own-python" class="doc-h"><span class="doc-h-text">Isolation from the operator's own Python</span><a class="doc-anchor" href="#isolation-from-the-operators-own-python" aria-label="Link to this section"></a></h3>
+<p>A <code>._pth</code> file cannot switch off the <strong>per-user site directory</strong>
+(<code>%APPDATA%\Python\Python311\site-packages</code>), because that switch is read from
+<code>-s</code>/<code>PYTHONNOUSERSITE</code> long before <code>getpath</code> runs. Left alone this bites twice:</p>
+<ul><li><strong>At build time</strong>, pip sees whatever the person at the keyboard once installed
+with <code>pip install --user</code> and treats it as already satisfied, so it does not
+put those packages in the tree. The tree ships incomplete and still passes its
+own import checks <em>on the build machine</em>.</li><li><strong>At run time</strong>, those same packages shadow the ones the product ships.</li></ul>
+<p>This is not hypothetical. On a build machine with <code>idna</code> and <code>certifi</code> in the
+user site, pip installed neither into the tree, and <code>httpx</code> in the "finished"
+runtime imported them out of the developer's profile.</p>
+<p>So the build writes <code>Lib\site-packages\sitecustomize.py</code> <strong>before pip runs</strong>. It
+removes the user site directory from <code>sys.path</code> and sets
+<code>site.ENABLE_USER_SITE = False</code>, all inside <code>try/except</code> — a <code>sitecustomize</code> that
+raises breaks every interpreter start. <code>verify-runtime.ps1</code> asserts the effect,
+so if the mechanism ever stops working the build fails instead of shipping a
+leaky tree.</p>
+<h3 id="wheels-only" class="doc-h"><span class="doc-h-text">Wheels only</span><a class="doc-anchor" href="#wheels-only" aria-label="Link to this section"></a></h3>
+<p>Every install of a named requirement passes <code>--only-binary=:all:</code>, so pip must
+use a <code>cp311</code> <code>win_amd64</code> wheel and fails loudly if one does not exist.</p>
+<p>This is not a preference. <strong>This interpreter cannot build an sdist</strong>:</p>
+<ul><li>pip's default build isolation hands the build backend to a child interpreter
+through <code>PYTHONPATH</code> — which a <code>._pth</code> interpreter ignores.</li><li>pip's alternative venv-based isolation needs <code>python -m venv</code>, and the
+embeddable distribution does not ship the <code>venv</code> module at all.</li></ul>
+<p>So a source build either fails with a message about <code>setuptools.build_meta</code> that
+explains nothing, or — on a machine that happens to have Visual Studio, like the
+one this is developed on — quietly succeeds and produces a locally compiled
+binary that was never tested anywhere else.</p>
+<p><strong>Every dependency of this project publishes a <code>win_amd64</code> wheel for CPython
+3.11.</strong> Checked against live PyPI, full transitive closure, resolved for
+Windows:</p>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Compiled (<code>cp311-cp311-win_amd64</code>)</th><th scope="col">Pure Python (<code>py3-none-any</code>)</th></tr></thead><tbody><tr><td><code>greenlet</code> (via SQLAlchemy)</td><td><code>annotated-doc</code>, <code>annotated-types</code>, <code>anyio</code>, <code>attrs</code></td></tr><tr><td><code>httptools</code> (via <code>uvicorn[standard]</code>)</td><td><code>certifi</code>, <code>click</code>, <code>colorama</code>, <code>fastapi</code>, <code>h11</code></td></tr><tr><td><code>pydantic-core</code></td><td><code>httpcore</code>, <code>httpx</code>, <code>idna</code>, <code>jsonschema</code></td></tr><tr><td><code>PyYAML</code></td><td><code>jsonschema-specifications</code>, <code>paho-mqtt</code>, <code>pydantic</code></td></tr><tr><td><code>rpds-py</code> (via <code>jsonschema</code>)</td><td><code>pydantic-settings</code>, <code>python-dotenv</code>, <code>referencing</code></td></tr><tr><td><code>SQLAlchemy</code></td><td><code>starlette</code>, <code>typing-extensions</code>, <code>typing-inspection</code></td></tr><tr><td><code>watchfiles</code>, <code>websockets</code></td><td><code>uvicorn</code>, and the <code>chaos</code> wheel itself</td></tr></tbody></table></div>
+<p>The <code>postgres</code> extra (<code>-IncludePostgres</code>) is clean too: <code>psycopg</code>,
+<code>psycopg-binary</code>, <code>alembic</code>, <code>Mako</code>, <code>MarkupSafe</code>, <code>tzdata</code>.</p>
+<p>One dependency deserves a note. <code>uvicorn[standard]</code> pulls <code>uvloop</code>, which has
+<strong>no Windows wheel and never will</strong> — it is a libuv binding for POSIX. That is
+fine: the extra's marker is
+<code>sys_platform != "win32" and sys_platform != "cygwin"</code>, so <code>uvloop</code> is simply not
+part of the Windows dependency set. If you ever check this yourself with
+<code>pip download --platform win_amd64</code>, you will see it fail on <code>uvloop</code>; that is a
+<strong>pip artefact</strong>, because <code>--platform</code> selects wheel tags but does not re-evaluate
+environment markers. Resolve with a tool that does cross-platform markers
+properly (<code>uv pip compile --python-platform x86_64-pc-windows-msvc --python-version 3.11</code>) and <code>uvloop</code> correctly disappears.</p>
+<h3 id="how-the-project-itself-is-installed" class="doc-h"><span class="doc-h-text">How the project itself is installed</span><a class="doc-anchor" href="#how-the-project-itself-is-installed" aria-label="Link to this section"></a></h3>
+<p>Not <code>pip install &lt;repo&gt;</code>. Two steps, and the order is the point:</p>
+<ol><li><code>pip wheel --no-deps --no-build-isolation</code> builds a <code>chaos-*-py3-none-any.whl</code>
+from the checkout. This is the only build in the whole script; it is pure
+Python and needs no compiler.</li><li><code>pip install --only-binary=:all: &lt;that wheel&gt;</code> installs it, which is what
+drags in fastapi, uvicorn, sqlalchemy, pydantic and the rest — all wheels.</li></ol>
+<p>Installing the checkout directly would put the local source tree and its whole
+transitive dependency graph under one pip run, and <code>--only-binary=:all:</code> cannot
+be used there because the checkout <em>is</em> a source tree.</p>
+<p>setuptools writes <code>build\</code> and <code>src\chaos.egg-info\</code> into the checkout while
+building that wheel. <code>build\</code> is not in <code>.gitignore</code>, so the script removes it
+again if it was not there before.</p>
+<h3 id="the-operator-ui-assets-are-copied-in-by-hand-on-purpose" class="doc-h"><span class="doc-h-text">The operator UI assets are copied in by hand, on purpose</span><a class="doc-anchor" href="#the-operator-ui-assets-are-copied-in-by-hand-on-purpose" aria-label="Link to this section"></a></h3>
+<p><code>src/chaos/web/</code> is not a Python package (no <code>__init__.py</code>) and <code>pyproject.toml</code>
+declares no package-data, so <strong>the wheel contains zero web assets</strong> (verified:
+the built wheel's only top-level entries are <code>chaos</code>, <code>simulator</code> and the
+<code>.dist-info</code>). But <code>chaos/api/app.py</code> computes <code>WEB_DIR</code> as
+<code>&lt;package dir&gt;/../web</code> and only mounts <code>/ui</code> when that directory exists.</p>
+<p>Without the explicit copy, the operator UI silently does not exist: the API
+answers, <code>/ui</code> returns 404, and nothing logs an error. <code>verify-runtime.ps1</code>
+resolves <code>WEB_DIR</code> from the <em>installed</em> package and checks the files are there.</p>
+<h3 id="relocatable-console-scripts" class="doc-h"><span class="doc-h-text">Relocatable console scripts</span><a class="doc-anchor" href="#relocatable-console-scripts" aria-label="Link to this section"></a></h3>
+<p>pip writes an <strong>absolute</strong> interpreter path into every console-script <code>.exe</code> it
+creates, taken from <code>sys.executable</code> — i.e. the staging tree. The MSI then moves
+everything to <code>%ProgramFiles%\Project CHAOS\</code>, where that path does not exist,
+and every launcher dies with:</p>
+<div class="doc-code" data-lang="text"><div class="doc-code-bar"><span class="doc-code-lang">text</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-text">Fatal error in launcher: Unable to create process using
+'"...\out\stage\python\python.exe" "...\Scripts\chaos.exe"'</code></pre></div>
+<p>Nothing catches this before a customer does, because in the staging tree the
+path is still valid — the build's own checks pass, and so does <code>-Task smoke</code>,
+which runs from the staging directory.</p>
+<p>So <code>relocate-launchers.py</code> rewrites each shebang to the launcher's own
+documented relative form:</p>
+<div class="doc-code" data-lang="text"><div class="doc-code-bar"><span class="doc-code-lang">text</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-text">#!&lt;launcher_dir&gt;\"..\python.exe"</code></pre></div>
+<p>The distlib stub pip vendors is built with <code>SUPPORT_RELATIVE_PATH</code>, resolves that
+token against the directory the <code>.exe</code> is in, and quotes the result before
+<code>CreateProcessW</code>, so a path with spaces is fine. GUI scripts keep <code>pythonw.exe</code>;
+any interpreter arguments in the original shebang are preserved.
+<code>verify-runtime.ps1</code> fails if any launcher still holds an absolute path.</p>
+<h3 id="how-long-it-takes-and-how-big-it-is" class="doc-h"><span class="doc-h-text">How long it takes, and how big it is</span><a class="doc-anchor" href="#how-long-it-takes-and-how-big-it-is" aria-label="Link to this section"></a></h3>
+<p><strong>Downloads (build machine, once per <code>-Force</code> run):</strong></p>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Artefact</th><th class="col-right" scope="col">Bytes</th><th scope="col">Cached?</th></tr></thead><tbody><tr><td><code>python-3.11.9-embed-amd64.zip</code></td><td class="col-right">11,249,023</td><td>yes, in <code>out\downloads</code></td></tr><tr><td><code>pip-26.2.1-py3-none-any.whl</code></td><td class="col-right">1,816,632</td><td>yes, in <code>out\downloads</code></td></tr><tr><td>31 dependency wheels</td><td class="col-right">~7.3 MB</td><td><strong>no</strong> — <code>--no-cache-dir</code> is deliberate</td></tr></tbody></table></div>
+<p>The dependency wheels are re-fetched every run. That is the price of not
+shipping whatever a stale pip cache happens to hold.</p>
+<p><strong>Time.</strong> The interpreter work itself is small: on a machine with a good
+connection the pip steps take well under a minute end to end, and <code>compileall</code>
+a couple of seconds. Budget <strong>2–5 minutes</strong> for a first <code>-Task runtime</code> on
+Windows and expect Defender's real-time scanning to dominate — it inspects every
+one of the ~3,000 files pip writes. If it is much slower than that, exclude
+<code>windows\build\out</code> from real-time scanning on the build machine (not on the
+target machine).</p>
+<p><strong>Size.</strong> Derived from the actual extracted embeddable and the actual
+<code>win_amd64</code> wheel contents:</p>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Part</th><th class="col-right" scope="col">Size</th></tr></thead><tbody><tr><td>Extracted embeddable distribution</td><td class="col-right">20.7 MiB</td></tr><tr><td><code>Lib\site-packages</code> from wheels</td><td class="col-right">24.1 MiB (17.1 native, 7.0 pure)</td></tr><tr><td>Operator UI assets</td><td class="col-right">0.4 MiB</td></tr><tr><td><code>.pyc</code> from <code>compileall</code></td><td class="col-right">~6 MiB</td></tr><tr><td><strong>Shipped <code>python\</code> tree</strong></td><td class="col-right"><strong>≈ 55 MB</strong></td></tr></tbody></table></div>
+<p><code>setuptools</code>, <code>wheel</code>, <code>pip</code> and <code>pkg_resources</code> are installed and then pruned;
+<code>-NoPrune</code> keeps them and adds roughly 15 MB. <code>-IncludePostgres</code> adds about
+26 MB, most of it the bundled libpq in <code>psycopg-binary</code>. The build prints the
+exact figure it produced.</p>
+<h3 id="when-it-fails" class="doc-h"><span class="doc-h-text">When it fails</span><a class="doc-anchor" href="#when-it-fails" aria-label="Link to this section"></a></h3>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">What you see</th><th scope="col">What it means</th></tr></thead><tbody><tr><td><code>SHA-256 verification failed twice</code></td><td>Either the pin in <code>python-runtime.lock.json</code> is stale, or the download was tampered with. <strong>Do not work around it.</strong> There is no <code>--skip-hash</code> switch and there should never be one — this artefact becomes the interpreter that decides whether a pump starts. Re-pin by following the provenance procedure written into the lock file: fetch the artefact and its <code>.asc</code>, <code>gpg --verify</code>, then take the SHA-256 of the verified bytes.</td></tr><tr><td><code>Could not find a version that satisfies the requirement &lt;x&gt;</code> during a <code>--only-binary=:all:</code> install</td><td>There is no <code>cp311 win_amd64</code> wheel for <code>&lt;x&gt;</code>. A new or upgraded dependency has broken the embedded-runtime approach for that package. Pin it to a version that ships a wheel, or drop it. Do not remove <code>--only-binary=:all:</code>.</td></tr><tr><td><code>&lt;Destination&gt; already exists</code></td><td>Re-run with <code>-Force</code>, or use <code>.\build.ps1 -Task runtime</code>, which passes it. The script refuses to build on top of a partial tree on purpose.</td></tr><tr><td><code>python.exe is not in the extracted tree</code></td><td>The embeddable zip layout changed. <code>&lt;install root&gt;\python\python.exe</code> is a contract with the supervisor; nothing downstream works without it.</td></tr><tr><td><code>Expected stdlib archive python311.zip is missing</code></td><td>The <code>tag</code> field for that version in the lock file does not match the distribution.</td></tr><tr><td><code>[FAIL] isolated from the per-user site directory</code></td><td><code>sitecustomize.py</code> was removed or shadowed. Rebuild; do not hand-repair. Anything the operator installed with <code>pip install --user</code> is currently able to shadow a shipped dependency.</td></tr><tr><td><code>[FAIL] compiled extension modules load</code> — "DLL load failed"</td><td>A wheel for the wrong platform, or a missing <code>vcruntime140.dll</code> / <code>vcruntime140_1.dll</code>. Both ship inside the embeddable zip; if they are gone, check the antivirus quarantine log for the runtime directory before blaming the build.</td></tr><tr><td><code>[FAIL] console-script launchers are relocatable</code></td><td><code>relocate-launchers.py</code> did not run. The tree works only where it was built. Rebuild.</td></tr><tr><td><code>Fatal error in launcher: Unable to create process</code> from <code>chaos.cmd</code> on an installed machine</td><td>Same cause, discovered later. Rebuild the runtime and repackage; the installed tree cannot be repaired in place.</td></tr><tr><td><code>The staged tree contains ...\app\src\chaos\cli.py</code></td><td>Something started staging the platform source next to the runtime. The supervisor would then set a <code>PYTHONPATH</code> this interpreter ignores. Stage <code>app\data</code>, <code>app\schemas</code>, <code>app\tools</code> and <code>app\web</code> only.</td></tr><tr><td><code>compileall reported errors</code> (a warning, not a failure)</td><td>Some third-party file did not compile — usually a vendored Python-2 fixture or a template. The offending files are printed. It is only a problem if one of them is ours; those modules just compile at first import.</td></tr></tbody></table></div>
+<p>The script is re-runnable. Downloads are cached and re-verified on every run; a
+cached file whose digest no longer matches is deleted and re-fetched once, and a
+second mismatch is a hard failure.</p>
+<h3 id="changing-the-pinned-python-version" class="doc-h"><span class="doc-h-text">Changing the pinned Python version</span><a class="doc-anchor" href="#changing-the-pinned-python-version" aria-label="Link to this section"></a></h3>
+<p><code>python-runtime.lock.json</code> also carries verified pins for 3.12.10 and 3.13.15.
+Moving up is a one-line change (<code>"default"</code>) plus a matching entry in the Python
+CI matrix in <code>.github/workflows/ci.yml</code> — a control system ships the
+configuration that was tested, not the newest one.</p>
+<p>Read the note in the lock file before a long deployment: <strong>3.11.9 is the last
+CPython 3.11 with Windows binaries.</strong> 3.11.10 and later are source-only security
+releases, so this embeddable will never receive a python.org security update.</p>
+<p>If you change the version, also change <code>EXPECTED_PYTHON</code> in
+<code>windows\build\verify-runtime.py</code>, and re-run the wheel-availability check for
+the new interpreter — the table above is specific to <code>cp311</code>.</p>
+<h3 id="what-has-and-has-not-been-proven" class="doc-h"><span class="doc-h-text">What has and has not been proven</span><a class="doc-anchor" href="#what-has-and-has-not-been-proven" aria-label="Link to this section"></a></h3>
+<p>Verified by execution, on Linux, against the real artefacts:</p>
+<ul><li>Both lock-file pins — SHA-256 <strong>and</strong> byte size — match the live artefacts.</li><li>The embeddable zip's contents: <code>python311._pth</code> exists and ships with
+<code>import site</code> commented out; <code>python311.zip</code> is 649 <code>.pyc</code> modules with no
+<code>venv</code> and no <code>ensurepip</code>; both <code>vcruntime140.dll</code> and <code>vcruntime140_1.dll</code>
+are present.</li><li><code>._pth</code> semantics, on a real 3.11 interpreter: <code>PYTHONPATH</code> discarded,
+isolated mode on, <code>import site</code> required for <code>site.main()</code>, comment lines
+ignored, <code>PYTHONUNBUFFERED</code>/<code>PYTHONIOENCODING</code>/<code>PYTHONDONTWRITEBYTECODE</code> still
+honoured.</li><li>The pip-from-a-wheel bootstrap works under a <code>._pth</code> interpreter.</li><li>Every dependency, full transitive closure, has a <code>cp311 win_amd64</code> wheel.</li><li>The whole install sequence, run end to end into a <code>._pth</code> tree: pip bootstrap,
+wheels-only dependency install, <code>pip wheel</code> of the project, install of that
+wheel, web-asset copy, <code>compileall</code>, and all ten verification checks passing.</li><li>The user-site defect and its fix: reproduced (pip skipped <code>idna</code> and
+<code>certifi</code>), then fixed with <code>sitecustomize.py</code> and re-run clean.</li><li>The launcher rewrite: byte-exact on launchers synthesised the way distlib
+builds them; stub bytes unchanged, appended zip still parses, quoted and
+unquoted shebangs, <code>pythonw.exe</code> preserved, interpreter arguments preserved,
+idempotent on a second run.</li><li>The PowerShell 5.1 quoting defect, reproduced with
+<code>$PSNativeCommandArgumentPassing = 'Legacy'</code>, and the file-based fix working
+in both modes including a path with spaces.</li><li>All four PowerShell files parse cleanly; the prune wildcard-escaping fix
+demonstrably matches where the old form matched nothing.</li></ul>
+<p><strong>Not proven, and only Windows can prove it:</strong> that <code>python.exe</code> from the
+embeddable distribution runs the sequence above (it was run with a real CPython
+3.11 on Linux under an equivalent <code>._pth</code>, not with the shipped <code>python.exe</code>);
+that the relocated launchers execute — the byte layout is right and the stub's C
+source has the code path, but no <code>.exe</code> has actually been launched; and the wall
+clock and on-disk figures above, which are derived rather than measured on
+Windows. Run the two commands at the top of this section and the answer is
+immediate.</p></div><nav class="doc-pager" aria-label="Reading order"><a class="pager-prev" href="advanced-container-deployment.html" data-page="advanced-container-deployment"><span class="pager-role">Previous</span>Container deployment</a><a class="pager-next" href="design-decisions-dd-001-energy-capacity-revision.html" data-page="design-decisions-dd-001-energy-capacity-revision"><span class="pager-role">Next</span>DD-001: Authoritative energy design revision</a></nav></article>
+</main>
+<aside class="site-toc" aria-label="On this page"><h2>On this page</h2><ul><li data-level="2"><a href="#the-build-tasks" data-anchor="the-build-tasks">The build tasks</a></li><li data-level="2"><a href="#embedded-python-runtime" data-anchor="embedded-python-runtime">Embedded Python runtime</a></li><li data-level="3"><a href="#why-it-exists" data-anchor="why-it-exists">Why it exists</a></li><li data-level="3"><a href="#building-it-from-visual-studio" data-anchor="building-it-from-visual-studio">Building it from Visual Studio</a></li><li data-level="3"><a href="#the-two-commands-it-runs" data-anchor="the-two-commands-it-runs">The two commands it runs</a></li><li data-level="3"><a href="#what-gets-produced" data-anchor="what-gets-produced">What gets produced</a></li><li data-level="3"><a href="#the-layout-contract-with-the-supervisor" data-anchor="the-layout-contract-with-the-supervisor">The layout contract with the supervisor</a></li><li data-level="3"><a href="#the-pth-file-and-what-it-silently-changes" data-anchor="the-pth-file-and-what-it-silently-changes">The .pth file, and what it silently changes</a></li><li data-level="3"><a href="#isolation-from-the-operators-own-python" data-anchor="isolation-from-the-operators-own-python">Isolation from the operator's own Python</a></li><li data-level="3"><a href="#wheels-only" data-anchor="wheels-only">Wheels only</a></li><li data-level="3"><a href="#how-the-project-itself-is-installed" data-anchor="how-the-project-itself-is-installed">How the project itself is installed</a></li><li data-level="3"><a href="#the-operator-ui-assets-are-copied-in-by-hand-on-purpose" data-anchor="the-operator-ui-assets-are-copied-in-by-hand-on-purpose">The operator UI assets are copied in by hand, on purpose</a></li><li data-level="3"><a href="#relocatable-console-scripts" data-anchor="relocatable-console-scripts">Relocatable console scripts</a></li><li data-level="3"><a href="#how-long-it-takes-and-how-big-it-is" data-anchor="how-long-it-takes-and-how-big-it-is">How long it takes, and how big it is</a></li><li data-level="3"><a href="#when-it-fails" data-anchor="when-it-fails">When it fails</a></li><li data-level="3"><a href="#changing-the-pinned-python-version" data-anchor="changing-the-pinned-python-version">Changing the pinned Python version</a></li><li data-level="3"><a href="#what-has-and-has-not-been-proven" data-anchor="what-has-and-has-not-been-proven">What has and has not been proven</a></li></ul></aside>
+</div>
+<div class="site-search" id="search-overlay" hidden role="dialog" aria-modal="true" aria-label="Search the documentation">
+<div class="site-search-panel">
+<div class="site-search-head">
+<svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.3-4.3"/></svg>
+<input type="search" id="search-input" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="true" aria-controls="search-results" placeholder="Search every page — try black start, dead letter, interlock">
+<button type="button" class="btn btn-sm" id="search-close">Close</button>
+</div>
+<p class="site-search-status" id="search-status" role="status">Type to search every page of this help set.</p>
+<ul class="site-results" id="search-results" role="listbox" aria-label="Search results"></ul>
+<div class="site-search-foot"><span><span class="kbd-hint">&#8593;</span> <span class="kbd-hint">&#8595;</span> move</span><span><span class="kbd-hint">Enter</span> open</span><span><span class="kbd-hint">Esc</span> close</span><span><span class="kbd-hint">/</span> search from anywhere</span></div>
+</div>
+</div>
+<script src="assets/search-index.js"></script>
+<script src="assets/docs.js"></script>
+</body>
+</html>

@@ -9,10 +9,15 @@
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
             </ResourceDictionary.MergedDictionaries>
 
-            <!-- The shell chrome stays dark regardless of the Windows theme.
+            <!-- The shell chrome defaults to dark whatever the Windows theme.
                  It frames a console that is dark by default and often lives on
                  a wall display in a container; a light frame around a dark
-                 console reads as a rendering fault. -->
+                 console reads as a rendering fault.
+
+                 The colours below are the DARK palette. They are the starting
+                 values only: App.ApplyTheme rewrites each brush's Color when
+                 the operator picks a theme in Settings, so every StaticResource
+                 reference in this project follows without being rebound. -->
             <SolidColorBrush x:Key="ChaosShellBackground" Color="#0B0D12" />
             <SolidColorBrush x:Key="ChaosShellText" Color="#E6E9F0" />
             <SolidColorBrush x:Key="ChaosShellMuted" Color="#AAB2C5" />
@@ -20,6 +25,11 @@
             <SolidColorBrush x:Key="ChaosShellAccent" Color="#5B8CFF" />
             <SolidColorBrush x:Key="ChaosShellWarn" Color="#F5C144" />
             <SolidColorBrush x:Key="ChaosShellError" Color="#E5484D" />
+
+            <!-- Verified-good. Deliberately the only green in the shell, so
+                 that nothing an operator reads as "fine" can be drawn without
+                 the state machine having actually checked it. -->
+            <SolidColorBrush x:Key="ChaosShellOk" Color="#3DD68C" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

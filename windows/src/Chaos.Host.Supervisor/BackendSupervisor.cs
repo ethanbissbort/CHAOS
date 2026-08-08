@@ -715,9 +715,9 @@ public sealed class BackendSupervisor : IBackendSupervisor, IBackendSupervisorDi
         {
             // Launch the platform through its own CLI rather than reimplementing
             // its startup. `--log-level` is a GLOBAL flag and must precede the
-            // subcommand (src/homestead_twin/cli.py: build_parser).
+            // subcommand (src/chaos/cli.py: build_parser).
             "-m",
-            "homestead_twin.cli",
+            "chaos.cli",
             "--log-level",
             _options.LogLevel,
             "serve",
@@ -742,12 +742,12 @@ public sealed class BackendSupervisor : IBackendSupervisor, IBackendSupervisorDi
 
         if (_options.DatabaseUrl is { Length: > 0 } databaseUrl)
         {
-            environment["HOMESTEAD_DATABASE_URL"] = databaseUrl;
+            environment["CHAOS_DATABASE_URL"] = databaseUrl;
         }
 
         if (_options.DataDirectory is { Length: > 0 } dataDirectory)
         {
-            environment["HOMESTEAD_DATA_DIR"] = dataDirectory;
+            environment["CHAOS_DATA_DIR"] = dataDirectory;
         }
 
         foreach (var (key, value) in _options.Environment)

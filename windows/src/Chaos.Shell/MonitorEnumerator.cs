@@ -15,6 +15,10 @@ internal static class MonitorEnumerator
     public static IReadOnlyList<MonitorInfo> Current()
     {
         var found = new List<MonitorInfo>();
+
+        // 1-based, as MonitorInfo.Index documents and WindowPlacementResolver.
+        // Select relies on: "--monitor 2" and "Display 2" in Settings have to
+        // mean the second display, not the third.
         var index = 0;
 
         bool Callback(IntPtr monitor, IntPtr _, ref RECT __, IntPtr ___)
@@ -22,13 +26,13 @@ internal static class MonitorEnumerator
             var info = new MONITORINFOEX { cbSize = Marshal.SizeOf<MONITORINFOEX>() };
             if (GetMonitorInfo(monitor, ref info))
             {
+                index++;
                 var work = info.rcWork;
                 found.Add(new MonitorInfo(
                     DeviceId: string.IsNullOrEmpty(info.szDevice) ? $"monitor-{index}" : info.szDevice,
                     WorkArea: ScreenRect.FromEdges(work.left, work.top, work.right, work.bottom),
                     IsPrimary: (info.dwFlags & MONITORINFOF_PRIMARY) != 0,
                     Index: index));
-                index++;
             }
             return true;
         }

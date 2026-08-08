@@ -24,8 +24,8 @@ import datetime as dt
 import pytest
 from sqlalchemy import select
 
-from homestead_twin.alarms.correlation import DOWNSTREAM_EDGE_TYPES, DependencyGraph
-from homestead_twin.api.routers.overview import (
+from chaos.alarms.correlation import DOWNSTREAM_EDGE_TYPES, DependencyGraph
+from chaos.api.routers.overview import (
     DEPLOYED_STATUSES,
     STATUS_DESIGN_ONLY,
     STATUS_EXPLANATIONS,
@@ -35,7 +35,7 @@ from homestead_twin.api.routers.overview import (
     STATUS_OK,
     STATUS_STALE,
 )
-from homestead_twin.api.routers.topology import (
+from chaos.api.routers.topology import (
     EDGE_SEMANTICS,
     GROUP_CLASSES,
     MAX_IMPACT_DEPTH,
@@ -46,9 +46,9 @@ from homestead_twin.api.routers.topology import (
     reachable_with_paths,
     read_extensions,
 )
-from homestead_twin.models.registry import Asset
+from chaos.models.registry import Asset
 
-UI = "src/homestead_twin/web"
+UI = "src/chaos/web"
 
 #: The asset SDD 16.1 tells the whole platform to assume the total loss of.
 POWER_CONTAINER = "structure.structure.power_container.01"
@@ -73,7 +73,7 @@ TOTAL_RELATIONSHIPS = 99 + 92
 @pytest.fixture()
 def seeded(db_session):
     """The real v0.3 register loaded into the test database."""
-    load_package = pytest.importorskip("homestead_twin.registry.loader").load_package
+    load_package = pytest.importorskip("chaos.registry.loader").load_package
     load_package(db_session)
     db_session.commit()
     return db_session
@@ -273,8 +273,8 @@ def test_node_health_cascade(status_value, points, bound, reporting, stale, seve
 
 def test_a_deployed_reporting_asset_can_reach_ok(db_session, settings, seeded):
     """The cascade is strict, not stuck: real data does produce ``ok``."""
-    from homestead_twin.models.registry import Point, PointBinding
-    from homestead_twin.models.telemetry import CurrentState
+    from chaos.models.registry import Point, PointBinding
+    from chaos.models.telemetry import CurrentState
 
     asset = db_session.scalars(select(Asset).where(Asset.asset_id == RACK)).one()
     asset.status = "commissioned"

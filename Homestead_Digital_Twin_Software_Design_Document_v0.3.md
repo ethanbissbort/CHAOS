@@ -479,12 +479,12 @@ dependencies:
   - water.cistern.irrigation_01
   - network.gateway.pump_house
 telemetry:
-  discharge_pressure_kpa: homestead/water/irrigation/pump01/pressure
-  flow_lpm: homestead/water/irrigation/pump01/flow
-  current_a: homestead/water/irrigation/pump01/current
-  state: homestead/water/irrigation/pump01/state
+  discharge_pressure_kpa: chaos/water/irrigation/pump01/pressure
+  flow_lpm: chaos/water/irrigation/pump01/flow
+  current_a: chaos/water/irrigation/pump01/current
+  state: chaos/water/irrigation/pump01/state
 commands:
-  requested_mode: homestead/water/irrigation/pump01/cmd/mode
+  requested_mode: chaos/water/irrigation/pump01/cmd/mode
 fail_states:
   communication_loss: continue_local_schedule
   low_source_level: stop_and_lockout
@@ -501,22 +501,22 @@ manual_override:
 ### 10.1 Topic convention
 
 ```text
-homestead/<domain>/<site-or-structure>/<asset>/<point>
-homestead/<domain>/<site-or-structure>/<asset>/cmd/<command>
-homestead/<domain>/<site-or-structure>/<asset>/event/<event-type>
-homestead/<domain>/<site-or-structure>/<asset>/availability
+chaos/<domain>/<site-or-structure>/<asset>/<point>
+chaos/<domain>/<site-or-structure>/<asset>/cmd/<command>
+chaos/<domain>/<site-or-structure>/<asset>/event/<event-type>
+chaos/<domain>/<site-or-structure>/<asset>/availability
 ```
 
 Examples:
 
 ```text
-homestead/energy/power_container/battery_bank/soc_pct
-homestead/energy/power_container/inverter_01/ac_output_kw
-homestead/water/orchard/cistern_01/level_pct
-homestead/agriculture/greenhouse_01/climate/temperature_c
-homestead/storage/nitrogen_container/o2_sensor_01/o2_pct
-homestead/it/rack_01/netbotz/temperature_c
-homestead/security/perimeter/gate_01/event/opened
+chaos/energy/power_container/battery_bank/soc_pct
+chaos/energy/power_container/inverter_01/ac_output_kw
+chaos/water/orchard/cistern_01/level_pct
+chaos/agriculture/greenhouse_01/climate/temperature_c
+chaos/storage/nitrogen_container/o2_sensor_01/o2_pct
+chaos/it/rack_01/netbotz/temperature_c
+chaos/security/perimeter/gate_01/event/opened
 ```
 
 ### 10.2 Standard telemetry envelope
@@ -1109,11 +1109,11 @@ A point is a measured value, state, command, setpoint, calculated value, configu
 MQTT representation:
 
 ```text
-homestead/<domain>/<location>/<asset>/<point_name>
-homestead/<domain>/<location>/<asset>/cmd/<command_name>
-homestead/<domain>/<location>/<asset>/setpoint/<setpoint_name>
-homestead/<domain>/<location>/<asset>/event/<event_name>
-homestead/<domain>/<location>/<asset>/alarm/<alarm_name>
+chaos/<domain>/<location>/<asset>/<point_name>
+chaos/<domain>/<location>/<asset>/cmd/<command_name>
+chaos/<domain>/<location>/<asset>/setpoint/<setpoint_name>
+chaos/<domain>/<location>/<asset>/event/<event_name>
+chaos/<domain>/<location>/<asset>/alarm/<alarm_name>
 ```
 
 The canonical asset registry maps the MQTT topic to `asset_id` and `point_id`; parsing a topic is not the sole identity mechanism.

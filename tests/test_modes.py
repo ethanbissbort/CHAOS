@@ -8,7 +8,7 @@ from dataclasses import dataclass
 import pytest
 from sqlalchemy import select
 
-from homestead_twin.commands.modes import (
+from chaos.commands.modes import (
     DEFAULT_MODE,
     MODES,
     RESTRICTIVENESS,
@@ -19,8 +19,8 @@ from homestead_twin.commands.modes import (
     UnknownModeError,
     more_restrictive,
 )
-from homestead_twin.models.commands import AuditLogEntry, ModeTransition, OperatingMode
-from homestead_twin.models.registry import Asset, AssetClass
+from chaos.models.commands import AuditLogEntry, ModeTransition, OperatingMode
+from chaos.models.registry import Asset, AssetClass
 
 SITE_ID = "site.site.primary.01"
 ASSET_ID = "water.pump.orchard.01"

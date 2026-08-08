@@ -9,7 +9,7 @@ namespace Chaos.Host.Routing;
 /// <remarks>
 /// <para>
 /// Today every <c>/api/v1/*</c> prefix is <see cref="RouteOwner.Python"/>. The
-/// prefixes mirror the FastAPI routers in <c>src/homestead_twin/api/routers/</c>
+/// prefixes mirror the FastAPI routers in <c>src/chaos/api/routers/</c>
 /// and the endpoint reference in <c>docs/api.md</c>, one row per subsystem, so a
 /// port is a one-row change rather than a surgical edit of a catch-all.
 /// </para>

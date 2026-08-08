@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<meta name="generator" content="tools/build_docs.py">
+<title>Commissioning — Project CHAOS help</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http%3A//www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230e1a16'/%3E%3Cpath d='M6 18 16 8l10 10v8H6z' fill='none' stroke='%234ade80' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/docs.css">
+<noscript><style>.doc-page[hidden]{display:block!important}.site-searchbtn{display:none}</style></noscript>
+</head>
+<body data-page="commissioning">
+<a class="skip-link" href="#content">Skip to the documentation</a>
+<header class="site-topbar">
+<button type="button" class="btn btn-icon site-navtoggle" id="nav-toggle" aria-controls="site-nav" aria-expanded="false" title="Documents"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span class="visually-hidden">Show the document list</span></button>
+<a class="site-identity" href="index.html"><span class="site-mark"><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M5 19 16 8l11 11v7H5z"/></svg></span><span class="site-titles"><h1>Project CHAOS help</h1><p>Central Homestead Automation and Operation System</p></span></a>
+<button type="button" class="site-searchbtn" id="search-open"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.3-4.3"/></svg><span>Search the documentation</span><span class="kbd-hint">/</span></button>
+<div class="site-tools">
+<button type="button" class="btn btn-sm" id="theme-toggle"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4"/></svg><span class="theme-label">System</span></button>
+<button type="button" class="btn btn-icon" id="print-page" onclick="window.print()" title="Print this page"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M7 9V4h10v5M7 18H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2"/><rect x="7" y="14" width="10" height="6" rx="1"/></svg><span class="visually-hidden">Print this page</span></button>
+</div>
+</header>
+<div class="site-shell">
+<nav class="site-nav" id="site-nav" aria-label="Documents"><h2>Overview</h2><ul><li><a href="index.html" data-page="index"><span class="nav-num">01</span><span>Project CHAOS documentation</span></a></li><li><a href="readme.html" data-page="readme"><span class="nav-num">02</span><span>Project CHAOS</span></a></li></ul><h2>Using CHAOS</h2><ul><li><a href="getting-started.html" data-page="getting-started"><span class="nav-num">03</span><span>Getting started</span></a></li><li><a href="visual-studio.html" data-page="visual-studio"><span class="nav-num">04</span><span>Building in Visual Studio 2026</span></a></li><li><a href="desktop-shell.html" data-page="desktop-shell"><span class="nav-num">05</span><span>The desktop shell</span></a></li><li><a href="operator-console.html" data-page="operator-console"><span class="nav-num">06</span><span>The operator console</span></a></li><li><a href="annunciator.html" data-page="annunciator"><span class="nav-num">07</span><span>The annunciator panel</span></a></li><li><a href="topology-view.html" data-page="topology-view"><span class="nav-num">08</span><span>Topology and blast radius</span></a></li><li><a href="rack-view.html" data-page="rack-view"><span class="nav-num">09</span><span>Rack elevation</span></a></li></ul><h2>How the platform works</h2><ul><li><a href="architecture.html" data-page="architecture"><span class="nav-num">10</span><span>Architecture</span></a></li><li><a href="alarms.html" data-page="alarms"><span class="nav-num">11</span><span>Alarms, incidents and notification</span></a></li><li><a href="control.html" data-page="control"><span class="nav-num">12</span><span>Control, interlocks and operating modes</span></a></li><li><a href="design-package.html" data-page="design-package"><span class="nav-num">13</span><span>The design package</span></a></li><li><a href="integration-findings.html" data-page="integration-findings"><span class="nav-num">14</span><span>Integration findings</span></a></li></ul><h2>Operating the property</h2><ul><li><a href="operations.html" data-page="operations"><span class="nav-num">15</span><span>Operations runbooks</span></a></li><li><a href="troubleshooting.html" data-page="troubleshooting"><span class="nav-num">16</span><span>Troubleshooting</span></a></li><li><a href="commissioning.html" data-page="commissioning" aria-current="page"><span class="nav-num">17</span><span>Commissioning</span></a></li><li><a href="secondary-control-node.html" data-page="secondary-control-node"><span class="nav-num">18</span><span>Secondary control node</span></a></li><li><a href="network-and-trust-boundaries.html" data-page="network-and-trust-boundaries"><span class="nav-num">19</span><span>Network and trust boundaries</span></a></li><li><a href="water-control-narrative.html" data-page="water-control-narrative"><span class="nav-num">20</span><span>Water-system control narrative</span></a></li></ul><h2>Reference</h2><ul><li><a href="api.html" data-page="api"><span class="nav-num">21</span><span>API reference</span></a></li><li><a href="design-decisions.html" data-page="design-decisions"><span class="nav-num">22</span><span>Design Decision Records</span></a></li></ul><h2>Advanced — you do not need these</h2><ul><li><a href="advanced-command-line.html" data-page="advanced-command-line"><span class="nav-num">23</span><span>Command line</span></a></li><li><a href="advanced-container-deployment.html" data-page="advanced-container-deployment"><span class="nav-num">24</span><span>Container deployment</span></a></li><li><a href="advanced-windows-packaging.html" data-page="advanced-windows-packaging"><span class="nav-num">25</span><span>Windows packaging</span></a></li></ul><h2>Design Decisions</h2><ul><li><a href="design-decisions-dd-001-energy-capacity-revision.html" data-page="design-decisions-dd-001-energy-capacity-revision"><span class="nav-num">26</span><span>DD-001: Authoritative energy design revision</span></a></li><li><a href="design-decisions-dd-002-historian-selection.html" data-page="design-decisions-dd-002-historian-selection"><span class="nav-num">27</span><span>DD-002: Time-series historian selection</span></a></li><li><a href="design-decisions-dd-003-secondary-control-node-placement.html" data-page="design-decisions-dd-003-secondary-control-node-placement"><span class="nav-num">28</span><span>DD-003: Secondary control node placement</span></a></li><li><a href="design-decisions-dd-004-controller-family.html" data-page="design-decisions-dd-004-controller-family"><span class="nav-num">29</span><span>DD-004: Standard PLC / controller family for critical local control</span></a></li></ul></nav>
+<main class="site-main" id="content" tabindex="-1">
+<article class="doc-page" id="commissioning" data-page="commissioning"><p class="doc-breadcrumb"><span>Operating the property</span><span>Commissioning</span></p><p class="doc-source">docs/commissioning.md</p><div class="doc-body"><h1 id="commissioning" class="doc-h"><span class="doc-h-text">Commissioning</span><a class="doc-anchor" href="#commissioning" aria-label="Link to this section"></a></h1>
+<p>Every subsystem passes a twelve-step sequence before it goes under automatic
+supervisory control.</p>
+<blockquote><p>No subsystem should be placed under automatic supervisory control until its
+local control and failure modes have been tested.</p></blockquote>
+<p>This document is the working checklist. It is tied to the platform's own
+commissioning records, so the sequence is <strong>data the software enforces</strong> rather
+than a paragraph everyone agrees with and nobody follows.</p>
+<p>Related: <a href="control.html">Control, interlocks and operating modes</a> ·
+<a href="operations.html#7-enabling-physical-control">Operations § Enabling physical control</a> ·
+<a href="design-package.html">The design package</a></p>
+<hr>
+<h2 id="0-how-the-platform-enforces-it" class="doc-h"><span class="doc-h-text">0. How the platform enforces it</span><a class="doc-anchor" href="#0-how-the-platform-enforces-it" aria-label="Link to this section"></a></h2>
+<ul><li>Steps <strong>1–8</strong> are prerequisites.</li><li>Step <strong>9</strong> is the supervisory-control test itself.</li><li>The platform refuses to permit automatic control, <strong>with a reason</strong>, until 1–8
+and 9 have passed for that asset.</li><li>It refuses to enable automatic control on a point binding when that gate says
+no.</li></ul>
+<p>Two independent switches stand between this platform and physical plant:</p>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Gate</th><th scope="col">Scope</th></tr></thead><tbody><tr><td>The platform-wide physical-control gate</td><td>Everything</td></tr><tr><td>Per-binding automatic control</td><td>One point, gated on this sequence</td></tr></tbody></table></div>
+<p>Turning on the global flag does not arm anything that has not been commissioned.
+That is deliberate: <strong>one switch should not be able to arm the property.</strong></p>
+<h3 id="where-you-do-this" class="doc-h"><span class="doc-h-text">Where you do this</span><a class="doc-anchor" href="#where-you-do-this" aria-label="Link to this section"></a></h3>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Task</th><th scope="col">Where</th></tr></thead><tbody><tr><td>See where an asset stands</td><td>Console → <strong>Control</strong> → the asset. Its commissioning status is on the screen</td></tr><tr><td>Record a step outcome</td><td>The commissioning endpoint, with the <code>maintainer</code> role</td></tr><tr><td>Enable a binding once the gate allows it</td><td>The commissioning endpoint, with the <code>maintainer</code> role</td></tr><tr><td>Track progress across every asset</td><td>Console → <strong>Assets</strong>, and the binding statuses</td></tr></tbody></table></div>
+<p><strong>There is no dedicated commissioning form in the console today.</strong> Recording a
+step is an API call; the request bodies are in
+<a href="api.html#10-maintenance-and-commissioning">API reference § Maintenance and commissioning</a>.
+Reading the state — which is what you do far more often — is on screen.</p>
+<h3 id="the-four-outcomes" class="doc-h"><span class="doc-h-text">The four outcomes</span><a class="doc-anchor" href="#the-four-outcomes" aria-label="Link to this section"></a></h3>
+<p><code>pass</code> · <code>fail</code> · <code>blocked</code> · <code>not_run</code></p>
+<p>Recording <strong><code>blocked</code></strong> is useful and honest: it says the step could not be run,
+which is different from "it passed" and different from "nobody has looked".</p>
+<hr>
+<h2 id="1-before-you-start" class="doc-h"><span class="doc-h-text">1. Before you start</span><a class="doc-anchor" href="#1-before-you-start" aria-label="Link to this section"></a></h2>
+<p>Per subsystem, have these in hand:</p>
+<ul class="doc-tasklist"><li class="doc-task" data-state="todo"><input type="checkbox" disabled><span>The assets exist in the registry with the right class, criticality and
+control authority. Check on the console's <strong>Assets</strong> screen.</span></li><li class="doc-task" data-state="todo"><input type="checkbox" disabled><span>The points exist and their bindings have <strong>real addresses, not <code>TBD</code></strong>.</span></li><li class="doc-task" data-state="todo"><input type="checkbox" disabled><span>The manual override and failure-state record for each controlled asset.</span></li><li class="doc-task" data-state="todo"><input type="checkbox" disabled><span>The equipment manual, and the vendor's own commissioning procedure.</span></li><li class="doc-task" data-state="todo"><input type="checkbox" disabled><span><strong>A second person</strong>, for anything that can move, heat, energise or
+pressurise.</span></li></ul>
+<p>And know the two rules that override everything below:</p>
+<ol><li><strong>Level 0 and Level 1 win.</strong> If the local controller refuses a command, that
+is a <strong>passing result</strong>, not a fault to work around.</li><li><strong>Stop on a fail.</strong> A failed step is not a reason to proceed carefully; it is
+a reason to stop. Record it, fix it, re-run it.</li></ol>
+<hr>
+<h2 id="2-the-twelve-steps" class="doc-h"><span class="doc-h-text">2. The twelve steps</span><a class="doc-anchor" href="#2-the-twelve-steps" aria-label="Link to this section"></a></h2>
+<p>Each step lists what to do, what "pass" means, and what to record. The
+platform's own step name is given so records and this document agree.</p>
+<h3 id="step-1--bench_test" class="doc-h"><span class="doc-h-text">Step 1 — <code>bench_test</code></span><a class="doc-anchor" href="#step-1--bench_test" aria-label="Link to this section"></a></h3>
+<p>Exercise the device away from the plant: on a bench, or against the simulator.</p>
+<ul><li>Power it, connect it, read a value, write a value if it is controllable.</li><li>For a gateway: publish one telemetry message and confirm it lands. <strong>The
+dead-letter count must not increment.</strong></li><li>Run the simulator against the subsystem's points —
+<a href="advanced-command-line.html#9-the-simulator">Command line § The simulator</a>.</li></ul>
+<p><strong>Pass:</strong> the device communicates and behaves as the manual describes, with no
+plant attached.
+<strong>Record:</strong> firmware version, protocol, and the exact addressing that worked.</p>
+<h3 id="step-2--point_to_point_verification" class="doc-h"><span class="doc-h-text">Step 2 — <code>point_to_point_verification</code></span><a class="doc-anchor" href="#step-2--point_to_point_verification" aria-label="Link to this section"></a></h3>
+<p>Every point, individually, end to end: physical signal → device → binding →
+point → current state.</p>
+<ul><li>Force or observe a real physical change; confirm the value moves in the twin.</li><li><strong>Confirm the units</strong> match the point dictionary. A pressure in kPa arriving on
+a point defined in bar is the classic way to build a plausible, wrong twin.</li><li>Confirm scale and offset on the binding.</li><li>Confirm there are no dead letters for this asset.</li></ul>
+<p><strong>Pass:</strong> every point resolves to the intended point, with correct units and
+plausible values. No dead letters.
+<strong>Record:</strong> the point list with observed values, and any binding corrections.</p>
+<p><strong>This is the step most often rushed, and it is the one that determines whether
+everything above it is measuring reality.</strong></p>
+<h3 id="step-3--sensor_calibration" class="doc-h"><span class="doc-h-text">Step 3 — <code>sensor_calibration</code></span><a class="doc-anchor" href="#step-3--sensor_calibration" aria-label="Link to this section"></a></h3>
+<p>Compare each sensor against a reference; apply and record the correction.</p>
+<ul><li>Record the reference instrument, its calibration date, and the readings.</li><li>Apply corrections <strong>at the binding</strong>, not in downstream logic.</li><li>Create a calibration record.</li></ul>
+<p><strong>Pass:</strong> every sensor within its stated accuracy, with the correction recorded.
+<strong>Record:</strong> as-found <strong>and</strong> as-left readings. As-found is what tells you next
+year whether the sensor is drifting.</p>
+<h3 id="step-4--manual_control_test" class="doc-h"><span class="doc-h-text">Step 4 — <code>manual_control_test</code></span><a class="doc-anchor" href="#step-4--manual_control_test" aria-label="Link to this section"></a></h3>
+<p>Operate the equipment by hand, at the equipment. No platform involvement.</p>
+<ul><li>Local hand/off/auto switch, manual valve, manual start.</li><li>Confirm the platform <strong>observes</strong> the change without having caused it.</li><li>Confirm the manual-override record in the registry matches what you just did.</li></ul>
+<p><strong>Pass:</strong> the equipment works under local control, and the twin reports it
+correctly without commanding it.
+<strong>Record:</strong> the override mechanism, its location, and its effect on the twin's
+view.</p>
+<h3 id="step-5--local_automatic_control_test" class="doc-h"><span class="doc-h-text">Step 5 — <code>local_automatic_control_test</code></span><a class="doc-anchor" href="#step-5--local_automatic_control_test" aria-label="Link to this section"></a></h3>
+<p>The subsystem's own automatic control, without supervision.</p>
+<ul><li>Let the local controller run its loop: thermostat, level control, pressure
+control, its own start/stop logic.</li><li>Confirm setpoints, dead-bands and minimum on/off times behave as configured.</li></ul>
+<p><strong>Pass:</strong> the subsystem runs correctly on its own. <strong>This is the state it must
+fall back to whenever the platform is unavailable</strong>, so a shaky pass here is a
+failure of the whole reliability model.
+<strong>Record:</strong> setpoints and timings as configured at the local controller.</p>
+<h3 id="step-6--communications_loss_test" class="doc-h"><span class="doc-h-text">Step 6 — <code>communications_loss_test</code></span><a class="doc-anchor" href="#step-6--communications_loss_test" aria-label="Link to this section"></a></h3>
+<p>Take communications away and see what happens.</p>
+<ul><li>Disconnect the gateway uplink, or block the broker at the firewall.</li><li>Confirm the subsystem <strong>continues safe local operation</strong>.</li><li>Confirm the platform notices: the last-will availability message, points going
+stale, a comms alarm at the right severity.</li><li>Restore, and confirm reconciliation: no stale command executes late, and
+retained state does not overwrite reality.</li></ul>
+<p><strong>Pass:</strong> the plant carries on; the platform admits it cannot see. <strong>Both halves
+are required</strong> — a subsystem that keeps running while the platform silently
+displays its last known value has failed this step.
+<strong>Record:</strong> duration, subsystem behaviour, alarm timing, recovery behaviour.</p>
+<p>This step is also the property-scale rehearsal for the communications-loss
+acceptance criterion.</p>
+<h3 id="step-7--sensor_failure_test" class="doc-h"><span class="doc-h-text">Step 7 — <code>sensor_failure_test</code></span><a class="doc-anchor" href="#step-7--sensor_failure_test" aria-label="Link to this section"></a></h3>
+<p>Break a sensor, not the wire.</p>
+<ul><li>Disconnect a sensor, short it, or drive it out of range.</li><li>Confirm the value is marked bad quality, <strong>not passed through as a number</strong>.</li><li>Confirm the subsystem fails safe: the stale-point list shows it, and any
+control loop using it degrades rather than acting on garbage.</li><li>For the energy manager: confirm it enters <code>DEGRADED_SENSOR</code> rather than
+dispatching on an invalid input.</li></ul>
+<p><strong>Pass:</strong> bad data is identified as bad and does not drive control.
+<strong>Record:</strong> which failure modes were injected and how each was handled.</p>
+<p><strong>A sensor reading zero is the dangerous case</strong>, because zero is a plausible
+number. Confirm the quality model catches it, not just the range check.</p>
+<h3 id="step-8--power_loss_and_restoration_test" class="doc-h"><span class="doc-h-text">Step 8 — <code>power_loss_and_restoration_test</code></span><a class="doc-anchor" href="#step-8--power_loss_and_restoration_test" aria-label="Link to this section"></a></h3>
+<p>Cut power to the subsystem and restore it.</p>
+<ul><li>Confirm a safe de-energised state.</li><li>Confirm restart behaviour matches the load record's restart policy: does it
+auto-restart, wait, or require a manual reset?</li><li>Confirm <strong>no simultaneous restart</strong> with other loads.</li><li>Confirm the twin reconciles rather than assuming its pre-outage state.</li></ul>
+<p><strong>Pass:</strong> safe on loss, controlled on restoration, honest in the twin.
+<strong>Record:</strong> de-energised state, restart delay, whether manual intervention was
+needed.</p>
+<blockquote><p><strong>Steps 1–8 are the prerequisites.</strong> The platform will not permit automatic
+supervisory control until all eight pass.</p></blockquote>
+<h3 id="step-9--supervisory_control_test" class="doc-h"><span class="doc-h-text">Step 9 — <code>supervisory_control_test</code></span><a class="doc-anchor" href="#step-9--supervisory_control_test" aria-label="Link to this section"></a></h3>
+<p>The first time the platform commands this equipment.</p>
+<ul><li>Turn on the platform-wide gate and enable <strong>this one binding</strong>.</li><li>Issue one command with a named operator and a reason. <strong>Dry-run it first</strong> —
+it evaluates every interlock and publishes nothing.</li><li>Confirm: the audit record is written <em>before</em> dispatch; the command reaches
+the device; the device acknowledges; the twin's requested and actual state
+converge.</li><li>Then confirm the <strong>negative case</strong>: issue a command the local controller
+should refuse. Confirm it is rejected and the rejection is recorded.</li></ul>
+<p><strong>Pass:</strong> commands work, acknowledgements return, and refusals are honoured and
+recorded.
+<strong>Record:</strong> command ID, audit entry, acknowledgement latency, and the refusal
+case with its reason.</p>
+<p><strong>The refusal case is not optional.</strong> A command path that has only ever been
+tested on commands that succeed has not been tested.</p>
+<p>See <a href="control.html#4-the-eight-interlocks">Control § The eight interlocks</a> for
+what each refusal means.</p>
+<h3 id="step-10--alarm_and_notification_test" class="doc-h"><span class="doc-h-text">Step 10 — <code>alarm_and_notification_test</code></span><a class="doc-anchor" href="#step-10--alarm_and_notification_test" aria-label="Link to this section"></a></h3>
+<p>Make a real alarm fire and follow it all the way out.</p>
+<ul><li>Drive the condition. Confirm the alarm activates at the right severity.</li><li>Confirm the tile lights on <a href="annunciator.html">the annunciator</a>, with the horn.</li><li>Confirm the notification arrives on <strong>every</strong> configured channel.</li><li>Confirm the alarm links to its operating procedure, affected assets,
+dependencies and manual controls.</li><li>Confirm the lifecycle works: acknowledge → mitigate → clear → review.</li><li><strong>Confirm it works with the internet down.</strong> If the only channel is <code>log</code> or
+<code>email</code>, this step fails.</li></ul>
+<p><strong>Pass:</strong> the alarm fires, reaches a human, carries its context, and clears
+properly.
+<strong>Record:</strong> alarm key, trigger, notification channels and their delivery times.</p>
+<p>Before you start: check the tile is not <code>OUT OF SVC</code>. Ten of the forty shipped
+definitions cannot fire at all —
+<a href="annunciator.html#6-out-of-service--the-honest-dark-tile">The annunciator panel § Out of service</a>.</p>
+<h3 id="step-11--manual_override_test" class="doc-h"><span class="doc-h-text">Step 11 — <code>manual_override_test</code></span><a class="doc-anchor" href="#step-11--manual_override_test" aria-label="Link to this section"></a></h3>
+<p>Take control back by hand while the platform is running.</p>
+<ul><li>Operate the local override with the platform commanding the equipment.</li><li>Confirm <strong>the override wins</strong>.</li><li>Confirm the twin shows override status and does not fight it.</li><li>Confirm the platform raises the right advisory rather than treating it as a
+fault.</li></ul>
+<p><strong>Pass:</strong> a human at the equipment always beats the platform, and the platform
+says so on screen.
+<strong>Record:</strong> the override mechanism, twin behaviour, and how the override is
+cleared.</p>
+<p><strong>This step is the one that matters at 2am in a storm. Test it as if you mean
+it.</strong></p>
+<h3 id="step-12--documentation_and_baseline_capture" class="doc-h"><span class="doc-h-text">Step 12 — <code>documentation_and_baseline_capture</code></span><a class="doc-anchor" href="#step-12--documentation_and_baseline_capture" aria-label="Link to this section"></a></h3>
+<p>Capture what "normal" looks like, so a future deviation is visible.</p>
+<ul class="doc-tasklist"><li class="doc-task" data-state="todo"><input type="checkbox" disabled><span>Baseline telemetry captured —
+<a href="advanced-command-line.html#7-export">Command line § Export</a>.</span></li><li class="doc-task" data-state="todo"><input type="checkbox" disabled><span>Setpoints, dead-bands and timings recorded in the registry, not in
+someone's head.</span></li><li class="doc-task" data-state="todo"><input type="checkbox" disabled><span>Manual-override and failure-state records complete for every controlled
+asset.</span></li><li class="doc-task" data-state="todo"><input type="checkbox" disabled><span>Binding addresses, protocol and scaling recorded; the binding status is no
+longer <code>tbd</code>.</span></li><li class="doc-task" data-state="todo"><input type="checkbox" disabled><span>Alarm definitions reviewed against what actually fired during steps 6–10.</span></li><li class="doc-task" data-state="todo"><input type="checkbox" disabled><span>Photos, wiring notes and vendor documents attached as document records.</span></li><li class="doc-task" data-state="todo"><input type="checkbox" disabled><span>Broker topic-permission verification re-run for the new identity.</span></li><li class="doc-task" data-state="todo"><input type="checkbox" disabled><span>Backup taken <strong>and restored into a scratch database</strong> to prove it works.</span></li><li class="doc-task" data-state="todo"><input type="checkbox" disabled><span>A portable archive copied off the property.</span></li></ul>
+<p><strong>Pass:</strong> someone who was not there could operate and troubleshoot this
+subsystem from the record.
+<strong>Record:</strong> the baseline export, and the date it was taken.</p>
+<hr>
+<h2 id="3-after-the-sequence" class="doc-h"><span class="doc-h-text">3. After the sequence</span><a class="doc-anchor" href="#3-after-the-sequence" aria-label="Link to this section"></a></h2>
+<p>Confirm the asset reports supervisory control permitted and fully commissioned.</p>
+<p>Then enable the bindings that need automatic control — <strong>one at a time, with a
+reason</strong>. The platform returns a refusal, not a success, if the prerequisites
+have not passed; that refusal is the point of the endpoint.</p>
+<p>Then <strong>watch it for a while</strong> before commissioning the next subsystem. The
+failure modes that matter usually appear on the second night, not the first
+hour.</p>
+<h3 id="one-caution-before-you-bulk-enable-anything" class="doc-h"><span class="doc-h-text">One caution before you bulk-enable anything</span><a class="doc-anchor" href="#one-caution-before-you-bulk-enable-anything" aria-label="Link to this section"></a></h3>
+<p>The field that says a point is trustworthy as a control <em>input</em> is the same
+field the command path reads as permission to <em>actuate</em>. Twelve of the bindings
+that set it true are on the energy manager's power-budget points, across all
+twelve load groups. Commissioning one of those would flip a field that meant
+"trustworthy input" into a grant to command twelve load groups.</p>
+<p><strong>Do not bulk-set bindings to commissioned.</strong> See
+<a href="integration-findings.html#f-004--automatic_control_allowed-is-semantically-overloaded">Integration findings F-004</a>.</p>
+<hr>
+<h2 id="4-order-of-subsystems" class="doc-h"><span class="doc-h-text">4. Order of subsystems</span><a class="doc-anchor" href="#4-order-of-subsystems" aria-label="Link to this section"></a></h2>
+<p>Each phase depends on the one before it being observable.</p>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Phase</th><th scope="col">Subsystems</th><th scope="col">Platform state</th></tr></thead><tbody><tr><td>A</td><td>Digital twin foundation, simulated telemetry, first dashboard</td><td><strong>Done</strong></td></tr><tr><td>B</td><td>Environmental monitor, UPS, PDUs, rack, network gear; inverter, BMS, meter, generator, critical panel; energy state and load tiers; secondary node; black-start test</td><td><strong>Next.</strong> The energy manager and the register are built for this and have never seen it</td></tr><tr><td>C</td><td>Well, tanks, pumps, pressure, flow, leak detection, treatment; weather; long-range radio; soil and compost; one irrigation zone</td><td>Water assets and points exist in the design package; no coordinator is built</td></tr><tr><td>D</td><td>Greenhouse, hydrogel lab, nitrogen storage, spa, mower</td><td>Not modelled beyond load groups</td></tr><tr><td>E</td><td>Forecasting, prediction, scenario simulation</td><td>Not built</td></tr></tbody></table></div>
+<p>Within Phase B, commission in <strong>dependency order: monitoring before control,
+observation before command.</strong> The environmental monitor and the UPS first — they
+are read-only, and they are what tells you the container is in trouble. The
+battery and inverters last, because they are the ones that can hurt you.</p>
+<hr>
+<h2 id="5-common-failure-modes" class="doc-h"><span class="doc-h-text">5. Common failure modes</span><a class="doc-anchor" href="#5-common-failure-modes" aria-label="Link to this section"></a></h2>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">What happens</th><th scope="col">What it usually means</th></tr></thead><tbody><tr><td>Step 2 passes but values look wrong</td><td>Unit mismatch between the device and the point dictionary. <strong>Fix the binding, not the dashboard</strong></td></tr><tr><td>Step 6 "passes" because nothing alarmed</td><td>The platform did not notice the loss. That is a <strong>fail</strong>, not a pass — check the point's stale window</td></tr><tr><td>Step 7 passes with a sensor reading zero</td><td>Zero is plausible. Confirm the <strong>quality model</strong> marks it bad, rather than the range check accepting it</td></tr><tr><td>Step 9 acknowledgement never arrives</td><td>The gateway has no permission to publish acknowledgements. Check the broker log for denied publishes</td></tr><tr><td>Step 10 notification never arrives</td><td>Only the <code>log</code> channel is implemented. A log line is not an alert</td></tr><tr><td>Step 10 alarm never fires</td><td>Check the annunciator tile. It may be <code>OUT OF SVC</code> — it cannot fire</td></tr><tr><td>Everything passes in a day</td><td>Steps 6, 7, 8 and 11 require actually breaking things. <strong>If nothing was broken, they were not tested</strong></td></tr></tbody></table></div>
+<hr>
+<h2 id="6-what-this-platform-cannot-commission-for-you" class="doc-h"><span class="doc-h-text">6. What this platform cannot commission for you</span><a class="doc-anchor" href="#6-what-this-platform-cannot-commission-for-you" aria-label="Link to this section"></a></h2>
+<p>The records, gates and endpoints here <strong>track and enforce</strong> the sequence. They
+do not perform it. Steps 1, 3, 4, 5, 8 and 11 happen at the equipment, with
+tools, by a person, and much of it needs two people.</p>
+<p>And the honest position today: <strong>no subsystem in this repository has been
+through this sequence against real hardware.</strong> Every path has been exercised
+against the simulator and the in-memory bus, which is step 1 and nothing beyond
+it. Every <code>pass</code> recorded so far would be a <code>pass</code> for a simulation.</p>
+<hr>
+<h2 id="7-related-reading" class="doc-h"><span class="doc-h-text">7. Related reading</span><a class="doc-anchor" href="#7-related-reading" aria-label="Link to this section"></a></h2>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Document</th><th scope="col">Why</th></tr></thead><tbody><tr><td><a href="control.html">Control</a></td><td>What the interlocks mean when a step-9 command is refused</td></tr><tr><td><a href="operations.html#7-enabling-physical-control">Operations § Enabling physical control</a></td><td>The order of operations, and how to revoke</td></tr><tr><td><a href="alarms.html">Alarms</a></td><td>What step 10 is proving</td></tr><tr><td><a href="design-package.html">The design package</a></td><td>Where binding addresses come from, and why they are <code>TBD</code></td></tr><tr><td><a href="api.html#10-maintenance-and-commissioning">API reference § Maintenance and commissioning</a></td><td>The exact request bodies</td></tr></tbody></table></div></div><nav class="doc-pager" aria-label="Reading order"><a class="pager-prev" href="troubleshooting.html" data-page="troubleshooting"><span class="pager-role">Previous</span>Troubleshooting</a><a class="pager-next" href="secondary-control-node.html" data-page="secondary-control-node"><span class="pager-role">Next</span>Secondary control node</a></nav></article>
+</main>
+<aside class="site-toc" aria-label="On this page"><h2>On this page</h2><ul><li data-level="2"><a href="#0-how-the-platform-enforces-it" data-anchor="0-how-the-platform-enforces-it">0. How the platform enforces it</a></li><li data-level="3"><a href="#where-you-do-this" data-anchor="where-you-do-this">Where you do this</a></li><li data-level="3"><a href="#the-four-outcomes" data-anchor="the-four-outcomes">The four outcomes</a></li><li data-level="2"><a href="#1-before-you-start" data-anchor="1-before-you-start">1. Before you start</a></li><li data-level="2"><a href="#2-the-twelve-steps" data-anchor="2-the-twelve-steps">2. The twelve steps</a></li><li data-level="3"><a href="#step-1--bench_test" data-anchor="step-1--bench_test">Step 1 — bench_test</a></li><li data-level="3"><a href="#step-2--point_to_point_verification" data-anchor="step-2--point_to_point_verification">Step 2 — point_to_point_verification</a></li><li data-level="3"><a href="#step-3--sensor_calibration" data-anchor="step-3--sensor_calibration">Step 3 — sensor_calibration</a></li><li data-level="3"><a href="#step-4--manual_control_test" data-anchor="step-4--manual_control_test">Step 4 — manual_control_test</a></li><li data-level="3"><a href="#step-5--local_automatic_control_test" data-anchor="step-5--local_automatic_control_test">Step 5 — local_automatic_control_test</a></li><li data-level="3"><a href="#step-6--communications_loss_test" data-anchor="step-6--communications_loss_test">Step 6 — communications_loss_test</a></li><li data-level="3"><a href="#step-7--sensor_failure_test" data-anchor="step-7--sensor_failure_test">Step 7 — sensor_failure_test</a></li><li data-level="3"><a href="#step-8--power_loss_and_restoration_test" data-anchor="step-8--power_loss_and_restoration_test">Step 8 — power_loss_and_restoration_test</a></li><li data-level="3"><a href="#step-9--supervisory_control_test" data-anchor="step-9--supervisory_control_test">Step 9 — supervisory_control_test</a></li><li data-level="3"><a href="#step-10--alarm_and_notification_test" data-anchor="step-10--alarm_and_notification_test">Step 10 — alarm_and_notification_test</a></li><li data-level="3"><a href="#step-11--manual_override_test" data-anchor="step-11--manual_override_test">Step 11 — manual_override_test</a></li><li data-level="3"><a href="#step-12--documentation_and_baseline_capture" data-anchor="step-12--documentation_and_baseline_capture">Step 12 — documentation_and_baseline_capture</a></li><li data-level="2"><a href="#3-after-the-sequence" data-anchor="3-after-the-sequence">3. After the sequence</a></li><li data-level="3"><a href="#one-caution-before-you-bulk-enable-anything" data-anchor="one-caution-before-you-bulk-enable-anything">One caution before you bulk-enable anything</a></li><li data-level="2"><a href="#4-order-of-subsystems" data-anchor="4-order-of-subsystems">4. Order of subsystems</a></li><li data-level="2"><a href="#5-common-failure-modes" data-anchor="5-common-failure-modes">5. Common failure modes</a></li><li data-level="2"><a href="#6-what-this-platform-cannot-commission-for-you" data-anchor="6-what-this-platform-cannot-commission-for-you">6. What this platform cannot commission for you</a></li><li data-level="2"><a href="#7-related-reading" data-anchor="7-related-reading">7. Related reading</a></li></ul></aside>
+</div>
+<div class="site-search" id="search-overlay" hidden role="dialog" aria-modal="true" aria-label="Search the documentation">
+<div class="site-search-panel">
+<div class="site-search-head">
+<svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.3-4.3"/></svg>
+<input type="search" id="search-input" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="true" aria-controls="search-results" placeholder="Search every page — try black start, dead letter, interlock">
+<button type="button" class="btn btn-sm" id="search-close">Close</button>
+</div>
+<p class="site-search-status" id="search-status" role="status">Type to search every page of this help set.</p>
+<ul class="site-results" id="search-results" role="listbox" aria-label="Search results"></ul>
+<div class="site-search-foot"><span><span class="kbd-hint">&#8593;</span> <span class="kbd-hint">&#8595;</span> move</span><span><span class="kbd-hint">Enter</span> open</span><span><span class="kbd-hint">Esc</span> close</span><span><span class="kbd-hint">/</span> search from anywhere</span></div>
+</div>
+</div>
+<script src="assets/search-index.js"></script>
+<script src="assets/docs.js"></script>
+</body>
+</html>

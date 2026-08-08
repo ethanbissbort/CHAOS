@@ -22,11 +22,11 @@ from test_alarm_correlation import (
     set_state,
 )
 
-from homestead_twin.alarms.correlation import CorrelationEngine
-from homestead_twin.alarms.definitions import sync_definitions
-from homestead_twin.alarms.evaluator import AlarmEvaluator
-from homestead_twin.alarms.notify import Notifier
-from homestead_twin.models.alarms import Alarm, Incident
+from chaos.alarms.correlation import CorrelationEngine
+from chaos.alarms.definitions import sync_definitions
+from chaos.alarms.evaluator import AlarmEvaluator
+from chaos.alarms.notify import Notifier
+from chaos.models.alarms import Alarm, Incident
 
 BATTERY = "energy.battery_bank.power_container.01"
 GENERATOR = "energy.generator.site.01"
@@ -440,7 +440,7 @@ def test_definitions_reload_requires_maintainer_and_is_idempotent(
 
 def test_reload_of_an_uncrossreferenced_registry_is_rejected(client, db_session, operator_headers):
     """Reloading without a registry must fail loudly, not install phantom alarms."""
-    from homestead_twin.alarms.definitions import DefinitionError, sync_definitions
+    from chaos.alarms.definitions import DefinitionError, sync_definitions
 
     # No assets or point definitions loaded: the package files still resolve, so
     # the reload succeeds. Point the loader at a broken document instead.

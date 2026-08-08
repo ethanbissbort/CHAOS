@@ -1,10 +1,24 @@
-# Water-System Control Narrative
+# Water-system control narrative
+
+**Status: proposed — awaiting owner ratification and commissioning.**
+
+The full control design for the water system: sources, storage, treatment,
+distribution, irrigation, graywater, freeze protection and leak detection.
+
+**Nothing in this document is implemented.** No water coordinator exists in the
+platform. The water assets are in the design package but are not merged into the
+registry, so they carry no points and no bindings — they appear on
+[the topology screen](./topology-view.md#2-the-137-nodes-and-why-the-registry-says-90)
+as an overlay and nowhere else. This is a specification to build against and to
+argue with, not a description of running software.
 
 **Revision:** v0.4 draft
-**Status:** proposed — awaiting owner ratification and commissioning
-**Work-queue item:** SDD section 49 item 5
 **Companion documents:** `data/water_assets.yaml`, `data/water_points.yaml`, `schemas/water_assets.schema.json`, `schemas/water_points.schema.json`
-**Modelled on:** SDD sections 30–36 (the energy control narratives)
+**Modelled on:** the design document's energy control narratives
+
+Related: [The design package](./design-package.md) ·
+[Control](./control.md) · [Alarms](./alarms.md) ·
+[Topology and blast radius](./topology-view.md)
 
 ---
 
@@ -555,3 +569,15 @@ These must be resolved before the narrative can be parameterised. They are recor
 8. Graywater reuse permissions in the final jurisdiction.
 9. Every numeric threshold in this document.
 10. The controller family for local water and freeze control — see `docs/design-decisions/DD-004-controller-family.md`.
+
+---
+
+## 14. Related reading
+
+| Document | Why |
+|---|---|
+| [The design package](./design-package.md) | Why the water documents are extensions, and what their status means |
+| [Topology and blast radius](./topology-view.md) | Losing the power container costs 22 water assets, including potable pressure |
+| [Control](./control.md) | The interlock and operating-mode machinery this narrative would run on |
+| [Alarms](./alarms.md) | The alarm model section 11 is written against |
+| [Design decision DD-004](./design-decisions/DD-004-controller-family.md) | The controller family every local water loop depends on. Status: *proposed* |

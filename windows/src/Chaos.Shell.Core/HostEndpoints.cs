@@ -7,7 +7,7 @@ namespace Chaos.Shell.Core;
 /// The shell never carries its own copy of the web assets. It points WebView2
 /// at the gateway's copy so the desktop app and the browsers on the LAN are
 /// looking at the same files. Paths here mirror how the platform mounts them
-/// (<c>src/homestead_twin/api/app.py</c>): the console at <c>/</c>, the static
+/// (<c>src/chaos/api/app.py</c>): the console at <c>/</c>, the static
 /// bundle under <c>/ui/</c>, the API under <c>/api/v1</c>.
 /// </remarks>
 public sealed record HostEndpoints
@@ -31,6 +31,32 @@ public sealed record HostEndpoints
 
     /// <summary>Active alarms, polled for tray state.</summary>
     public Uri ActiveAlarms => new(BaseUri, "api/v1/alarms/active");
+
+    /// <summary>Gateway identity and configuration, for the launcher's diagnostic.</summary>
+    public Uri HostInfo => new(BaseUri, "host/info");
+
+    /// <summary>
+    /// First-run setup state. A gateway older than this shell answers 404 here,
+    /// which the launcher reports as "this platform is too old to say" rather
+    /// than as a failure.
+    /// </summary>
+    public Uri Setup => new(BaseUri, "host/setup");
+
+    /// <summary>Triggers or retries first-run setup. POST.</summary>
+    public Uri RunSetup => new(BaseUri, "host/setup/run");
+
+    /// <summary>
+    /// The setup-run URL, optionally forced.
+    /// </summary>
+    /// <remarks>
+    /// The gateway refuses an ordinary run when automatic setup is off or when
+    /// it assessed the database as needing a human decision, and only
+    /// <c>?force=true</c> gets past that. Forcing is never inferred by the
+    /// shell: it is passed only when the setup report itself said it was
+    /// required, because that guard exists to stop a run nobody chose.
+    /// </remarks>
+    public Uri RunSetupUrl(bool force) =>
+        force ? new(BaseUri, "host/setup/run?force=true") : RunSetup;
 
     /// <summary>OpenAPI docs, offered from the Help menu.</summary>
     public Uri ApiDocs => new(BaseUri, "docs");

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<meta name="generator" content="tools/build_docs.py">
+<title>Architecture — Project CHAOS help</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http%3A//www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230e1a16'/%3E%3Cpath d='M6 18 16 8l10 10v8H6z' fill='none' stroke='%234ade80' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/docs.css">
+<noscript><style>.doc-page[hidden]{display:block!important}.site-searchbtn{display:none}</style></noscript>
+</head>
+<body data-page="architecture">
+<a class="skip-link" href="#content">Skip to the documentation</a>
+<header class="site-topbar">
+<button type="button" class="btn btn-icon site-navtoggle" id="nav-toggle" aria-controls="site-nav" aria-expanded="false" title="Documents"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span class="visually-hidden">Show the document list</span></button>
+<a class="site-identity" href="index.html"><span class="site-mark"><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M5 19 16 8l11 11v7H5z"/></svg></span><span class="site-titles"><h1>Project CHAOS help</h1><p>Central Homestead Automation and Operation System</p></span></a>
+<button type="button" class="site-searchbtn" id="search-open"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.3-4.3"/></svg><span>Search the documentation</span><span class="kbd-hint">/</span></button>
+<div class="site-tools">
+<button type="button" class="btn btn-sm" id="theme-toggle"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4"/></svg><span class="theme-label">System</span></button>
+<button type="button" class="btn btn-icon" id="print-page" onclick="window.print()" title="Print this page"><svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M7 9V4h10v5M7 18H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2"/><rect x="7" y="14" width="10" height="6" rx="1"/></svg><span class="visually-hidden">Print this page</span></button>
+</div>
+</header>
+<div class="site-shell">
+<nav class="site-nav" id="site-nav" aria-label="Documents"><h2>Overview</h2><ul><li><a href="index.html" data-page="index"><span class="nav-num">01</span><span>Project CHAOS documentation</span></a></li><li><a href="readme.html" data-page="readme"><span class="nav-num">02</span><span>Project CHAOS</span></a></li></ul><h2>Using CHAOS</h2><ul><li><a href="getting-started.html" data-page="getting-started"><span class="nav-num">03</span><span>Getting started</span></a></li><li><a href="visual-studio.html" data-page="visual-studio"><span class="nav-num">04</span><span>Building in Visual Studio 2026</span></a></li><li><a href="desktop-shell.html" data-page="desktop-shell"><span class="nav-num">05</span><span>The desktop shell</span></a></li><li><a href="operator-console.html" data-page="operator-console"><span class="nav-num">06</span><span>The operator console</span></a></li><li><a href="annunciator.html" data-page="annunciator"><span class="nav-num">07</span><span>The annunciator panel</span></a></li><li><a href="topology-view.html" data-page="topology-view"><span class="nav-num">08</span><span>Topology and blast radius</span></a></li><li><a href="rack-view.html" data-page="rack-view"><span class="nav-num">09</span><span>Rack elevation</span></a></li></ul><h2>How the platform works</h2><ul><li><a href="architecture.html" data-page="architecture" aria-current="page"><span class="nav-num">10</span><span>Architecture</span></a></li><li><a href="alarms.html" data-page="alarms"><span class="nav-num">11</span><span>Alarms, incidents and notification</span></a></li><li><a href="control.html" data-page="control"><span class="nav-num">12</span><span>Control, interlocks and operating modes</span></a></li><li><a href="design-package.html" data-page="design-package"><span class="nav-num">13</span><span>The design package</span></a></li><li><a href="integration-findings.html" data-page="integration-findings"><span class="nav-num">14</span><span>Integration findings</span></a></li></ul><h2>Operating the property</h2><ul><li><a href="operations.html" data-page="operations"><span class="nav-num">15</span><span>Operations runbooks</span></a></li><li><a href="troubleshooting.html" data-page="troubleshooting"><span class="nav-num">16</span><span>Troubleshooting</span></a></li><li><a href="commissioning.html" data-page="commissioning"><span class="nav-num">17</span><span>Commissioning</span></a></li><li><a href="secondary-control-node.html" data-page="secondary-control-node"><span class="nav-num">18</span><span>Secondary control node</span></a></li><li><a href="network-and-trust-boundaries.html" data-page="network-and-trust-boundaries"><span class="nav-num">19</span><span>Network and trust boundaries</span></a></li><li><a href="water-control-narrative.html" data-page="water-control-narrative"><span class="nav-num">20</span><span>Water-system control narrative</span></a></li></ul><h2>Reference</h2><ul><li><a href="api.html" data-page="api"><span class="nav-num">21</span><span>API reference</span></a></li><li><a href="design-decisions.html" data-page="design-decisions"><span class="nav-num">22</span><span>Design Decision Records</span></a></li></ul><h2>Advanced — you do not need these</h2><ul><li><a href="advanced-command-line.html" data-page="advanced-command-line"><span class="nav-num">23</span><span>Command line</span></a></li><li><a href="advanced-container-deployment.html" data-page="advanced-container-deployment"><span class="nav-num">24</span><span>Container deployment</span></a></li><li><a href="advanced-windows-packaging.html" data-page="advanced-windows-packaging"><span class="nav-num">25</span><span>Windows packaging</span></a></li></ul><h2>Design Decisions</h2><ul><li><a href="design-decisions-dd-001-energy-capacity-revision.html" data-page="design-decisions-dd-001-energy-capacity-revision"><span class="nav-num">26</span><span>DD-001: Authoritative energy design revision</span></a></li><li><a href="design-decisions-dd-002-historian-selection.html" data-page="design-decisions-dd-002-historian-selection"><span class="nav-num">27</span><span>DD-002: Time-series historian selection</span></a></li><li><a href="design-decisions-dd-003-secondary-control-node-placement.html" data-page="design-decisions-dd-003-secondary-control-node-placement"><span class="nav-num">28</span><span>DD-003: Secondary control node placement</span></a></li><li><a href="design-decisions-dd-004-controller-family.html" data-page="design-decisions-dd-004-controller-family"><span class="nav-num">29</span><span>DD-004: Standard PLC / controller family for critical local control</span></a></li></ul></nav>
+<main class="site-main" id="content" tabindex="-1">
+<article class="doc-page" id="architecture" data-page="architecture"><p class="doc-breadcrumb"><span>How the platform works</span><span>Architecture</span></p><p class="doc-source">docs/architecture.md</p><div class="doc-body"><h1 id="architecture" class="doc-h"><span class="doc-h-text">Architecture</span><a class="doc-anchor" href="#architecture" aria-label="Link to this section"></a></h1>
+<p>How Project CHAOS is put together, why it is split the way it is, and — just as
+important — what it does not yet do.</p>
+<p>Related: <a href="visual-studio.html">Building in Visual Studio 2026</a> ·
+<a href="desktop-shell.html">The desktop shell</a> ·
+<a href="control.html">Control</a> ·
+<a href="secondary-control-node.html">Secondary control node</a></p>
+<hr>
+<h2 id="1-what-this-software-is" class="doc-h"><span class="doc-h-text">1. What this software is</span><a class="doc-anchor" href="#1-what-this-software-is" aria-label="Link to this section"></a></h2>
+<p>A local-first operational control plane for an off-grid homestead: an
+authoritative asset and point registry, a telemetry ingest path, a supervisory
+command path with audit, an energy-management state machine, an alarm engine,
+and the interfaces on top of them.</p>
+<p>Three properties shape every decision below.</p>
+<p><strong>The registry owns identity.</strong> An asset ID is never derived from a vendor
+serial, MAC, IP or home-automation entity ID. Devices get replaced; the
+functional position does not. Vendor facts live in external identifiers and
+point bindings, both of which are expected to churn.</p>
+<p><strong>The platform requests; local controllers decide.</strong> The API can ask a pump to
+start. The PLC, the BMS, the float switch and the breaker retain the authority
+to refuse. Nothing here bypasses that, and <strong>the software is not the protection
+system</strong>.</p>
+<p><strong>It runs without the internet, and it must survive losing its own building.</strong>
+The design assumes the combined battery and server container can be destroyed.
+That assumption is why SQLite is a supported backend, why the command line
+remains a first-class interface for a headless node, and why
+<a href="secondary-control-node.html">Secondary control node</a> exists.</p>
+<hr>
+<h2 id="2-the-three-processes" class="doc-h"><span class="doc-h-text">2. The three processes</span><a class="doc-anchor" href="#2-the-three-processes" aria-label="Link to this section"></a></h2>
+<figure class="doc-diagram"><figcaption><span class="doc-diagram-tag">Diagram</span>Mermaid source — rendered here as text so the page needs no diagram library and no network.</figcaption><pre class="doc-pre"><code class="lang-mermaid"><span class="t-k">flowchart</span> <span class="t-k">TB</span>
+  <span class="t-k">subgraph</span> client<span class="t-t">["Client — Windows desktop"]</span>
+    SHELL<span class="t-t">["Chaos.Shell (WinUI 3)&lt;br/&gt;launcher · console window · tray · annunciator"]</span>
+  <span class="t-k">end</span>
+
+  BROWSER<span class="t-t">["Any browser on the LAN"]</span>
+
+  <span class="t-k">subgraph</span> gw<span class="t-t">["Chaos.Host (.NET 10) — the only LAN listener, :8080"]</span>
+    OWN<span class="t-t">["Gateway routes&lt;br/&gt;/health · /health/live&lt;br/&gt;/host/info · /host/routes&lt;br/&gt;/host/setup · /host/setup/run"]</span>
+    WEB<span class="t-t">["Operator console assets&lt;br/&gt;served from src/chaos/web"]</span>
+    PROXY<span class="t-t">["Reverse proxy&lt;br/&gt;route-ownership manifest"]</span>
+    SETUP<span class="t-t">["First-run setup&lt;br/&gt;runs the platform's own commands"]</span>
+  <span class="t-k">end</span>
+
+  <span class="t-k">subgraph</span> be<span class="t-t">["Python platform backend — loopback only, :8081"]</span>
+    API<span class="t-t">["FastAPI · 83 endpoints under /api/v1"]</span>
+    SVC<span class="t-t">["ingest · ems · alarms · commands · maintenance"]</span>
+  <span class="t-k">end</span>
+
+  DB<span class="t-t">[("SQLite or PostgreSQL")]</span>
+  BUS<span class="t-t">["Mosquitto"]</span>
+
+  SHELL <span class="t-o">--&gt;</span> gw
+  BROWSER <span class="t-o">--&gt;</span> gw
+  PROXY <span class="t-o">--&gt;</span> API
+  SETUP <span class="t-o">--&gt;</span> SVC
+  API <span class="t-o">--&gt;</span> DB
+  SVC <span class="t-o">--&gt;</span> DB
+  SVC <span class="t-o">--&gt;</span> BUS</code></pre></figure>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Process</th><th scope="col">Language</th><th scope="col">Listens on</th><th scope="col">Job</th></tr></thead><tbody><tr><td><code>Chaos.Shell</code></td><td>C# / WinUI 3</td><td>nothing</td><td>The Windows front end. A client</td></tr><tr><td><code>Chaos.Host</code></td><td>C# / .NET 10</td><td><code>0.0.0.0:8080</code></td><td>The front door: the only LAN listener, the console's web server, the reverse proxy, and first-run setup</td></tr><tr><td>The platform backend</td><td>Python 3.11 / FastAPI</td><td><code>127.0.0.1:8081</code></td><td>Everything that decides anything</td></tr></tbody></table></div>
+<h3 id="why-the-backend-is-on-loopback" class="doc-h"><span class="doc-h-text">Why the backend is on loopback</span><a class="doc-anchor" href="#why-the-backend-is-on-loopback" aria-label="Link to this section"></a></h3>
+<p><strong>It is an unauthenticated control API.</strong> Authentication terminates upstream at a
+VPN or reverse proxy; the backend only records <em>who</em> an action was taken by. So
+it is reached through the gateway or not at all, and the gateway refuses a
+non-loopback backend address unless that is explicitly configured.</p>
+<h3 id="why-there-is-a-gateway-at-all" class="doc-h"><span class="doc-h-text">Why there is a gateway at all</span><a class="doc-anchor" href="#why-there-is-a-gateway-at-all" aria-label="Link to this section"></a></h3>
+<p>Four reasons, in the order they mattered:</p>
+<ol><li><strong>One listener.</strong> A single place where LAN exposure, timeouts, forwarded
+headers and the firewall rule are decided.</li><li><strong>First-run setup.</strong> Launching the executable has to be the whole
+installation procedure, and something has to look at the database and act.</li><li><strong>A migration seam.</strong> Subsystems can be ported from Python to .NET one route
+prefix at a time, with the live answer to "who serves what" available on
+<code>/host/routes</code>.</li><li><strong>Honest health.</strong> The gateway answers <code>/health</code> even when the backend is
+dead, which is the case it exists for.</li></ol>
+<h3 id="route-ownership" class="doc-h"><span class="doc-h-text">Route ownership</span><a class="doc-anchor" href="#route-ownership" aria-label="Link to this section"></a></h3>
+<p>Every request is matched against a manifest: longest prefix wins, at segment
+boundaries. Today <strong>every <code>/api/v1</code> prefix is Python.</strong> <code>/health</code> and <code>/host</code>
+are the only .NET-owned rows.</p>
+<p>Two rules keep it safe:</p>
+<ul><li>The <code>/api/v1</code> row is a deliberate catch-all, so a new Python endpoint nobody
+listed still proxies instead of 404-ing.</li><li><strong>The host refuses to start</strong> if a row claims a prefix for .NET and no .NET
+endpoint is registered under it. A route marked as ported with nothing behind
+it answers 404, and a 404 from an alarm endpoint reads like <em>"no alarms"</em>.</li></ul>
+<p><code>Chaos.Api</code> exists as the destination for ported subsystems, is built and
+tested, and <strong>is not wired into the gateway today</strong>.</p>
+<h3 id="health-and-what-each-answer-means" class="doc-h"><span class="doc-h-text">Health, and what each answer means</span><a class="doc-anchor" href="#health-and-what-each-answer-means" aria-label="Link to this section"></a></h3>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Endpoint</th><th scope="col">Answers</th></tr></thead><tbody><tr><td><code>/health/live</code></td><td>200 whenever this gateway process is running. Says nothing about the platform</td></tr><tr><td><code>/health</code></td><td>200 <strong>only</strong> when the backend is up; 503 when it is down or starting, with the full body either way</td></tr><tr><td><code>/host/info</code></td><td>Identity, addresses, web-root resolution, supervisor state, route counts</td></tr><tr><td><code>/host/routes</code></td><td>The live route-ownership table</td></tr><tr><td><code>/host/setup</code></td><td>Always 200 — a report that a machine needs setting up is a successful report</td></tr></tbody></table></div>
+<p>A gateway that returned 200 while the platform behind it was dead would tell
+every status-code-only monitor that an off-grid site with no alarm engine is
+fine. And a gateway reporting healthy over a platform with <strong>no database</strong> is
+the same lie in a different costume, so a setup state of <code>failed</code> or
+<code>needs_attention</code> forces <code>degraded</code> whatever the backend says.</p>
+<h3 id="process-supervision" class="doc-h"><span class="doc-h-text">Process supervision</span><a class="doc-anchor" href="#process-supervision" aria-label="Link to this section"></a></h3>
+<p><code>Chaos.Host.Supervisor</code> resolves which Python runs the platform — the embedded
+runtime when one is installed, otherwise a development interpreter — launches it
+on loopback, and gates readiness on its <code>/health</code> answering rather than on the
+process having started. It restarts with backoff behind a circuit breaker, so a
+crash loop reports a terminal failure instead of looking like "starting"
+forever. The gateway registers it at composition and <code>/host/info</code> reports its
+state.</p>
+<p><code>CHAOS_SuperviseBackend=false</code> turns it off on a node where the backend is
+started by something else; proxying, health reporting and first-run setup work
+either way. See
+<a href="visual-studio.html#what-happens-when-you-press-f5">Visual Studio § What happens when you press F5</a>.</p>
+<hr>
+<h2 id="3-control-hierarchy" class="doc-h"><span class="doc-h-text">3. Control hierarchy</span><a class="doc-anchor" href="#3-control-hierarchy" aria-label="Link to this section"></a></h2>
+<figure class="doc-diagram"><figcaption><span class="doc-diagram-tag">Diagram</span>Mermaid source — rendered here as text so the page needs no diagram library and no network.</figcaption><pre class="doc-pre"><code class="lang-mermaid"><span class="t-k">flowchart</span> <span class="t-k">TB</span>
+  L4<span class="t-t">["LEVEL 4 — Planning, analytics, forecasting"]</span>
+  L3<span class="t-t">["LEVEL 3 — Homestead master control plane"]</span>
+  L2<span class="t-t">["LEVEL 2 — Subsystem coordinators"]</span>
+  L1<span class="t-t">["LEVEL 1 — Local controllers and gateways"]</span>
+  L0<span class="t-t">["LEVEL 0 — Physical process and hardwired protection"]</span>
+
+  L4 <span class="t-o">--&gt;</span> L3
+  L3 <span class="t-o">--&gt;</span><span class="t-o">|</span><span class="t-s">"supervisory request"</span><span class="t-o">|</span> L2
+  L2 <span class="t-o">--&gt;</span><span class="t-o">|</span><span class="t-s">"command envelope over MQTT"</span><span class="t-o">|</span> L1
+  L1 <span class="t-o">--&gt;</span><span class="t-o">|</span><span class="t-s">"actuates"</span><span class="t-o">|</span> L0
+  L0 <span class="t-o">-.-&gt;</span><span class="t-o">|</span><span class="t-s">"may refuse: interlock, dry-run, freeze lockout, e-stop"</span><span class="t-o">|</span> L1
+  L1 <span class="t-o">-.-&gt;</span><span class="t-o">|</span><span class="t-s">"telemetry, acknowledgement, rejection"</span><span class="t-o">|</span> L2
+  L2 <span class="t-o">-.-&gt;</span><span class="t-o">|</span><span class="t-s">"state, alarms, audit"</span><span class="t-o">|</span> L3</code></pre></figure>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Level</th><th scope="col">Scope</th><th scope="col">In this repository</th><th scope="col">Status</th></tr></thead><tbody><tr><td>4</td><td>Long-term models, forecasting, scenario simulation, budget linkage</td><td>The maintenance scheduler produces due-work forecasts. Nothing else</td><td><strong>Not built</strong></td></tr><tr><td>3</td><td>Registry, event engine, supervisory rules, dashboards, command service, alerts, work orders</td><td><code>registry/</code>, <code>commands/</code>, <code>alarms/</code>, <code>maintenance/</code>, <code>api/</code>, <code>web/</code></td><td><strong>Implemented</strong></td></tr><tr><td>2</td><td>Energy, irrigation, greenhouse, water plant, container environment, security, spa</td><td><code>ems/</code> only</td><td><strong>Energy implemented; every other coordinator not built</strong></td></tr><tr><td>1</td><td>PLCs, inverter/BMS controls, ESP32 nodes, long-range radio, relays, environmental monitors</td><td>Out of scope — real hardware. <code>src/simulator/</code> stands in during development</td><td><strong>Simulated only</strong></td></tr><tr><td>0</td><td>Breakers, fuses, relief valves, float switches, e-stops</td><td>Physical. Deliberately not represented as controllable software</td><td><strong>N/A by design</strong></td></tr></tbody></table></div>
+<p><strong>The most important row is Level 1.</strong> Nothing in this repository has ever
+talked to a real inverter, pump or PLC.</p>
+<hr>
+<h2 id="4-the-subsystems" class="doc-h"><span class="doc-h-text">4. The subsystems</span><a class="doc-anchor" href="#4-the-subsystems" aria-label="Link to this section"></a></h2>
+<h3 id="registry" class="doc-h"><span class="doc-h-text">Registry</span><a class="doc-anchor" href="#registry" aria-label="Link to this section"></a></h3>
+<p>Reads the four design-package documents and upserts them, recording a
+configuration revision for the load. It is idempotent and additive, and it is
+the only writer of dictionary-derived rows.</p>
+<p>The separation that matters is enforced in the schema: asset identity, point
+identity, and vendor binding are three different things. A binding stays <code>tbd</code>
+until commissioning verifies the real address — which is why the binding-status
+breakdown is the honest measure of how much of the property is wired up rather
+than merely modelled.</p>
+<p>See <a href="design-package.html">The design package</a>.</p>
+<h3 id="ingest" class="doc-h"><span class="doc-h-text">Ingest</span><a class="doc-anchor" href="#ingest" aria-label="Link to this section"></a></h3>
+<div class="doc-code" data-lang="text"><div class="doc-code-bar"><span class="doc-code-lang">text</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-text">bus message → topic resolver → telemetry writer → current state + historian</code></pre></div>
+<p>Two rules:</p>
+<ul><li><strong>The registry resolves topic to point</strong>, never string parsing. A topic
+segment of the form <code>&lt;class&gt;_&lt;instance&gt;</code> cannot be split unambiguously, so it
+is not attempted.</li><li><strong>Nothing is dropped silently.</strong> Anything unresolvable becomes a dead letter
+with a reason, because a silently discarded message during commissioning looks
+exactly like a dead sensor.</li></ul>
+<h3 id="energy-management" class="doc-h"><span class="doc-h-text">Energy management</span><a class="doc-anchor" href="#energy-management" aria-label="Link to this section"></a></h3>
+<p>A ten-state machine, load-tier shedding, restoration, generator coordination,
+black-start sequencing and power-budget leases.</p>
+<p>The energy manager publishes a state and grants budgets; <strong>it is not a universal
+relay board.</strong> There is exactly one on the property, and the platform refuses to
+start it on a secondary node.</p>
+<p>The authoritative energy design is still an open conflict — a 12 kW / 40 kWh
+baseline versus a 45 kWdc / 800 kWh revision. The register preserves both, and
+<strong>no threshold in the energy manager assumes either is correct.</strong></p>
+<h3 id="alarms" class="doc-h"><span class="doc-h-text">Alarms</span><a class="doc-anchor" href="#alarms" aria-label="Link to this section"></a></h3>
+<p>Definitions load from the design package. The evaluator runs against current
+state; correlation groups related alarms into incidents so one power-container
+outage does not produce hundreds of independent notifications. See
+<a href="alarms.html">Alarms</a>.</p>
+<h3 id="commands" class="doc-h"><span class="doc-h-text">Commands</span><a class="doc-anchor" href="#commands" aria-label="Link to this section"></a></h3>
+<p>Interlock evaluation → audit record → dispatch → acknowledgement or expiry.
+Every command carries who, why, under which operating mode, an idempotency key
+and a time to live. See <a href="control.html">Control</a>.</p>
+<h3 id="maintenance" class="doc-h"><span class="doc-h-text">Maintenance</span><a class="doc-anchor" href="#maintenance" aria-label="Link to this section"></a></h3>
+<p>Plans, due-work generation, work orders, inspections, calibrations, spare parts,
+and the twelve-step commissioning record — which turns the sequence into
+something the platform <strong>enforces</strong> rather than something a document asks for.
+See <a href="commissioning.html">Commissioning</a>.</p>
+<h3 id="the-operator-console" class="doc-h"><span class="doc-h-text">The operator console</span><a class="doc-anchor" href="#the-operator-console" aria-label="Link to this section"></a></h3>
+<p><code>src/chaos/web/</code> — vanilla ES modules, no framework, no build step, no network
+dependency beyond the server it came from. Served by the gateway. See
+<a href="operator-console.html">The operator console</a>.</p>
+<h3 id="the-simulator" class="doc-h"><span class="doc-h-text">The simulator</span><a class="doc-anchor" href="#the-simulator" aria-label="Link to this section"></a></h3>
+<p>A simulated site — solar, battery, inverter, generator, loads, rack, weather —
+publishing real envelopes on real topics, to a real broker or to the in-process
+bus. This is how every control path in this repository has been exercised.</p>
+<hr>
+<h2 id="5-runtime-shape" class="doc-h"><span class="doc-h-text">5. Runtime shape</span><a class="doc-anchor" href="#5-runtime-shape" aria-label="Link to this section"></a></h2>
+<p>Background services are selected by node role and settings:</p>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Service</th><th scope="col">Runs when</th><th scope="col">Notes</th></tr></thead><tbody><tr><td>Ingest</td><td>The bus is enabled</td><td></td></tr><tr><td>Command dispatch</td><td>The bus is enabled</td><td><strong>Not suppressed on a secondary node</strong> — see below</td></tr><tr><td>Alarm engine</td><td>The alarm engine is enabled</td><td></td></tr><tr><td>Energy manager</td><td>Enabled <strong>and</strong> not a secondary node</td><td>The only role-based suppression in the platform</td></tr></tbody></table></div>
+<p><strong>One subsystem failing to start never prevents the others</strong>: a frozen
+greenhouse is worse than a missing dashboard. The same rule governs the gateway:
+a background service that throws must not take the host down, because the
+gateway's job during a failure is to stay up and report it.</p>
+<p><strong>Worth knowing:</strong> role is enforced for the energy manager only. On a secondary
+node the command-dispatch service is still registered whenever the bus is
+enabled, so the physical-control gate is the thing standing between the
+secondary node and a second source of commands — backed by broker permissions.
+<a href="secondary-control-node.html#how-that-is-enforced">Secondary control node § How that is enforced</a>
+explains why that is treated as a primary control rather than belt-and-braces.</p>
+<hr>
+<h2 id="6-storage" class="doc-h"><span class="doc-h-text">6. Storage</span><a class="doc-anchor" href="#6-storage" aria-label="Link to this section"></a></h2>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Concern</th><th scope="col">Today</th></tr></thead><tbody><tr><td>Database</td><td>SQLite by default; PostgreSQL supported</td></tr><tr><td>Historian</td><td>A relational table. The InfluxDB-versus-TimescaleDB decision is unresolved, so neither is deployed</td></tr><tr><td>Geospatial</td><td>PostGIS is installed and the geometry column prepared, but geometry is stored as GeoJSON and the generated column is commented out</td></tr><tr><td>Migrations</td><td><strong>None.</strong> Table creation adds tables; it never alters them</td></tr></tbody></table></div>
+<p>The relational historian is a real limitation, not a finished choice. It is
+adequate for commissioning and for the secondary node; it is not adequate for
+years of high-resolution telemetry. The per-point series key and retention
+policy are kept in the registry precisely so the historian can be swapped
+<strong>without touching point identity</strong>.</p>
+<hr>
+<h2 id="7-deployment-shapes" class="doc-h"><span class="doc-h-text">7. Deployment shapes</span><a class="doc-anchor" href="#7-deployment-shapes" aria-label="Link to this section"></a></h2>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Shape</th><th scope="col">What it is</th><th scope="col">Documented in</th></tr></thead><tbody><tr><td><strong>The Windows product</strong></td><td>Installer, gateway as a Windows service, desktop shell, embedded Python runtime</td><td><a href="getting-started.html">Getting started</a></td></tr><tr><td><strong>The container stack</strong></td><td>Docker Compose for a primary node and a headless secondary node</td><td><a href="advanced-container-deployment.html">Container deployment</a></td></tr><tr><td><strong>A development checkout</strong></td><td>Visual Studio for the .NET half; the platform on SQLite and an in-memory bus</td><td><a href="visual-studio.html">Building in Visual Studio 2026</a></td></tr></tbody></table></div>
+<p>All three run the same platform code. The container stack additionally deploys
+PostgreSQL, Mosquitto, Prometheus and Grafana.</p>
+<hr>
+<h2 id="8-status-summary" class="doc-h"><span class="doc-h-text">8. Status summary</span><a class="doc-anchor" href="#8-status-summary" aria-label="Link to this section"></a></h2>
+<h3 id="implemented-and-exercised-against-the-simulator" class="doc-h"><span class="doc-h-text">Implemented, and exercised against the simulator</span><a class="doc-anchor" href="#implemented-and-exercised-against-the-simulator" aria-label="Link to this section"></a></h3>
+<p>Registry and design-package loading · telemetry ingest with dead-lettering ·
+current-state cache · relational historian and retention · energy state machine,
+shedding, restoration, generator coordination, black start, budget leases ·
+alarm definitions, evaluation, correlation, log notification · command path with
+eight interlocks, operating modes and audit · maintenance and commissioning
+records · annunciator panel · topology and blast-radius analysis · rack
+elevation · 83 REST endpoints under <code>/api/v1</code> · the operator console · the .NET
+gateway with route ownership and first-run setup · the WinUI 3 desktop shell ·
+the command line · container deployment for both node roles · Grafana dashboards
+over real tables · 2128 Python tests.</p>
+<h3 id="stubbed-or-partial" class="doc-h"><span class="doc-h-text">Stubbed or partial</span><a class="doc-anchor" href="#stubbed-or-partial" aria-label="Link to this section"></a></h3>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Thing</th><th scope="col">State</th></tr></thead><tbody><tr><td><strong>Backend process supervision</strong></td><td>The supervisor is built and shipped; the gateway's entry point does not register it</td></tr><tr><td><strong>Ported .NET subsystems</strong></td><td><code>Chaos.Api</code> is built and tested; no route is owned by it</td></tr><tr><td><strong>Notification backends</strong></td><td>Only <code>log</code> is implemented. <code>email</code>, <code>push</code> and <code>voice</code> record <code>not_configured</code> and never claim success</td></tr><tr><td><strong>Prometheus</strong></td><td>Scrapes only itself. No exporters deployed, most target addresses are open items. The API exposes no <code>/metrics</code></td></tr><tr><td><strong>Historian</strong></td><td>Relational, pending the InfluxDB/TimescaleDB decision</td></tr><tr><td><strong>PostGIS</strong></td><td>Geometry column prepared and disabled; GeoJSON stored</td></tr><tr><td><strong>MQTT TLS</strong></td><td>Configured and deliberately left disabled rather than half-configured</td></tr><tr><td><strong>Migrations</strong></td><td>None. Alembic is declared and unused</td></tr><tr><td><strong>Water, rack and lifecycle extensions</strong></td><td>In the design package; not merged into the registry. Consumed directly by the screens that need them</td></tr></tbody></table></div>
+<h3 id="not-built" class="doc-h"><span class="doc-h-text">Not built</span><a class="doc-anchor" href="#not-built" aria-label="Link to this section"></a></h3>
+<p>Home Assistant integration · Node-RED flows · property-map rendering on a real
+map · dedicated wall-display views beyond the console's wall mode · Level 4
+forecasting, prediction and scenario simulation · subsystem coordinators for
+water, irrigation, greenhouse, compost, nitrogen storage, spa and security ·
+SNMP/Modbus polling of real devices · camera and NVR integration · voice
+escalation · automated network-device configuration backup · a time service with
+holdover · the document library.</p>
+<h3 id="the-headline" class="doc-h"><span class="doc-h-text">The headline</span><a class="doc-anchor" href="#the-headline" aria-label="Link to this section"></a></h3>
+<p><strong>No part of this platform has been connected to real plant.</strong> Every control
+path has been exercised against the simulator and the in-memory bus, which is
+the bench-test commissioning step and nothing beyond it.</p>
+<p>Consequently most of the MVP acceptance criteria are outstanding:</p>
+<div class="doc-table-wrap"><table><thead><tr><th class="col-right" scope="col">#</th><th scope="col">Criterion</th><th scope="col">Status</th></tr></thead><tbody><tr><td class="col-right">1</td><td>Registry contains all installed core assets</td><td><strong>Met for what is designed</strong> — 90 assets, though most are <code>planned</code>, not installed</td></tr><tr><td class="col-right">2</td><td>Live energy, water, rack, weather and alarm state</td><td><strong>Not met</strong> — needs hardware</td></tr><tr><td class="col-right">3</td><td>Telemetry follows one documented schema</td><td><strong>Met</strong></td></tr><tr><td class="col-right">4</td><td>Critical alarms work during internet loss</td><td><strong>Not met</strong> — a log line is not an alert</td></tr><tr><td class="col-right">5</td><td>Home automation, flows, dashboards and the API backed up automatically</td><td><strong>Partial</strong> — dashboards and the API yes; the others do not exist</td></tr><tr><td class="col-right">6</td><td>One physical subsystem controlled with acknowledgement and audit</td><td><strong>Not met</strong> — needs hardware</td></tr><tr><td class="col-right">7</td><td>Communications-loss and server-loss tests</td><td><strong>Not met</strong> against hardware; simulated only</td></tr><tr><td class="col-right">8</td><td>Property map displays structures and assets</td><td><strong>Not met</strong> — GeoJSON is served, nothing renders it over a basemap</td></tr><tr><td class="col-right">9</td><td>Every critical asset has a manual override and failure-state record</td><td><strong>Partial</strong> — the schema requires it; the data is incomplete</td></tr><tr><td class="col-right">10</td><td>Data export and restore tested</td><td><strong>Partial</strong> — export works and is tested; restore is documented, not drilled</td></tr></tbody></table></div>
+<p>Closing these is what <a href="commissioning.html">Commissioning</a> is for, one subsystem
+at a time.</p>
+<hr>
+<h2 id="9-related-reading" class="doc-h"><span class="doc-h-text">9. Related reading</span><a class="doc-anchor" href="#9-related-reading" aria-label="Link to this section"></a></h2>
+<div class="doc-table-wrap"><table><thead><tr><th scope="col">Document</th><th scope="col">Why</th></tr></thead><tbody><tr><td><a href="design-package.html">The design package</a></td><td>What the registry is built from</td></tr><tr><td><a href="control.html">Control</a></td><td>The command path in detail</td></tr><tr><td><a href="alarms.html">Alarms</a></td><td>The alarm engine in detail</td></tr><tr><td><a href="secondary-control-node.html">Secondary control node</a></td><td>The second deployment, and why it must not take over</td></tr><tr><td><a href="integration-findings.html">Integration findings</a></td><td>What running all of this end to end revealed</td></tr><tr><td><a href="api.html">API reference</a></td><td>Every endpoint</td></tr></tbody></table></div></div><nav class="doc-pager" aria-label="Reading order"><a class="pager-prev" href="rack-view.html" data-page="rack-view"><span class="pager-role">Previous</span>Rack elevation</a><a class="pager-next" href="alarms.html" data-page="alarms"><span class="pager-role">Next</span>Alarms, incidents and notification</a></nav></article>
+</main>
+<aside class="site-toc" aria-label="On this page"><h2>On this page</h2><ul><li data-level="2"><a href="#1-what-this-software-is" data-anchor="1-what-this-software-is">1. What this software is</a></li><li data-level="2"><a href="#2-the-three-processes" data-anchor="2-the-three-processes">2. The three processes</a></li><li data-level="3"><a href="#why-the-backend-is-on-loopback" data-anchor="why-the-backend-is-on-loopback">Why the backend is on loopback</a></li><li data-level="3"><a href="#why-there-is-a-gateway-at-all" data-anchor="why-there-is-a-gateway-at-all">Why there is a gateway at all</a></li><li data-level="3"><a href="#route-ownership" data-anchor="route-ownership">Route ownership</a></li><li data-level="3"><a href="#health-and-what-each-answer-means" data-anchor="health-and-what-each-answer-means">Health, and what each answer means</a></li><li data-level="3"><a href="#process-supervision" data-anchor="process-supervision">Process supervision</a></li><li data-level="2"><a href="#3-control-hierarchy" data-anchor="3-control-hierarchy">3. Control hierarchy</a></li><li data-level="2"><a href="#4-the-subsystems" data-anchor="4-the-subsystems">4. The subsystems</a></li><li data-level="3"><a href="#registry" data-anchor="registry">Registry</a></li><li data-level="3"><a href="#ingest" data-anchor="ingest">Ingest</a></li><li data-level="3"><a href="#energy-management" data-anchor="energy-management">Energy management</a></li><li data-level="3"><a href="#alarms" data-anchor="alarms">Alarms</a></li><li data-level="3"><a href="#commands" data-anchor="commands">Commands</a></li><li data-level="3"><a href="#maintenance" data-anchor="maintenance">Maintenance</a></li><li data-level="3"><a href="#the-operator-console" data-anchor="the-operator-console">The operator console</a></li><li data-level="3"><a href="#the-simulator" data-anchor="the-simulator">The simulator</a></li><li data-level="2"><a href="#5-runtime-shape" data-anchor="5-runtime-shape">5. Runtime shape</a></li><li data-level="2"><a href="#6-storage" data-anchor="6-storage">6. Storage</a></li><li data-level="2"><a href="#7-deployment-shapes" data-anchor="7-deployment-shapes">7. Deployment shapes</a></li><li data-level="2"><a href="#8-status-summary" data-anchor="8-status-summary">8. Status summary</a></li><li data-level="3"><a href="#implemented-and-exercised-against-the-simulator" data-anchor="implemented-and-exercised-against-the-simulator">Implemented, and exercised against the simulator</a></li><li data-level="3"><a href="#stubbed-or-partial" data-anchor="stubbed-or-partial">Stubbed or partial</a></li><li data-level="3"><a href="#not-built" data-anchor="not-built">Not built</a></li><li data-level="3"><a href="#the-headline" data-anchor="the-headline">The headline</a></li><li data-level="2"><a href="#9-related-reading" data-anchor="9-related-reading">9. Related reading</a></li></ul></aside>
+</div>
+<div class="site-search" id="search-overlay" hidden role="dialog" aria-modal="true" aria-label="Search the documentation">
+<div class="site-search-panel">
+<div class="site-search-head">
+<svg class="icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.3-4.3"/></svg>
+<input type="search" id="search-input" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="true" aria-controls="search-results" placeholder="Search every page — try black start, dead letter, interlock">
+<button type="button" class="btn btn-sm" id="search-close">Close</button>
+</div>
+<p class="site-search-status" id="search-status" role="status">Type to search every page of this help set.</p>
+<ul class="site-results" id="search-results" role="listbox" aria-label="Search results"></ul>
+<div class="site-search-foot"><span><span class="kbd-hint">&#8593;</span> <span class="kbd-hint">&#8595;</span> move</span><span><span class="kbd-hint">Enter</span> open</span><span><span class="kbd-hint">Esc</span> close</span><span><span class="kbd-hint">/</span> search from anywhere</span></div>
+</div>
+</div>
+<script src="assets/search-index.js"></script>
+<script src="assets/docs.js"></script>
+</body>
+</html>

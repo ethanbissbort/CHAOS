@@ -336,11 +336,11 @@ def conformance_database(tmp_path_factory) -> Path:
     yaml = pytest.importorskip("yaml")  # noqa: F841  (loader dependency)
     from sqlalchemy.orm import sessionmaker
 
-    from homestead_twin.alarms.definitions import sync_definitions
-    from homestead_twin.config import Settings
-    from homestead_twin.db import build_engine
-    from homestead_twin.models.base import Base
-    from homestead_twin.registry.loader import load_package
+    from chaos.alarms.definitions import sync_definitions
+    from chaos.config import Settings
+    from chaos.db import build_engine
+    from chaos.models.base import Base
+    from chaos.registry.loader import load_package
 
     database_path = tmp_path_factory.mktemp("conformance") / "homestead.db"
     settings = Settings(
@@ -351,7 +351,7 @@ def conformance_database(tmp_path_factory) -> Path:
     )
 
     engine = build_engine(settings)
-    import homestead_twin.models  # noqa: F401  (registers mappers)
+    import chaos.models  # noqa: F401  (registers mappers)
 
     Base.metadata.create_all(engine)
 
@@ -385,7 +385,7 @@ def _seed_edge_case_definitions(session) -> None:
     not registered, an undeclared panel bay, or an unknown severity -- all of
     which are paths where two implementations can quietly disagree.
     """
-    from homestead_twin.models.alarms import AlarmDefinition
+    from chaos.models.alarms import AlarmDefinition
 
     rows = [
         AlarmDefinition(
@@ -461,7 +461,7 @@ def _seed_alarms(session) -> None:
     """
     import datetime as dt
 
-    from homestead_twin.models.alarms import Alarm, Incident
+    from chaos.models.alarms import Alarm, Incident
 
     base = dt.datetime(2026, 8, 7, 12, 0, 0, tzinfo=dt.UTC)
 
@@ -595,8 +595,8 @@ def python_base_url(conformance_database: Path):
     """The Python platform, served by uvicorn over a real socket."""
     uvicorn = pytest.importorskip("uvicorn", reason="uvicorn is needed to serve the Python side")
 
-    from homestead_twin.api.app import create_app
-    from homestead_twin.config import Settings
+    from chaos.api.app import create_app
+    from chaos.config import Settings
 
     settings = Settings(
         database_url=f"sqlite:///{conformance_database}",

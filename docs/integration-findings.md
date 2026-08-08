@@ -1,17 +1,48 @@
-# Integration Findings
+# Integration findings
 
 Gaps found by running the whole platform end to end — the simulated homestead
 publishing real envelopes on real topics, ingest resolving them through the
-registry, and the EMS evaluating the resulting state.
+registry, and the energy manager evaluating the resulting state.
+
+**This is operational knowledge, not trivia.** Two of these findings change what
+you should believe when you look at a screen:
+
+- **F-007** — a quarter of the shipped alarm definitions cannot fire. An alarm
+  list reading "40 defined, 0 active" is not full coverage.
+- **F-008** — losing the power container takes 71% of the homestead with it,
+  **including potable water pressure**, through an electrical dependency that
+  the water system is otherwise independent of.
 
 Every item here is a gap in the **design package**, not a platform defect. In
-each case the software behaved correctly by refusing to guess. They are
-recorded rather than silently patched because resolving them is a design
-decision belonging to the property owner, and because SDD sections 3.1 and 45
-are explicit that conflicts are preserved rather than quietly reconciled.
+each case the software behaved correctly by refusing to guess. They are recorded
+rather than silently patched because resolving them is a design decision
+belonging to the property owner, and because the design document is explicit
+that conflicts are preserved rather than quietly reconciled.
 
-`tests/test_end_to_end.py` asserts that no *new* failure category appears, so
-this list cannot grow without someone noticing.
+The end-to-end test asserts that no *new* failure category appears, so this list
+cannot grow without someone noticing.
+
+Related: [The annunciator panel](./annunciator.md) ·
+[Topology and blast radius](./topology-view.md) ·
+[The design package](./design-package.md) ·
+[Troubleshooting](./troubleshooting.md)
+
+---
+
+## Where each finding shows up
+
+| Finding | Severity | Where you see it |
+|---|---|---|
+| [F-001](#f-001--five-asset-classes-cannot-represent-a-device-going-silent) | high | Assets: safety sensors with no availability point |
+| [F-002](#f-002--command_last_result-has-no-idle-value) | low | The dead-letter list |
+| [F-003](#f-003--energy_state-is-published-but-not-defined) | medium | A steady stream of dead letters |
+| [F-004](#f-004--automatic_control_allowed-is-semantically-overloaded) | medium | Nowhere yet — and that is the problem. See [Control § A safety-relevant ambiguity](./control.md#8-a-safety-relevant-ambiguity-you-should-know-about) |
+| [F-005](#f-005--asset-id-schema-is-looser-than-the-identification-standard) | low | Nowhere; latent |
+| [F-006](#f-006--load-tiers-are-one-based-in-the-register-zero-based-in-the-sdd) | medium | The Energy screen's load tiers |
+| [F-007](#f-007--ten-of-the-forty-alarms-can-never-fire) | **high** | **Ten `OUT OF SVC` tiles on [the annunciator](./annunciator.md)** |
+| [F-007a](#f-007a--battery_cell_imbalance-the-original-case) | high | The same panel — the first case found |
+| [F-008](#f-008--losing-the-power-container-takes-71-of-the-homestead-including-potable-water-pressure) | **high** | **[The topology screen's blast radius](./topology-view.md#3-blast-radius)** |
+| [F-009](#f-009--the-register-cannot-express-n1-redundancy) | medium | The `caveats` on any impact result, and two blocking findings on [the rack elevation](./rack-view.md#3-it-checks-the-document-rather-than-trusting-it) |
 
 ---
 
@@ -73,7 +104,7 @@ value already means "no result."
 **Severity: medium — produces recurring noise**
 
 The EMS publishes the site energy state to
-`homestead/site/primary/site_01/energy_state` every tick (SDD section 13
+`chaos/site/primary/site_01/energy_state` every tick (SDD section 13
 requires the EMS to publish a state that subsystems consume). `energy_state` is
 not in `data/point_dictionary.yaml`, so ingest dead-letters it on every
 evaluation.
@@ -194,7 +225,7 @@ Section 16.1 is not being conservative. It is barely adequate.
 the freeze-protection controller, both winter drain valves, the field pipework.
 But **22 do not**, and the path to them is only four hops:
 
-```
+```text
 power container → power zone → critical loads panel
                 → water pumping load → potable pressure pump
 ```

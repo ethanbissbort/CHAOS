@@ -12,18 +12,18 @@ import json
 import pytest
 from test_ems_state_machine import T0, at, make_derived, make_inputs
 
-from homestead_twin.ems import CommandOutcome, RecordingCommandPort
-from homestead_twin.ems.config import EmsConfig
-from homestead_twin.ems.inputs import load_input_key
-from homestead_twin.ems.loader import load_schedule
-from homestead_twin.ems.shedding import (
+from chaos.ems import CommandOutcome, RecordingCommandPort
+from chaos.ems.config import EmsConfig
+from chaos.ems.inputs import load_input_key
+from chaos.ems.loader import load_schedule
+from chaos.ems.shedding import (
     ShedController,
     active_shed_groups,
     current_load_states,
     validate_shed_preconditions,
 )
-from homestead_twin.models.energy import LoadShedAction, PowerLoadProfile
-from homestead_twin.models.registry import Asset
+from chaos.models.energy import LoadShedAction, PowerLoadProfile
+from chaos.models.registry import Asset
 
 CONTROL_CORE = "energy.load.site.control_core_01"
 RACK_COOLING = "energy.load.site.rack_cooling_01"
@@ -163,7 +163,7 @@ def test_shedding_refuses_when_the_reserve_cannot_be_verified(
     assert not result.preconditions.ok
     assert not port.requests
     assert "could not be verified" in result.reason
-    assert bus.last("homestead/site/#") is not None
+    assert bus.last("chaos/site/#") is not None
 
 
 def test_precondition_check_lists_each_component(config):
@@ -302,13 +302,13 @@ def test_rejected_shed_escalates_and_is_not_assumed_off(config, db_session, load
     assert not states[COMPUTE].is_shed
     assert states[COMPUTE].shed_failed
     # The alarm reached the bus.
-    message = bus.last("homestead/energy/site/load_opportunistic_compute_01/alarm/load_shed_failed")
+    message = bus.last("chaos/energy/site/load_opportunistic_compute_01/alarm/load_shed_failed")
     assert message is not None
     assert json.loads(message.text)["detail"]["severity"] == "major"
 
 
 def test_blocked_command_is_a_failure_not_a_success(config, db_session, loads, settings, bus):
-    from homestead_twin.ems import NullCommandPort
+    from chaos.ems import NullCommandPort
 
     port = NullCommandPort()
     controller = ShedController(config, port, settings=settings, bus=bus)

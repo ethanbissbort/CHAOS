@@ -4,7 +4,8 @@
 
   WHAT THIS OPENS
   ===============
-  Exactly one inbound TCP port, 8080, the .NET gateway's LAN listener, and only
+  Two inbound TCP ports: 8080, the .NET gateway's LAN listener, and 8090, the
+  offline manual on its own read-only listener. Both private profile only, and
   while the active network profile is PRIVATE.
 
   What it deliberately does not do:
@@ -47,6 +48,8 @@
 
   <?define ChaosFirewallRuleName = "Project CHAOS web interface (LAN)" ?>
   <?define ChaosFirewallDescription = "Inbound TCP $(var.ChaosLanPort) for the Project CHAOS web interface. Private networks only -- phones, tablets and wall displays on the homestead LAN. Removed when Project CHAOS is uninstalled." ?>
+  <?define ChaosDocsFirewallRuleName = "Project CHAOS manual (LAN)" ?>
+  <?define ChaosDocsFirewallDescription = "Inbound TCP $(var.ChaosDocsPort) for the Project CHAOS offline manual. Private networks only. Serves documentation and nothing else -- no API, no proxy, read requests only. Removed when Project CHAOS is uninstalled." ?>
 
   <Fragment>
     <!-- Settable on the command line; persisted so a major upgrade keeps the
@@ -72,6 +75,15 @@
                               Scope="any"
                               Outbound="no"
                               IgnoreFailure="no" />
+        <fw:FirewallException Id="ChaosDocsHttpAny"
+                              Name="$(var.ChaosDocsFirewallRuleName)"
+                              Description="$(var.ChaosDocsFirewallDescription)"
+                              Port="$(var.ChaosDocsPort)"
+                              Protocol="tcp"
+                              Profile="private"
+                              Scope="any"
+                              Outbound="no"
+                              IgnoreFailure="no" />
       </Component>
 
       <!-- Tightened: private profile, local subnet only. Correct on a flat LAN,
@@ -85,6 +97,15 @@
                               Name="$(var.ChaosFirewallRuleName)"
                               Description="$(var.ChaosFirewallDescription)"
                               Port="$(var.ChaosLanPort)"
+                              Protocol="tcp"
+                              Profile="private"
+                              Scope="localSubnet"
+                              Outbound="no"
+                              IgnoreFailure="no" />
+        <fw:FirewallException Id="ChaosDocsHttpLocalSubnet"
+                              Name="$(var.ChaosDocsFirewallRuleName)"
+                              Description="$(var.ChaosDocsFirewallDescription)"
+                              Port="$(var.ChaosDocsPort)"
                               Protocol="tcp"
                               Profile="private"
                               Scope="localSubnet"

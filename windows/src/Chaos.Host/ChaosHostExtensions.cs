@@ -1,9 +1,14 @@
+extern alias ChaosSupervisor;
+
 using Chaos.Host.Abstractions;
+using ChaosSupervisor::Chaos.Host.Supervisor;
 using Chaos.Host.Configuration;
+using Chaos.Host.Docs;
 using Chaos.Host.Endpoints;
 using Chaos.Host.Health;
 using Chaos.Host.Proxy;
 using Chaos.Host.Routing;
+using Chaos.Host.Setup;
 using Chaos.Host.Web;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -65,7 +70,18 @@ public static class ChaosHostExtensions
         builder.Services.AddSingleton<BackendHealthState>();
         builder.Services.AddSingleton<BackendForwarder>();
 
-        builder.Services.AddSingleton(WebRootResolver.Resolve(options, builder.Environment.ContentRootPath));
+        var webRoot = WebRootResolver.Resolve(options, builder.Environment.ContentRootPath);
+        builder.Services.AddSingleton(webRoot);
+
+        // The documentation site is resolved here, not when the listener starts,
+        // so /host/info can report where the gateway looked even in a process
+        // where the listener never runs.
+        var documentationRoot = DocumentationRootResolver.Resolve(
+            options.Docs,
+            webRoot,
+            builder.Environment.ContentRootPath);
+        builder.Services.AddSingleton(documentationRoot);
+        builder.Services.AddSingleton(new DocumentationSiteState(options.Docs, documentationRoot));
 
         builder.Services.AddHttpForwarder();
         builder.Services
@@ -89,12 +105,45 @@ public static class ChaosHostExtensions
 
         // Order is deliberate:
         //  1. validate the manifest - refuse to start on a route that would 404;
-        //  2. start the backend (if a supervisor is registered);
-        //  3. start polling the backend.
+        //  2. start first-run setup, so a fresh machine is being prepared while
+        //     the backend is starting rather than after it has already failed
+        //     against an empty database. It does not block startup - see
+        //     SetupHostedService - so the shell can poll /host/setup and watch;
+        //  3. start the backend (if a supervisor is registered);
+        //  4. start polling the backend.
+        //  5. start the documentation listener last. It is a second, read-only
+        //     listener on its own port and nothing else in this process depends
+        //     on it, so it goes at the back of the queue and cannot delay
+        //     anything that matters more.
         builder.Services.AddHostedService<RouteOwnershipStartupCheck>();
+        builder.Services.AddPlatformSetup();
+
+        // The real supervisor must be registered BEFORE the TryAdd below, which
+        // is a fallback and not a default: TryAdd keeps whatever is already
+        // there. Without this call the gateway would register
+        // NullBackendSupervisor, start nothing, and proxy /api/v1 to a port
+        // with no listener -- a console that loads and then answers nothing.
+        if (options.SuperviseBackend)
+        {
+            builder.Services.AddChaosBackendSupervisor(
+                builder.Configuration.GetSection(BackendSupervisorOptions.SectionName),
+                supervisor =>
+                {
+                    // The gateway owns where the backend listens, because it is
+                    // the thing that proxies to it. Two places naming that
+                    // address would eventually disagree.
+                    if (Uri.TryCreate(options.BackendUrl, UriKind.Absolute, out var backend))
+                    {
+                        supervisor.BindAddress = backend.Host;
+                        supervisor.Port = backend.Port;
+                    }
+                });
+        }
+
         builder.Services.TryAddSingleton<IBackendSupervisor, NullBackendSupervisor>();
         builder.Services.AddHostedService<Supervision.BackendSupervisorHost>();
         builder.Services.AddHostedService<BackendHealthMonitor>();
+        builder.Services.AddHostedService<DocumentationSiteHost>();
 
         WindowsServiceIntegration.AddWindowsServiceIfAvailable(builder);
 
