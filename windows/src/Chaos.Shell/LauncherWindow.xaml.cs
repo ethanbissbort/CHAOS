@@ -723,4 +723,12 @@ public sealed partial class LauncherWindow : Window
         Dismissed = true;
         _closing.Cancel();
     }
+
+    private void OnHelpRequested(
+        Microsoft.UI.Xaml.Input.KeyboardAccelerator sender,
+        Microsoft.UI.Xaml.Input.KeyboardAcceleratorInvokedEventArgs args)
+    {
+        args.Handled = true;
+        _app.ShowHelp("getting-started.html");
+    }
 }

@@ -549,7 +549,7 @@ async function renderRoute() {
       h('p', { text: String(err && err.message ? err.message : err) })));
     return;
   }
-  document.title = `${module.default.title || 'Console'} — Homestead Digital Twin`;
+  document.title = `${module.default.title || 'Console'} — Project CHAOS`;
   main.focus({ preventScroll: true });
 }
 

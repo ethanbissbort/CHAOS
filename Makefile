@@ -1,4 +1,4 @@
-# Homestead Digital Twin -- developer and operator entry points.
+# Project CHAOS -- developer and operator entry points.
 #
 # POSIX-portable: no GNU-only functions, no bashisms, one shell per recipe line.
 # `make` with no target prints this file's own help.
@@ -30,7 +30,7 @@ ARGS ?=
 
 # ---------------------------------------------------------------------------
 help: ## Show this help
-	@echo "Homestead Digital Twin"
+	@echo "Project CHAOS"
 	@echo ""
 	@echo "Usage: make <target>"
 	@echo ""

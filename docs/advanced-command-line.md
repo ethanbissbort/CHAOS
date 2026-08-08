@@ -110,7 +110,7 @@ engine should still get a registry.
 Expected after a successful load:
 
 ```text
-Homestead Digital Twin 0.4.0
+Project CHAOS 0.4.0
   node role        : primary
   physical control : disabled
 
@@ -125,10 +125,9 @@ Registry and history
 `physical control : disabled` is correct and should stay that way until a
 subsystem has passed [commissioning](./commissioning.md).
 
-**The banner still reads "Homestead Digital Twin".** That is the project's
-former name; the package, the environment prefix and the message-bus topics have
-all moved to `chaos`, and this banner has not. It is cosmetic, and it is the one
-place the old name still appears at runtime.
+The banner reads `Project CHAOS` followed by the platform version. Older
+builds printed the project's former name here; if you see that, the install
+predates the rename.
 
 ---
 

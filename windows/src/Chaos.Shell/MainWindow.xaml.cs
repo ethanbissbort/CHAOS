@@ -181,6 +181,8 @@ public sealed partial class MainWindow : Window
             return false;
         }
 
+        _app.NotePlatformReachability(_probe.Reachable, documentationUrl: null);
+
         if (_probe.Reachable)
         {
             _link = LinkStatus.Online(DateTimeOffset.UtcNow, _probe.HostVersion);
@@ -330,5 +332,13 @@ public sealed partial class MainWindow : Window
     {
         _closing.Cancel();
         _app.SaveLayout();
+    }
+
+    private void OnHelpRequested(
+        Microsoft.UI.Xaml.Input.KeyboardAccelerator sender,
+        Microsoft.UI.Xaml.Input.KeyboardAcceleratorInvokedEventArgs args)
+    {
+        args.Handled = true;
+        _app.ShowHelp("operator-console.html");
     }
 }

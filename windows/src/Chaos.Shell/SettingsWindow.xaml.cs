@@ -322,4 +322,12 @@ public sealed partial class SettingsWindow : Window
         Load(ShellSettings.Defaults with { ServiceName = ShellMessages.ServiceName });
         StatusText.Text = "The boxes are back at their defaults. Nothing is saved until you press Save.";
     }
+
+    private void OnHelpRequested(
+        Microsoft.UI.Xaml.Input.KeyboardAccelerator sender,
+        Microsoft.UI.Xaml.Input.KeyboardAcceleratorInvokedEventArgs args)
+    {
+        args.Handled = true;
+        _app.ShowHelp("desktop-shell.html");
+    }
 }

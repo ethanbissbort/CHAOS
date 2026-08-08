@@ -1,4 +1,4 @@
-# Homestead Digital Twin core service.
+# Project CHAOS core service.
 #
 # One image serves both node roles (SDD section 16.1): the primary node in the
 # power container and the physically separate secondary control node. Role is
@@ -33,7 +33,7 @@ RUN pip install --upgrade pip setuptools wheel \
 FROM python:3.11-slim-bookworm AS runtime
 
 LABEL org.opencontainers.image.title="chaos" \
-      org.opencontainers.image.description="Homestead Digital Twin and Master Control Platform" \
+      org.opencontainers.image.description="Project CHAOS -- Central Homestead Automation and Operation System" \
       org.opencontainers.image.licenses="Apache-2.0" \
       org.opencontainers.image.source="https://github.com/ethanbissbort/CHAOS"
 

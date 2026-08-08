@@ -1,4 +1,4 @@
-"""Operator command line for the Homestead Digital Twin platform.
+"""Operator command line for Project CHAOS.
 
 The CLI is the local-first operator surface: it works over SSH on the primary
 node in the power container and on the physically separate secondary control
@@ -724,7 +724,7 @@ def cmd_serve(args: argparse.Namespace) -> int:
 
 
 def cmd_simulate(args: argparse.Namespace) -> int:
-    """Delegate to the simulator CLI (``homestead-simulator``)."""
+    """Delegate to the simulator CLI (``chaos-simulator``)."""
     simulator_main = resolve_subsystem(
         "simulator.cli",
         ("main",),
@@ -832,7 +832,7 @@ def cmd_backup(args: argparse.Namespace) -> int:
     }
 
     restore_text = (
-        "Homestead Digital Twin backup\n"
+        "Project CHAOS backup\n"
         "=============================\n\n"
         f"Created  : {now.isoformat()}\n"
         f"Node role: {settings.node_role}\n\n"
@@ -1003,7 +1003,7 @@ def cmd_status(args: argparse.Namespace) -> int:
         sys.stdout.write(_dumps(payload, "json"))
         return EXIT_OK
 
-    print(f"Homestead Digital Twin {payload['platform_version']}")
+    print(f"Project CHAOS {payload['platform_version']}")
     print(f"  node role        : {payload['node_role']}")
     print(f"  site             : {payload['site_id']}  ({payload['timezone']})")
     print(f"  database         : {payload['database']}")
@@ -1145,7 +1145,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog=PROG,
         description=(
-            "Homestead Digital Twin operator CLI. Every subcommand works over SSH on the "
+            "Project CHAOS operator CLI. Every subcommand works over SSH on the "
             "primary node and on the secondary control node; subsystems are imported lazily "
             "so a partially deployed node still reports status and takes backups."
         ),

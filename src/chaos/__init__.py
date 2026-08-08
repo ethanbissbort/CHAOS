@@ -1,7 +1,7 @@
 """Project CHAOS -- Central Homestead Automation and Operation System.
 
 Local-first operational control plane for an off-grid homestead, implementing
-the Homestead Digital Twin and Master Control Platform design. See
+the homestead digital-twin and master-control design. See
 ``Homestead_Digital_Twin_Software_Design_Document_v0.3.md`` for the design
 narrative that this package implements.
 

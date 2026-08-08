@@ -55,6 +55,13 @@
   <ItemGroup>
     <ProjectReference Include="..\Chaos.Host.Supervisor\Chaos.Host.Supervisor.csproj"
                       Aliases="ChaosSupervisor" />
+
+    <!-- The ported endpoints. Registered and mapped by the composition root, but
+         NOT owned by default: the route-ownership manifest still sends
+         /api/v1/annunciator to Python. Building and mapping them is what makes
+         the migration seam real - flipping ownership becomes a configuration
+         change rather than a code change. -->
+    <ProjectReference Include="..\Chaos.Api\Chaos.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>

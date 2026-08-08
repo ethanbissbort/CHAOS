@@ -1,5 +1,6 @@
 extern alias ChaosSupervisor;
 
+using Chaos.Api;
 using Chaos.Host.Abstractions;
 using ChaosSupervisor::Chaos.Host.Supervisor;
 using Chaos.Host.Configuration;
@@ -118,6 +119,13 @@ public static class ChaosHostExtensions
         builder.Services.AddHostedService<RouteOwnershipStartupCheck>();
         builder.Services.AddPlatformSetup();
 
+        // The ported endpoints are always registered, even while the manifest
+        // still routes their paths to Python. An endpoint that exists but is not
+        // owned is inert; a route marked Dotnet with no endpoint behind it 404s,
+        // which is why the startup check refuses that combination. Registering
+        // first means flipping ownership is a configuration change.
+        builder.Services.AddChaosApi(api => api.SqliteDatabasePath = options.DatabaseUrl);
+
         // The real supervisor must be registered BEFORE the TryAdd below, which
         // is a fallback and not a default: TryAdd keeps whatever is already
         // there. Without this call the gateway would register
@@ -165,6 +173,8 @@ public static class ChaosHostExtensions
     public static WebApplication UseChaosHost(this WebApplication app)
     {
         ArgumentNullException.ThrowIfNull(app);
+
+        app.MapChaosApi();
 
         var inventory = app.Services.GetRequiredService<NativeRouteInventory>();
         var webRoot = app.Services.GetRequiredService<WebRootResolution>();

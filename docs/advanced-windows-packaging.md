@@ -144,7 +144,7 @@ rights are not needed for either command.
         __pycache__\ everywhere      precompiled, unchecked-hash
     Scripts\
       chaos.exe                      the operator CLI entry point
-      homestead-simulator.exe
+      chaos-simulator.exe
       uvicorn.exe  httpx.exe  jsonschema.exe  dotenv.exe  fastapi.exe
 ```
 

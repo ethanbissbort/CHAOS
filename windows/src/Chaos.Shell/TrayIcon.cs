@@ -145,6 +145,7 @@ internal sealed class TrayIcon : IDisposable
     private const int IdBrowser = 3;
     private const int IdStatus = 4;
     private const int IdSettings = 5;
+    private const int IdHelp = 6;
     private const int IdExit = 9;
 
     /// <summary>
@@ -178,6 +179,7 @@ internal sealed class TrayIcon : IDisposable
         AppendMenu(_menu, 0, IdBrowser, "Open in browser");
         AppendMenu(_menu, 0x800, 0, null);
         AppendMenu(_menu, 0, IdSettings, "Settings…");
+        AppendMenu(_menu, 0, IdHelp, "Help (F1)");
         AppendMenu(_menu, 0x800, 0, null);
         AppendMenu(_menu, 0, IdExit, ShellMessages.ExitMenuItemFor(_app.RunMode));
     }
@@ -211,6 +213,9 @@ internal sealed class TrayIcon : IDisposable
                 break;
             case IdSettings:
                 _app.ShowSettings();
+                break;
+            case IdHelp:
+                _app.ShowHelp();
                 break;
             case IdExit:
                 _app.ExitShell();

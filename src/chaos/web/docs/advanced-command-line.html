@@ -76,7 +76,7 @@ chaos status              <span class="t-c"># confirm what landed</span></code><
 than failing — which is what the gateway uses, because a node without the alarm
 engine should still get a registry.</p>
 <p>Expected after a successful load:</p>
-<div class="doc-code" data-lang="text"><div class="doc-code-bar"><span class="doc-code-lang">text</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-text">Homestead Digital Twin 0.4.0
+<div class="doc-code" data-lang="text"><div class="doc-code-bar"><span class="doc-code-lang">text</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-text">Project CHAOS 0.4.0
   node role        : primary
   physical control : disabled
 
@@ -88,10 +88,9 @@ Registry and history
   alarm_definitions      40</code></pre></div>
 <p><code>physical control : disabled</code> is correct and should stay that way until a
 subsystem has passed <a href="commissioning.html">commissioning</a>.</p>
-<p><strong>The banner still reads "Homestead Digital Twin".</strong> That is the project's
-former name; the package, the environment prefix and the message-bus topics have
-all moved to <code>chaos</code>, and this banner has not. It is cosmetic, and it is the one
-place the old name still appears at runtime.</p>
+<p>The banner reads <code>Project CHAOS</code> followed by the platform version. Older
+builds printed the project's former name here; if you see that, the install
+predates the rename.</p>
 <hr>
 <h2 id="4-status" class="doc-h"><span class="doc-h-text">4. Status</span><a class="doc-anchor" href="#4-status" aria-label="Link to this section"></a></h2>
 <div class="doc-code" data-lang="sh"><div class="doc-code-bar"><span class="doc-code-lang">sh</span><button type="button" class="doc-copy" data-copy><span class="doc-copy-label">Copy</span></button></div><pre class="doc-pre"><code class="lang-sh">chaos status
