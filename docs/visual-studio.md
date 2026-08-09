@@ -87,8 +87,45 @@ The solution defines `Debug` and `Release` against `Any CPU`, `x64`, `x86` and
 `ARM64`.
 
 **WinUI 3 has no Any CPU.** `Chaos.Shell` declares `x86;x64;ARM64` explicitly,
-and the solution maps its `Any CPU` rows onto `x86`. Everything else builds as
+and the solution maps its `Any CPU` rows onto `x64`. Everything else builds as
 `Any CPU` regardless of which solution platform is selected.
+
+Exactly one project is excluded from **Build Solution**: `Chaos.Installer`. It
+has an active configuration but no build flag, so an ordinary build or F5 never
+pays for publishing, staging and packaging. Build it explicitly when you want
+an MSI — see [Advanced: Windows packaging](./advanced-windows-packaging.md).
+
+### If projects say "Skipped"
+
+```text
+1>------ Skipped Rebuild All: Project: Chaos.Shell.Core ------
+```
+
+Anything under `src` reporting **Skipped** means its build flag is off for the
+solution configuration you selected, in **Build → Configuration Manager**.
+`Chaos.Installer` is the only project meant to look like that.
+
+It matters more than it sounds, because a skipped project does not fail — it
+leaves whatever it last produced sitting in `bin` and `obj`, and everything
+downstream compiles against that. The symptom is never "Chaos.Shell.Core was
+skipped". It is:
+
+* `error CS0103: The name 'X' does not exist in the current context`, in a test
+  project, for a type you can see in the source. The stale assembly predates it.
+* `error CS0006: Metadata file '…\obj\Release\net10.0\ref\X.dll' could not be
+  found`, if that configuration was never built at all.
+
+Fix it in **Build → Configuration Manager**: tick **Build** for every project
+except `Chaos.Installer`, and check `Debug` and `Release` separately — the
+checkboxes are per solution configuration, so a project can be on in one and
+off in the other. The checkboxes live in `windows\CHAOS.sln`, so if it is
+easier, discard your local changes to that file and take the committed one.
+
+Then reload the affected project (right-click → **Unload Project**, then
+**Reload Project**) before rebuilding. Visual Studio caches each project's file
+list, and it is least reliable about noticing a whole new *subdirectory* that
+arrived from a pull while the solution was open — which produces the same
+"the type is right there in the source" CS0103.
 
 ### Warnings are errors
 
