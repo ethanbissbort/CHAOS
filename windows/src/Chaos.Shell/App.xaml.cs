@@ -590,7 +590,13 @@ public partial class App : Application
         var stopsThePlatform = RunModeBanner.For(RunMode, Settings.ServiceName)
             .ClosingTheShellStopsThePlatform;
 
-        var host = (Window?)_launcher ?? _main ?? _annunciator ?? _settings;
+        // Assigned in steps rather than chained: ?? is right-associative, so
+        // "a ?? b ?? c ?? d" reduces to (c ?? d) first, and two unrelated window
+        // types have no common type to coalesce to.
+        Window? host = _launcher;
+        host ??= _main;
+        host ??= _annunciator;
+        host ??= _settings;
         if (host?.Content is not FrameworkElement root)
         {
             // Without somewhere to show a dialog, the safe answer is to refuse

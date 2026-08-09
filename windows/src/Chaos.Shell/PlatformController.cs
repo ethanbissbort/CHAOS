@@ -386,7 +386,20 @@ internal sealed class PlatformController : IDisposable
                 // The job object is created first so the child can be put in it
                 // immediately: a gateway orphaned by a shell crash would keep
                 // the port bound and make the next start fail.
-                _job ??= WindowsJobObject.TryCreate($"ChaosShell_{Environment.ProcessId}", out var jobDetail);
+                // Not "_job ??= TryCreate(..., out var detail)": with ??= the
+                // right side runs only when _job is null, so detail would not be
+                // definitely assigned on the reuse path.
+                string jobDetail;
+                if (_job is null)
+                {
+                    _job = WindowsJobObject.TryCreate(
+                        $"ChaosShell_{Environment.ProcessId}", out jobDetail);
+                }
+                else
+                {
+                    jobDetail = "Reusing the job object created for an earlier start.";
+                }
+
                 Log.Add(LogStream.Shell, _job is null
                     ? $"Running without a job object ({jobDetail}); a crash of this shell could leave "
                       + "the platform running."

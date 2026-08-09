@@ -482,9 +482,16 @@ Verified by execution, on Linux, against the real artefacts:
   isolated mode on, `import site` required for `site.main()`, comment lines
   ignored, `PYTHONUNBUFFERED`/`PYTHONIOENCODING`/`PYTHONDONTWRITEBYTECODE` still
   honoured.
-* The pip-from-a-wheel bootstrap works under a `._pth` interpreter.
+* pip installed by unpacking its wheel into `Lib\site-packages`, and `-m pip`
+  working afterwards under a `._pth` interpreter. The earlier approach — running
+  pip out of its own wheel to install itself, `python.exe <wheel>\pip install
+  <wheel>` — was verified working and then stopped working: pip 26 refuses to be
+  the target of an install unless it was invoked as `-m pip`, which is not
+  available before pip exists. The pinned wheel is 476 entries, all under `pip/`
+  and `pip-26.2.1.dist-info/`, with no `.data` directory, so unpacking it is a
+  complete install bar the `Scripts\pip.exe` launcher, which is pruned anyway.
 * Every dependency, full transitive closure, has a `cp311 win_amd64` wheel.
-* The whole install sequence, run end to end into a `._pth` tree: pip bootstrap,
+* The whole install sequence, run end to end into a `._pth` tree: pip install,
   wheels-only dependency install, `pip wheel` of the project, install of that
   wheel, web-asset copy, `compileall`, and all ten verification checks passing.
 * The user-site defect and its fix: reproduced (pip skipped `idna` and

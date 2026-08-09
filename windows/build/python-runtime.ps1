@@ -15,7 +15,7 @@
         download embeddable zip  -> verify SHA-256 -> extract
         rewrite pythonXY._pth    -> enable site and Lib\site-packages
         write sitecustomize.py   -> shut the per-user site directory out; see ISOLATION
-        bootstrap pip            -> from a hash-pinned wheel, no get-pip.py
+        install pip              -> unpack a hash-pinned wheel, no get-pip.py
         pip install              -> requirements.txt, then the chaos package,
                                     WHEELS ONLY; see NATIVE WHEELS below
         copy the web assets      -> they are NOT in the wheel; see WEB ASSETS below
@@ -283,17 +283,85 @@ New-Item -ItemType Directory -Path $sitePackages -Force | Out-Null
 
 Write-ChaosDetail 'wrote sitecustomize.py (keeps %APPDATA% site-packages out of the tree)'
 
-# --- bootstrap pip ---------------------------------------------------------
+# --- install pip -----------------------------------------------------------
 #
-# The embeddable distribution has no pip and no ensurepip.  A wheel is a zip and
-# zipimport can import from it, so pip installs itself out of its own wheel.
-# One hash-pinned file, no get-pip.py whose contents change without notice.
+# The embeddable distribution has no pip and no ensurepip, so pip is put on disk
+# by unpacking its own hash-pinned wheel into Lib\site-packages.  One pinned
+# file, no get-pip.py whose contents change without notice.
+#
+# This used to run pip out of the wheel to install itself -- `python.exe
+# <wheel>\pip install <wheel>`, which works because a wheel is a zip and
+# zipimport can import from it.  pip 26 refuses that:
+#
+#     ERROR: To modify pip, please run the following command:
+#     ...\python.exe -m pip install ... pip-26.2.1-py3-none-any.whl
+#
+# and its instruction cannot be followed during a bootstrap: `-m pip` needs pip
+# importable, which is the thing being installed.  Putting the wheel on the
+# interpreter's path first does not help either -- a ._pth file discards
+# PYTHONPATH (see above), and the guard keys off how pip was invoked rather than
+# where it was imported from.
+#
+# Unpacking is not a way around the guard; for this wheel it is what installing
+# it means.  pip ships one pure-Python py3-none-any wheel whose whole payload is
+# pip\ and pip-<version>.dist-info\, both of which belong verbatim at the root
+# of site-packages.  The only thing a real installer adds is the Scripts\pip.exe
+# launcher, which nothing here uses -- every install below is `-m pip` -- and
+# which the prune step deletes anyway.
+#
+# What would make that untrue is a .data directory in the wheel: those entries
+# are routed to scheme paths (Scripts\, Include\, the tree root) instead of
+# site-packages, so unpacking would silently drop them.  pip's wheel has never
+# had one.  If it ever does, this stops instead of packaging a partial install.
 
-Write-ChaosStep 'Bootstrapping pip'
-$pipInWheel = Join-Path $pipWheel 'pip'
-Invoke-ChaosNative -FilePath $pythonExe -What 'pip bootstrap' -Arguments @(
-    $pipInWheel, 'install', '--no-index', '--no-cache-dir',
-    '--no-warn-script-location', $pipWheel
+Write-ChaosStep 'Installing pip from its pinned wheel'
+
+# Windows PowerShell 5.1 does not load this on its own, and Expand-Archive is no
+# use here: it rejects any file that is not named *.zip.
+Add-Type -AssemblyName 'System.IO.Compression.FileSystem' -ErrorAction SilentlyContinue
+
+# Resolved, because everything below is .NET rather than a PowerShell cmdlet,
+# and .NET resolves a relative path against the PROCESS working directory -- not
+# PowerShell's location, which is what the rest of this script writes against.
+# The two are the same until someone passes a relative -Destination.
+$pipRoot = (Resolve-Path -LiteralPath $sitePackages).Path
+
+$pipFileCount = 0
+$pipArchive = [IO.Compression.ZipFile]::OpenRead((Resolve-Path -LiteralPath $pipWheel).Path)
+try {
+    $misrouted = @($pipArchive.Entries | Where-Object { $_.FullName -match '(^|/)[^/]+\.data/' })
+    if ($misrouted.Count -gt 0) {
+        Stop-Chaos -Message "$($lock.pip.filename) contains a .data directory ($($misrouted[0].FullName))." `
+                   -Hint 'A wheel with a .data directory cannot be installed by unpacking it into site-packages -- those entries belong elsewhere in the tree. Pin pip back to a version without one, or install this wheel with a real installer.'
+    }
+
+    # [IO.Directory]::CreateDirectory rather than New-Item, for the same reason
+    # the prune step escapes its patterns: a '[' in the path -- C:\src\chaos [wip]
+    # -- is a character class to the PowerShell provider and not to .NET, and
+    # ExtractToFile below is going to use the .NET reading of it either way.
+    foreach ($entry in $pipArchive.Entries) {
+        $target = Join-Path $pipRoot ($entry.FullName -replace '/', '\')
+        # Directory entries have an empty Name; only they end in a separator.
+        if (-not $entry.Name) {
+            [IO.Directory]::CreateDirectory($target) | Out-Null
+            continue
+        }
+        [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($target)) | Out-Null
+        [IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $target, $true)
+        $pipFileCount++
+    }
+}
+finally {
+    $pipArchive.Dispose()
+}
+
+Write-ChaosDetail "unpacked $pipFileCount file(s) from $($lock.pip.filename)"
+
+# Proves the interpreter can import and run what was just unpacked.  Everything
+# below is `-m pip`, so a tree where that does not work fails here, on the step
+# that caused it, rather than four steps later on a dependency install.
+Invoke-ChaosNative -FilePath $pythonExe -What 'pip --version' -Arguments @(
+    '-m', 'pip', '--version'
 )
 
 $pipArgsCommon = @('-m', 'pip', 'install', '--no-cache-dir', '--no-warn-script-location', '--disable-pip-version-check')

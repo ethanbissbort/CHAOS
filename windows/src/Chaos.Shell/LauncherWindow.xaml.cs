@@ -210,8 +210,6 @@ public sealed partial class LauncherWindow : Window
 
     private void Render(LauncherView view)
     {
-        _view = view;
-
         HeadlineText.Text = view.Headline;
         SummaryText.Text = view.Summary;
 
