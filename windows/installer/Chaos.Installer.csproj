@@ -1,0 +1,114 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Project CHAOS installer.
+
+    Right-click this project in Solution Explorer and choose Build. One Build
+    does the whole sequence and leaves the MSI in windows\build\out\package.
+
+    It is deliberately NOT part of Build Solution: the solution gives it an
+    active configuration but no build flag, so an ordinary build or F5 never
+    pays for publishing, staging and packaging.
+
+    WHY THIS IS A C# PROJECT AND NOT A .wixproj
+    ===========================================
+    Visual Studio cannot open a .wixproj unless the WiX extension (HeatWave) is
+    installed and registered for the WiX project type. Without it — which
+    includes a stock Visual Studio 2026 — the solution opens with an
+    "Unsupported … the project types may not be installed" dialog and a
+    migration report, and the installer cannot be built from the IDE at all.
+
+    Nothing is lost, because the .wixproj never defined this MSI.
+    windows\build\build.ps1 does, and always has: it installs a pinned
+    wix 5.0.2 into out\tools and runs `wix build` against the .wxs files in this
+    directory. This project is the IDE's handle on that script — the same
+    command, reached by a right-click instead of a shell. A .wixproj alongside
+    it would be a second, divergent definition of the same installer.
+
+    What is given up is WiX IntelliSense on the .wxs files. Install HeatWave if
+    you want it; these are ordinary WiX 5 sources and it will read them. Do not
+    add a .wixproj back to the solution — that dialog is what this project
+    exists to remove.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>$(ChaosTargetFramework)</TargetFramework>
+    <RootNamespace>Chaos.Installer</RootNamespace>
+    <AssemblyName>Chaos.Installer</AssemblyName>
+    <IsPackable>false</IsPackable>
+
+    <!-- The assembly this emits is an empty by-product; see InstallerProject.cs
+         for why there is a source file at all. Nothing references it, so it
+         needs no reference assembly and no generated attributes. -->
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
+
+    <ChaosRepoRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..'))</ChaosRepoRoot>
+    <ChaosBuildScript>$(ChaosRepoRoot)\windows\build\build.ps1</ChaosBuildScript>
+    <ChaosPackageDir>$(ChaosRepoRoot)\windows\build\out\package</ChaosPackageDir>
+
+    <!-- Set false to open the WiX sources in the IDE without paying for a
+         package on every build of this project. -->
+    <ChaosPackageOnBuild Condition="'$(ChaosPackageOnBuild)' == ''">true</ChaosPackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The installer's real sources, so they are editable from Solution
+         Explorer rather than only existing on disk. -->
+    <None Include="*.wxs" />
+    <None Include="*.wxi" />
+    <None Include="License.rtf" />
+    <None Include="config\**\*" />
+    <None Include="$(ChaosBuildScript)" Link="build.ps1" Visible="true" />
+  </ItemGroup>
+
+  <!--
+    Publish, rebuild the embedded runtime, assemble the install tree, compile
+    the MSI. That is build.ps1 -Task all, unchanged and not reimplemented here.
+
+    Not incremental, on purpose. Staging republishes into a directory it first
+    deletes, and a half-refreshed install tree is how you get an MSI carrying a
+    new gateway beside an old Python tree. The cost is paid only when this
+    project is built, which is why it is excluded from Build Solution.
+  -->
+  <Target Name="ChaosPackage"
+          AfterTargets="Build"
+          Condition="'$(ChaosPackageOnBuild)' == 'true' AND $([MSBuild]::IsOSPlatform('Windows'))">
+
+    <Message Importance="high" Text=" " />
+    <Message Importance="high" Text="Project CHAOS: building the installer ($(Configuration))." />
+    <Message Importance="high" Text="  Publishes the host and shell, rebuilds the embedded Python runtime," />
+    <Message Importance="high" Text="  stages the install tree and compiles the MSI. Expect several minutes;" />
+    <Message Importance="high" Text="  the first run also downloads about 55 MB." />
+    <Message Importance="high" Text="  output: $(ChaosPackageDir)" />
+    <Message Importance="high" Text=" " />
+
+    <!-- ContinueOnError so the explicit <Error> below is what the operator
+         reads, rather than MSB3073 naming a powershell command line. -->
+    <Exec Command="powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(ChaosBuildScript)&quot; -Task all -Configuration $(Configuration)"
+          WorkingDirectory="$(ChaosRepoRoot)"
+          StandardOutputImportance="high"
+          StandardErrorImportance="high"
+          IgnoreStandardErrorWarningFormat="true"
+          ContinueOnError="true">
+      <Output TaskParameter="ExitCode" PropertyName="ChaosPackageExitCode" />
+    </Exec>
+
+    <!-- File= makes this a double-clickable entry in the Error List. -->
+    <Error Condition="'$(ChaosPackageExitCode)' != '0'"
+           Code="CHAOS0003"
+           File="$(ChaosBuildScript)"
+           Text="The installer could not be built (exit code $(ChaosPackageExitCode)). The output above this error is build.ps1's own explanation; every failure it raises names its likely cause. Nothing was packaged." />
+
+    <Message Importance="high" Text="Project CHAOS: MSI written to $(ChaosPackageDir)" />
+  </Target>
+
+  <Target Name="ChaosInstallerNotBuiltHere"
+          AfterTargets="Build"
+          Condition="'$(ChaosPackageOnBuild)' == 'true' AND !$([MSBuild]::IsOSPlatform('Windows'))">
+    <Message Importance="high"
+             Text="Project CHAOS: the installer was NOT built. WiX and the embedded Python runtime are Windows-only. Build this project from Visual Studio 2026 on Windows." />
+  </Target>
+
+</Project>

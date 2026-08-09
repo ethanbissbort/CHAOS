@@ -39,25 +39,44 @@ it runs.
 One Build does the whole sequence:
 
 1. publishes `Chaos.Host` and `Chaos.Shell` self-contained,
-2. builds the embedded Python runtime if it is not already there
-   (2-5 minutes and about 55 MB the first time, from the internet),
+2. rebuilds the embedded Python runtime (2-5 minutes, and about 55 MB from the
+   internet the first time),
 3. assembles the install tree in `windows\build\out\stage`,
-4. compiles the WiX sources against that tree.
+4. compiles the WiX sources against that tree with a pinned `wix` 5.0.2 that it
+   installs into `windows\build\out\tools`.
 
-The MSI lands in `windows\installer\bin\x64\Release\`.
+The MSI lands in `windows\build\out\package`.
 
 Staging is not incremental, by design. It republishes into a directory it first
 deletes, and a half-refreshed install tree is how you get an MSI carrying a new
 gateway beside an old Python tree. The cost is only paid when you build this
 project.
 
-Two failures are reported as build errors you can double-click rather than as a
+A failure is reported as a build error you can double-click rather than as a
 WiX bind failure naming a file nobody asked about:
 
 | Code | Meaning |
 |---|---|
-| `CHAOS0003` | Staging failed. The `build.ps1` output above the error says why. Nothing was packaged. |
-| `CHAOS0004` | No staged tree was found. Build with the default settings, or stage one yourself first. |
+| `CHAOS0003` | Packaging failed. The `build.ps1` output above the error says why, and every failure it raises names its likely cause. Nothing was packaged. |
+
+### Why Chaos.Installer is a C# project
+
+Visual Studio cannot open a `.wixproj` unless the WiX extension (HeatWave) is
+installed and registered for the WiX project type. On a stock Visual Studio
+2026 it is not, and the solution opens with an *"Unsupported … the project
+types may not be installed"* dialog and a migration report — with the installer
+unbuildable from the IDE.
+
+So `Chaos.Installer` is an ordinary C# project that runs `build.ps1 -Task all`.
+Nothing is lost by that, because the `.wixproj` never defined this MSI:
+`build.ps1` does, and always has. It runs `wix build` against the `.wxs` files
+in `windows\installer`, and a `.wixproj` beside it would only be a second,
+divergent definition of the same installer.
+
+What is given up is WiX IntelliSense on the `.wxs` files. Install HeatWave if
+you want it — these are ordinary WiX 5 sources and it will read them. Do not
+add a `.wixproj` back to the solution; that dialog is what the C# project
+exists to remove.
 
 To package a tree you staged yourself, build with
 `ChaosStageBeforePackaging=false`.
