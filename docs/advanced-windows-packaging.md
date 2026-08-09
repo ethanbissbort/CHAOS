@@ -26,6 +26,47 @@ Related: [Building in Visual Studio 2026](./visual-studio.md) ·
 
 ---
 
+## Building the installer from Visual Studio
+
+The MSI is a project in the solution. Right-click **Chaos.Installer** in
+Solution Explorer and choose **Build**.
+
+It is deliberately excluded from **Build Solution**: the solution gives it an
+active configuration but no build flag, so an ordinary build or F5 never pays
+for publishing, staging and packaging. Building it explicitly is the only way
+it runs.
+
+One Build does the whole sequence:
+
+1. publishes `Chaos.Host` and `Chaos.Shell` self-contained,
+2. builds the embedded Python runtime if it is not already there
+   (2-5 minutes and about 55 MB the first time, from the internet),
+3. assembles the install tree in `windows\build\out\stage`,
+4. compiles the WiX sources against that tree.
+
+The MSI lands in `windows\installer\bin\x64\Release\`.
+
+Staging is not incremental, by design. It republishes into a directory it first
+deletes, and a half-refreshed install tree is how you get an MSI carrying a new
+gateway beside an old Python tree. The cost is only paid when you build this
+project.
+
+Two failures are reported as build errors you can double-click rather than as a
+WiX bind failure naming a file nobody asked about:
+
+| Code | Meaning |
+|---|---|
+| `CHAOS0003` | Staging failed. The `build.ps1` output above the error says why. Nothing was packaged. |
+| `CHAOS0004` | No staged tree was found. Build with the default settings, or stage one yourself first. |
+
+To package a tree you staged yourself, build with
+`ChaosStageBeforePackaging=false`.
+
+Installing the MSI needs administrator rights: it registers the `ChaosHost`
+service and adds two inbound firewall rules, for the console on 8080 and the
+manual on 8090, both private-profile only.
+
+
 ## The build tasks
 
 `windows\build\build.ps1` drives the whole pipeline. One task per stage, and
