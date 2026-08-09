@@ -210,8 +210,6 @@ public sealed partial class LauncherWindow : Window
 
     private void Render(LauncherView view)
     {
-        _view = view;
-
         HeadlineText.Text = view.Headline;
         SummaryText.Text = view.Summary;
 
@@ -722,5 +720,13 @@ public sealed partial class LauncherWindow : Window
     {
         Dismissed = true;
         _closing.Cancel();
+    }
+
+    private void OnHelpRequested(
+        Microsoft.UI.Xaml.Input.KeyboardAccelerator sender,
+        Microsoft.UI.Xaml.Input.KeyboardAcceleratorInvokedEventArgs args)
+    {
+        args.Handled = true;
+        _app.ShowHelp("getting-started.html");
     }
 }

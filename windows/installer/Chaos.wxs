@@ -137,7 +137,7 @@
     -->
     <Property Id="ARPCOMMENTS"
               Value="Operator data (database, logs, backups and local config) lives in %ProgramData%\$(var.ChaosProductName) and is NOT removed by uninstall." />
-    <Property Id="ARPHELPLINK" Value="https://github.com/ethanbissbort/chaos" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/ethanbissbort/CHAOS" />
     <Property Id="ARPPRODUCTICON" Value="ChaosIcon" />
     <!-- ARPNOMODIFY is set by WixUI_Minimal; setting it again here is a
          duplicate-symbol error at link time. -->

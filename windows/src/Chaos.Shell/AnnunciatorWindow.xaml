@@ -6,6 +6,11 @@
     xmlns:controls="using:Microsoft.UI.Xaml.Controls">
 
     <Grid Background="#0A0C0B">
+        <Grid.KeyboardAccelerators>
+            <!-- F1 opens the manual at the page for this window. -->
+            <KeyboardAccelerator Key="F1" Invoked="OnHelpRequested" />
+        </Grid.KeyboardAccelerators>
+
         <controls:WebView2 x:Name="Panel" />
 
         <!-- Shown only while the panel is loading. The annunciator is the

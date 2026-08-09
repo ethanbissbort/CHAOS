@@ -14,6 +14,11 @@
     -->
 
     <Grid Background="{StaticResource ChaosShellBackground}">
+        <Grid.KeyboardAccelerators>
+            <!-- F1 opens the manual at the page for this window. -->
+            <KeyboardAccelerator Key="F1" Invoked="OnHelpRequested" />
+        </Grid.KeyboardAccelerators>
+
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />

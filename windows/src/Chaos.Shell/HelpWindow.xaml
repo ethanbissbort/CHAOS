@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="Chaos.Shell.HelpWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls">
+
+    <Grid Background="{StaticResource ChaosShellBackground}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Padding="8,6" ColumnSpacing="8"
+              BorderBrush="{StaticResource ChaosShellStroke}" BorderThickness="0,0,0,1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6">
+                <Button x:Name="BackButton" Content="Back" Click="OnBack" />
+                <Button x:Name="HomeButton" Content="Contents" Click="OnHome" />
+                <Button x:Name="BrowserButton" Content="Open in browser" Click="OnOpenInBrowser" />
+            </StackPanel>
+
+            <!-- Which copy is open, and whether it survives the platform
+                 stopping. An operator reading the troubleshooting page during an
+                 outage should know whether this window will still be here. -->
+            <TextBlock x:Name="SourceText" Grid.Column="1"
+                       VerticalAlignment="Center" TextWrapping="NoWrap"
+                       TextTrimming="CharacterEllipsis" FontSize="12"
+                       Foreground="{StaticResource ChaosShellMuted}" />
+        </Grid>
+
+        <controls:WebView2 x:Name="HelpView" Grid.Row="1" Visibility="Collapsed" />
+
+        <Border x:Name="MissingPanel" Grid.Row="1" Padding="28" Visibility="Collapsed">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                        MaxWidth="620" Spacing="12">
+                <TextBlock Text="No help is installed" FontSize="20" FontWeight="SemiBold"
+                           Foreground="{StaticResource ChaosShellText}" />
+                <TextBlock x:Name="MissingSummary" TextWrapping="Wrap"
+                           Foreground="{StaticResource ChaosShellMuted}" />
+                <TextBlock Text="Looked in:" Margin="0,8,0,0"
+                           Foreground="{StaticResource ChaosShellText}" />
+                <ItemsControl x:Name="MissingSearched">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock FontFamily="Consolas" FontSize="12" TextWrapping="Wrap"
+                                       Foreground="{StaticResource ChaosShellMuted}"
+                                       Text="{Binding}" Margin="0,1" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Button x:Name="RetryButton" Content="Look again" Click="OnRetry" Margin="0,8,0,0" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

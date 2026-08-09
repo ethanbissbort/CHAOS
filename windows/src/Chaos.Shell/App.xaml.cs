@@ -36,6 +36,7 @@ public partial class App : Application
     private AnnunciatorWindow? _annunciator;
     private LauncherWindow? _launcher;
     private SettingsWindow? _settings;
+    private HelpWindow? _help;
     private TrayIcon? _tray;
     private ILayoutStore _layoutStore = null!;
     private ShellLayout _layout = ShellLayout.Empty;
@@ -107,6 +108,26 @@ public partial class App : Application
     /// starts Unknown and is only ever set from a launcher evaluation.
     /// </summary>
     internal PlatformRunMode RunMode { get; private set; } = PlatformRunMode.Unknown;
+
+    /// <summary>Whether the gateway answered recently. Used to decide whether a
+    /// served help copy is worth offering at all.</summary>
+    internal bool GatewayReachable { get; private set; }
+
+    /// <summary>The documentation listener's URL from /host/info, when reported.</summary>
+    internal Uri? DocumentationUrl { get; private set; }
+
+    /// <summary>Records what the shell's poller last saw about the platform.</summary>
+    internal void NotePlatformReachability(bool reachable, Uri? documentationUrl)
+    {
+        GatewayReachable = reachable;
+
+        // Never forget a URL we were once told: /host/info stops answering when
+        // the platform stops, and that is precisely when help is wanted.
+        if (documentationUrl is not null)
+        {
+            DocumentationUrl = documentationUrl;
+        }
+    }
 
     /// <summary>Things the operator has to be told about this launch.</summary>
     internal IReadOnlyList<string> StartupNotices => _notices;
@@ -280,6 +301,30 @@ public partial class App : Application
         _annunciator.Activate();
         _annunciator.BringToFront();
         SaveLayout(annunciatorOpen: true);
+    }
+
+    /// <summary>
+    /// Opens the manual. One window, reused: F1 from anywhere brings the same
+    /// one forward rather than stacking copies.
+    /// </summary>
+    internal void ShowHelp(string? page = null)
+    {
+        if (_help is null)
+        {
+            _help = new HelpWindow(this);
+            _help.Closed += (_, _) => _help = null;
+            _help.Activate();
+        }
+        else
+        {
+            _help.Activate();
+            _help.BringToFront();
+        }
+
+        if (!string.IsNullOrWhiteSpace(page))
+        {
+            _help.Navigate(page!);
+        }
     }
 
     internal void ShowSettings()
@@ -545,7 +590,13 @@ public partial class App : Application
         var stopsThePlatform = RunModeBanner.For(RunMode, Settings.ServiceName)
             .ClosingTheShellStopsThePlatform;
 
-        var host = (Window?)_launcher ?? _main ?? _annunciator ?? _settings;
+        // Assigned in steps rather than chained: ?? is right-associative, so
+        // "a ?? b ?? c ?? d" reduces to (c ?? d) first, and two unrelated window
+        // types have no common type to coalesce to.
+        Window? host = _launcher;
+        host ??= _main;
+        host ??= _annunciator;
+        host ??= _settings;
         if (host?.Content is not FrameworkElement root)
         {
             // Without somewhere to show a dialog, the safe answer is to refuse

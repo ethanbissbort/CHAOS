@@ -59,7 +59,7 @@ def test_help_exits_zero(capsys):
     with pytest.raises(SystemExit) as excinfo:
         run("--help")
     assert excinfo.value.code == 0
-    assert "Homestead Digital Twin operator CLI" in capsys.readouterr().out
+    assert "Project CHAOS operator CLI" in capsys.readouterr().out
 
 
 def test_version_exits_zero(capsys):

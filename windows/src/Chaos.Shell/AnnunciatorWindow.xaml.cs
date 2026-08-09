@@ -122,4 +122,12 @@ public sealed partial class AnnunciatorWindow : Window
             p.IsAlwaysOnTop = on;
         }
     }
+
+    private void OnHelpRequested(
+        Microsoft.UI.Xaml.Input.KeyboardAccelerator sender,
+        Microsoft.UI.Xaml.Input.KeyboardAcceleratorInvokedEventArgs args)
+    {
+        args.Handled = true;
+        _app.ShowHelp("annunciator.html");
+    }
 }

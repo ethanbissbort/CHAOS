@@ -1,0 +1,102 @@
+<Project Sdk="WixToolset.Sdk/5.0.2">
+
+  <!--
+    Project CHAOS installer.
+
+    Right-click this project in Solution Explorer and choose Build to produce
+    the MSI. It is deliberately NOT part of Build Solution: the solution's
+    configuration mapping gives it an ActiveCfg but no Build.0, so an ordinary
+    build or F5 never pays for publishing, staging and packaging. That also
+    keeps a Linux `dotnet build CHAOS.sln` green, since WiX only supports
+    Windows.
+
+    Prerequisites, in the order they are needed:
+      1. Chaos.Runtime built at least once (the embedded Python tree).
+      2. Chaos.Host and Chaos.Shell published, and the install tree staged.
+    Both are handled by the staging step below, which calls the same
+    build.ps1 that has always produced this layout. Nothing here reimplements
+    it: the .wxs files harvest from out\stage, so whatever fills that
+    directory is the single definition of what ships.
+  -->
+
+  <PropertyGroup>
+    <OutputName>ProjectCHAOS-$(ChaosVersion)-x64</OutputName>
+    <OutputType>Package</OutputType>
+    <InstallerPlatform>x64</InstallerPlatform>
+
+    <!-- Version comes from Directory.Build.props so the MSI, the assemblies and
+         the Add/Remove Programs entry cannot drift apart. -->
+    <ChaosVersion Condition="'$(ChaosVersion)' == ''">$(Version)</ChaosVersion>
+    <ChaosVersion Condition="'$(ChaosVersion)' == ''">0.5.0</ChaosVersion>
+
+    <ChaosRepoRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..'))</ChaosRepoRoot>
+    <ChaosStageDir>$(ChaosRepoRoot)\windows\build\out\stage</ChaosStageDir>
+    <ChaosBuildScript>$(ChaosRepoRoot)\windows\build\build.ps1</ChaosBuildScript>
+
+    <!-- Staging runs by default so one Build produces an installable MSI. Set
+         false to package a tree you have staged yourself. -->
+    <ChaosStageBeforePackaging Condition="'$(ChaosStageBeforePackaging)' == ''">true</ChaosStageBeforePackaging>
+
+    <DefineConstants>ChaosVersion=$(ChaosVersion);StageDir=$(ChaosStageDir)</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="*.wxs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Pinned to the SDK version above. An unpinned extension resolves to the
+         newest published, which is a different major and fails to load. -->
+    <PackageReference Include="WixToolset.Util.wixext" Version="5.0.2" />
+    <PackageReference Include="WixToolset.Firewall.wixext" Version="5.0.2" />
+    <PackageReference Include="WixToolset.UI.wixext" Version="5.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <BindInputPaths Include="$(ChaosStageDir)" BindName="Stage" />
+    <BindInputPaths Include="$(MSBuildThisFileDirectory)" BindName="Installer" />
+  </ItemGroup>
+
+  <!--
+    Publish, build the embedded runtime and assemble out\stage.
+
+    Not incremental on purpose. Staging is a full re-publish into a directory it
+    first deletes, and a half-refreshed install tree is the kind of thing that
+    produces an MSI which installs a new gateway beside an old Python tree. The
+    cost is paid only when this project is built, which is why it is excluded
+    from Build Solution.
+  -->
+  <Target Name="ChaosStageInstallTree"
+          BeforeTargets="Build"
+          Condition="'$(ChaosStageBeforePackaging)' == 'true' AND $([MSBuild]::IsOSPlatform('Windows'))">
+    <Message Importance="high"
+             Text="Project CHAOS: publishing and staging the install tree. First run downloads the embedded Python runtime (2-5 minutes)." />
+    <Exec Command="powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(ChaosBuildScript)&quot; -Task stage -Configuration $(Configuration)"
+          WorkingDirectory="$(ChaosRepoRoot)"
+          StandardOutputImportance="high"
+          ContinueOnError="true">
+      <Output TaskParameter="ExitCode" PropertyName="ChaosStageExitCode" />
+    </Exec>
+    <Error Condition="'$(ChaosStageExitCode)' != '0'"
+           Code="CHAOS0003"
+           File="$(ChaosBuildScript)"
+           Text="Staging the install tree failed (exit $(ChaosStageExitCode)). The output above is from build.ps1. Nothing was packaged." />
+  </Target>
+
+  <!-- A missing stage produces a clear error rather than a wix bind failure
+       naming a file nobody asked about. -->
+  <Target Name="ChaosVerifyStage" BeforeTargets="Build" DependsOnTargets="ChaosStageInstallTree"
+          Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <Error Condition="!Exists('$(ChaosStageDir)\Chaos.Host.exe')"
+           Code="CHAOS0004"
+           Text="No staged install tree at $(ChaosStageDir). Build this project with ChaosStageBeforePackaging=true (the default), or stage it yourself first." />
+  </Target>
+
+  <Target Name="ChaosInstallerNotBuiltHere"
+          BeforeTargets="Build"
+          Condition="!$([MSBuild]::IsOSPlatform('Windows'))">
+    <Message Importance="high"
+             Text="Project CHAOS: the installer was NOT built. WiX only supports Windows. Build it from Visual Studio 2026." />
+  </Target>
+
+</Project>

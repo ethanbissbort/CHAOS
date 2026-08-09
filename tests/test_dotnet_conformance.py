@@ -294,7 +294,7 @@ def dotnet_host() -> Path:
     }
 
     try:
-        completed = subprocess.run(  # noqa: S603
+        completed = subprocess.run(
             [executable, "build", str(CONFORMANCE_HOST_PROJECT), "-c", "Debug", "--nologo"],
             cwd=WINDOWS_ROOT,
             capture_output=True,
@@ -646,7 +646,7 @@ def dotnet_base_url(dotnet_host: Path, conformance_database: Path, tmp_path_fact
 
     log_path = tmp_path_factory.mktemp("dotnet-host") / "host.log"
     with log_path.open("w", encoding="utf-8") as log:
-        process = subprocess.Popen(  # noqa: S603
+        process = subprocess.Popen(
             [
                 executable,
                 "run",
@@ -772,7 +772,7 @@ def _assert_generated_at_is_honest(
             f"{implementation}: generated_at {raw!r} carries no UTC designator; "
             "a client would parse it as local time"
         )
-        parsed = dt.datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        parsed = dt.datetime.fromisoformat(raw)
         assert window_start <= parsed <= window_end, (
             f"{implementation}: generated_at {raw} is outside the request window "
             f"{window_start.isoformat()}..{window_end.isoformat()}"

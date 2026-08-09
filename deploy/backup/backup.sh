@@ -1,5 +1,5 @@
 #!/bin/sh
-# Homestead Digital Twin -- backup.
+# Project CHAOS -- backup.
 #
 # SDD section 16.1 mitigation 3: critical configuration and asset data must be
 # replicated OUTSIDE the combined battery/server container. SDD section 15.8 and
@@ -83,7 +83,7 @@ fail() { FAILURES=$((FAILURES + 1)); log "FAILED: $*"; note "FAILED: $*"; }
 mkdir -p "$TARGET"
 : > "$MANIFEST"
 
-note "Homestead Digital Twin backup"
+note "Project CHAOS backup"
 note "started_at   : $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 note "host         : $(hostname)"
 note "repo         : $REPO_DIR"

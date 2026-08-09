@@ -26,6 +26,47 @@ Related: [Building in Visual Studio 2026](./visual-studio.md) ·
 
 ---
 
+## Building the installer from Visual Studio
+
+The MSI is a project in the solution. Right-click **Chaos.Installer** in
+Solution Explorer and choose **Build**.
+
+It is deliberately excluded from **Build Solution**: the solution gives it an
+active configuration but no build flag, so an ordinary build or F5 never pays
+for publishing, staging and packaging. Building it explicitly is the only way
+it runs.
+
+One Build does the whole sequence:
+
+1. publishes `Chaos.Host` and `Chaos.Shell` self-contained,
+2. builds the embedded Python runtime if it is not already there
+   (2-5 minutes and about 55 MB the first time, from the internet),
+3. assembles the install tree in `windows\build\out\stage`,
+4. compiles the WiX sources against that tree.
+
+The MSI lands in `windows\installer\bin\x64\Release\`.
+
+Staging is not incremental, by design. It republishes into a directory it first
+deletes, and a half-refreshed install tree is how you get an MSI carrying a new
+gateway beside an old Python tree. The cost is only paid when you build this
+project.
+
+Two failures are reported as build errors you can double-click rather than as a
+WiX bind failure naming a file nobody asked about:
+
+| Code | Meaning |
+|---|---|
+| `CHAOS0003` | Staging failed. The `build.ps1` output above the error says why. Nothing was packaged. |
+| `CHAOS0004` | No staged tree was found. Build with the default settings, or stage one yourself first. |
+
+To package a tree you staged yourself, build with
+`ChaosStageBeforePackaging=false`.
+
+Installing the MSI needs administrator rights: it registers the `ChaosHost`
+service and adds two inbound firewall rules, for the console on 8080 and the
+manual on 8090, both private-profile only.
+
+
 ## The build tasks
 
 `windows\build\build.ps1` drives the whole pipeline. One task per stage, and
@@ -144,7 +185,7 @@ rights are not needed for either command.
         __pycache__\ everywhere      precompiled, unchecked-hash
     Scripts\
       chaos.exe                      the operator CLI entry point
-      homestead-simulator.exe
+      chaos-simulator.exe
       uvicorn.exe  httpx.exe  jsonschema.exe  dotenv.exe  fastapi.exe
 ```
 
@@ -441,9 +482,16 @@ Verified by execution, on Linux, against the real artefacts:
   isolated mode on, `import site` required for `site.main()`, comment lines
   ignored, `PYTHONUNBUFFERED`/`PYTHONIOENCODING`/`PYTHONDONTWRITEBYTECODE` still
   honoured.
-* The pip-from-a-wheel bootstrap works under a `._pth` interpreter.
+* pip installed by unpacking its wheel into `Lib\site-packages`, and `-m pip`
+  working afterwards under a `._pth` interpreter. The earlier approach — running
+  pip out of its own wheel to install itself, `python.exe <wheel>\pip install
+  <wheel>` — was verified working and then stopped working: pip 26 refuses to be
+  the target of an install unless it was invoked as `-m pip`, which is not
+  available before pip exists. The pinned wheel is 476 entries, all under `pip/`
+  and `pip-26.2.1.dist-info/`, with no `.data` directory, so unpacking it is a
+  complete install bar the `Scripts\pip.exe` launcher, which is pruned anyway.
 * Every dependency, full transitive closure, has a `cp311 win_amd64` wheel.
-* The whole install sequence, run end to end into a `._pth` tree: pip bootstrap,
+* The whole install sequence, run end to end into a `._pth` tree: pip install,
   wheels-only dependency install, `pip wheel` of the project, install of that
   wheel, web-asset copy, `compileall`, and all ten verification checks passing.
 * The user-site defect and its fix: reproduced (pip skipped `idna` and

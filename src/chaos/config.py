@@ -64,7 +64,7 @@ class Settings(BaseSettings):
     # --- API ------------------------------------------------------------
     api_host: str = "0.0.0.0"
     api_port: int = 8000
-    api_title: str = "Project CHAOS — Homestead Digital Twin API"
+    api_title: str = "Project CHAOS API"
     api_root_path: str = ""
 
     # --- Control safety -------------------------------------------------

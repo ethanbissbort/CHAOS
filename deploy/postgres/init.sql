@@ -1,4 +1,4 @@
--- Homestead Digital Twin -- PostgreSQL bootstrap.
+-- Project CHAOS -- PostgreSQL bootstrap.
 --
 -- Runs once, on first initialisation of an empty data directory
 -- (/docker-entrypoint-initdb.d). It must be safe to re-run by hand, so every
