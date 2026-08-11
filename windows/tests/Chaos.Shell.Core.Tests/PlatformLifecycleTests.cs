@@ -191,9 +191,54 @@ public sealed class HostExecutableLocatorTests
         return path => set.Contains(Normalize(path));
     }
 
-    /// <summary>Collapses the "a/../b" forms Path.Combine leaves behind.</summary>
-    private static string Normalize(string path) =>
-        Path.GetFullPath(path, "/").Replace('\\', '/');
+    /// <summary>
+    /// Collapses the "a/../b" forms Path.Combine leaves behind, and settles on
+    /// one separator so a candidate assembled on Windows compares equal to the
+    /// POSIX-shaped fixture it is meant to match.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately not <c>Path.GetFullPath(path, "/")</c>, which is what this
+    /// used to be. That asks a question about the machine running the test, and
+    /// gets two different answers: on Linux it resolves against the real root,
+    /// and on Windows it throws — "Basepath argument is not fully qualified",
+    /// because a path rooted with no drive letter is rooted but not fully
+    /// qualified. These strings are invented and are only ever compared with
+    /// other invented strings, so the collapsing is done here, in a way that
+    /// gives the same answer on either OS.
+    /// </remarks>
+    private static string Normalize(string path)
+    {
+        var rooted = path.Length > 0 && (path[0] == '/' || path[0] == '\\');
+        var segments = new List<string>();
+
+        foreach (var segment in path.Split('/', '\\'))
+        {
+            if (segment.Length == 0 || segment == ".")
+            {
+                continue;
+            }
+
+            if (segment == "..")
+            {
+                // A ".." above the root has nowhere to go and is dropped, which
+                // is what every filesystem does with it.
+                if (segments.Count > 0)
+                {
+                    segments.RemoveAt(segments.Count - 1);
+                }
+                else if (!rooted)
+                {
+                    segments.Add(segment);
+                }
+
+                continue;
+            }
+
+            segments.Add(segment);
+        }
+
+        return (rooted ? "/" : string.Empty) + string.Join('/', segments);
+    }
 
     [Fact]
     public void The_configured_path_wins_over_anything_lying_beside_the_shell()
