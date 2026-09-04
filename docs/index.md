@@ -88,6 +88,8 @@ A task-oriented index. Every entry lands on the section that answers it.
 | Know what "not ratified" means on a document | [The design package § Ratification](./design-package.md#4-ratification-and-what-not-ratified-means) |
 | Read the known gaps found by running the whole thing | [Integration findings](./integration-findings.md) |
 | Look up an endpoint | [API reference](./api.md) |
+| Add an integration with a third-party system | [Plugins](./plugins.md) |
+| Find out why a vendor integration is showing nothing | [Plugins § Health](./plugins.md#5-health-five-states-and-why-not-two) |
 | Know what survives losing the power container | [Secondary control node](./secondary-control-node.md) |
 | See the network zones and trust boundaries | [Network and trust boundaries](./network-and-trust-boundaries.md) |
 | Read the water control narrative | [Water-system control narrative](./water-control-narrative.md) |
@@ -117,6 +119,7 @@ A task-oriented index. Every entry lands on the section that answers it.
 | [Control, interlocks and operating modes](./control.md) | The command path, the eight interlocks, modes, the two safety gates |
 | [The design package](./design-package.md) | `data/`, schemas, ratification status, design decisions, open conflicts |
 | [Integration findings](./integration-findings.md) | Nine findings from running the platform end to end. Operational knowledge |
+| [Plugins and third-party integrations](./plugins.md) | The plugin contract, how vendor readings become canonical points, the NetBotz reference plugin |
 
 ### Operating the property
 

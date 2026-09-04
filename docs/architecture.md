@@ -55,7 +55,7 @@ flowchart TB
   end
 
   subgraph be["Python platform backend — loopback only, :8081"]
-    API["FastAPI · 83 endpoints under /api/v1"]
+    API["FastAPI · 87 endpoints under /api/v1<br/>plugins under /api/v1/ext"]
     SVC["ingest · ems · alarms · commands · maintenance"]
   end
 
@@ -323,10 +323,11 @@ shedding, restoration, generator coordination, black start, budget leases ·
 alarm definitions, evaluation, correlation, log notification · command path with
 eight interlocks, operating modes and audit · maintenance and commissioning
 records · annunciator panel · topology and blast-radius analysis · rack
-elevation · 83 REST endpoints under `/api/v1` · the operator console · the .NET
-gateway with route ownership and first-run setup · the WinUI 3 desktop shell ·
+elevation · 87 REST endpoints under `/api/v1` · a plugin system for third-party
+integrations · the operator console · the .NET gateway with route ownership and
+first-run setup · the WinUI 3 desktop shell ·
 the command line · container deployment for both node roles · Grafana dashboards
-over real tables · 2128 Python tests.
+over real tables · 2250 Python tests.
 
 ### Stubbed or partial
 
@@ -335,6 +336,7 @@ over real tables · 2128 Python tests.
 | **Backend process supervision** | The supervisor is built and shipped; the gateway's entry point does not register it |
 | **Ported .NET subsystems** | `Chaos.Api` is built and tested; no route is owned by it |
 | **Notification backends** | Only `log` is implemented. `email`, `push` and `voice` record `not_configured` and never claim success |
+| **NetBotz plugin transport** | The mapping, identity routing, API and health are complete and tested. The SNMP and HTTPS transports are not implemented; the plugin reports `not_configured` and never reports a value that did not come from a device |
 | **Prometheus** | Scrapes only itself. No exporters deployed, most target addresses are open items. The API exposes no `/metrics` |
 | **Historian** | Relational, pending the InfluxDB/TimescaleDB decision |
 | **PostGIS** | Geometry column prepared and disabled; GeoJSON stored |
@@ -348,7 +350,9 @@ Home Assistant integration · Node-RED flows · property-map rendering on a real
 map · dedicated wall-display views beyond the console's wall mode · Level 4
 forecasting, prediction and scenario simulation · subsystem coordinators for
 water, irrigation, greenhouse, compost, nitrogen storage, spa and security ·
-SNMP/Modbus polling of real devices · camera and NVR integration · voice
+SNMP/Modbus polling of real devices (the [plugin system](./plugins.md) is where
+it would go, and the NetBotz plugin is the worked example) · camera and NVR
+integration · voice
 escalation · automated network-device configuration backup · a time service with
 holdover · the document library.
 

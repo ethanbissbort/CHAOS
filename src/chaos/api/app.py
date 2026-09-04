@@ -2,6 +2,12 @@
 
 Routers are discovered from ``chaos.api.routers`` so that subsystems
 can be added without editing a central import list.
+
+Plugins add a second, deliberately separate surface. Their routers are mounted
+under ``/api/v1/ext/<plugin>`` and are included *after* every core router, so a
+third-party integration can neither shadow a core route nor change the order in
+which core routes are matched. On a platform where a URL can start a pump, which
+half of the API you are talking to should be visible in the URL.
 """
 
 from __future__ import annotations
@@ -21,6 +27,7 @@ from chaos import __version__
 from chaos.config import Settings, get_settings
 from chaos.db import build_engine, create_all, get_session_factory
 from chaos.mqtt import MessageBus, build_bus
+from chaos.plugins.manager import PluginManager
 from chaos.runtime import ServiceManager, build_services
 
 logger = logging.getLogger(__name__)
@@ -74,7 +81,12 @@ def create_app(
     async def lifespan(app: FastAPI):
         if init_db:
             create_all(app.state.engine)
-        manager: ServiceManager = build_services(settings, app.state.session_factory, app.state.bus)
+        manager: ServiceManager = build_services(
+            settings,
+            app.state.session_factory,
+            app.state.bus,
+            plugins=getattr(app.state, "plugins", None),
+        )
         app.state.services = manager
         if should_start:
             app.state.bus.start()
@@ -113,9 +125,22 @@ def create_app(
     _db.configure(engine)
     app.state.session_factory = get_session_factory()
     app.state.bus = bus if bus is not None else build_bus(settings)
+    app.state.plugins = PluginManager.discover(
+        settings,
+        session_factory=app.state.session_factory,
+        bus=app.state.bus,
+    )
 
     for router in discover_routers():
         app.include_router(router, prefix="/api/v1")
+
+    for record, plugin_router, prefix in app.state.plugins.routers():
+        try:
+            app.include_router(plugin_router, prefix=f"/api/v1{prefix}")
+        except Exception:
+            # A malformed router -- a duplicate operation ID, an unresolvable
+            # response model -- must cost that plugin its API and nothing else.
+            logger.exception("Plugin %s contributed a router that could not be mounted", record.name)
 
     @app.get("/health", tags=["platform"])
     def health() -> dict:

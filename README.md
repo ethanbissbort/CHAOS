@@ -40,6 +40,7 @@ Three consequences run through everything here:
 | Audited supervisory command path with eight interlocks | Console → **Control** |
 | Twelve-step commissioning records and gating | Console → **Control**, and the API |
 | Property map as GeoJSON | Console → **Map** |
+| Third-party integrations through plugins, mirrored into the registry | `chaos plugins`, and `/api/v1/plugins` |
 
 ---
 
@@ -89,7 +90,7 @@ flowchart TB
   end
 
   subgraph backend["Python platform backend (loopback only)"]
-    API["FastAPI — 83 endpoints under /api/v1"]
+    API["FastAPI — 87 endpoints under /api/v1<br/>plugins under /api/v1/ext"]
     INGEST["ingest · ems · alarms · commands · maintenance"]
   end
 
@@ -153,6 +154,7 @@ src/chaos/       the Python platform backend
   ems/           energy state machine        alarms/    evaluate, correlate, notify
   commands/      interlocks, modes, audit    maintenance/ plans, work orders, commissioning
   api/           FastAPI app and routers     web/       the operator console and annunciator
+  plugins/       third-party integrations: contract, mirror engine, NetBotz
   cli.py         the chaos CLI (advanced; see docs/advanced-command-line.md)
 
 src/simulator/   simulated site: solar, battery, inverter, generator, loads, weather
@@ -171,7 +173,7 @@ windows/
 
 deploy/          Docker Compose stacks for headless nodes (advanced)
 docs/            this documentation set — start at docs/index.md
-tests/           2128 pytest tests, all against SQLite and the in-memory bus
+tests/           2250 pytest tests, all against SQLite and the in-memory bus
 ```
 
 ---
@@ -186,13 +188,18 @@ shedding, restoration, generator coordination, black start, budget leases ·
 alarm definitions, evaluation, correlation, log notification · command path with
 eight interlocks, operating modes and audit · maintenance and commissioning
 records · annunciator panel · topology and blast-radius analysis · rack
-elevation · 83 REST endpoints · the .NET gateway with first-run setup · the
-WinUI 3 desktop shell · 2128 passing Python tests.
+elevation · 87 REST endpoints · a plugin system for third-party integrations ·
+the .NET gateway with first-run setup · the WinUI 3 desktop shell ·
+2250 passing Python tests.
 
 ### Partial or stubbed
 
 - **Notification backends** — `log` is wired. `email`, `push` and `voice` are
   named but not implemented. A log line is not an alert.
+- **The NetBotz plugin's transport.** The plugin system, the sensor mapping and
+  the identity routing are complete and tested; the SNMP and HTTPS transports
+  are not. It reports `not_configured` and never reports a temperature that did
+  not come from a device.
 - **Historian** is a relational table. The InfluxDB-versus-TimescaleDB decision
   is unresolved, so neither is deployed.
 - **PostGIS** geometry column is prepared but disabled; geometry is stored as
@@ -207,8 +214,8 @@ WinUI 3 desktop shell · 2128 passing Python tests.
 Home Assistant integration · Node-RED flows · property-map rendering on a real
 map · Level 4 forecasting and scenario simulation · subsystem coordinators for
 water, irrigation, greenhouse, compost, nitrogen storage, spa and security ·
-SNMP/Modbus polling of real devices · camera and NVR integration · voice
-escalation · the document library.
+SNMP/Modbus polling of real devices (the plugin system is where it would go) ·
+camera and NVR integration · voice escalation · the document library.
 
 ### The headline
 

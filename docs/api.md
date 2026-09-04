@@ -358,9 +358,52 @@ prerequisites have not passed. **That refusal is the point of the endpoint.** Se
 
 ---
 
-## 11. Surface size
+## 11. Plugins
 
-**83 operations under `/api/v1`**, plus the platform's own `/health`. Everything
+Third-party integrations. The full model is in [Plugins](./plugins.md); this is
+the endpoint surface.
+
+| Method | Path | Role | Purpose |
+|---|---|---|---|
+| `GET` | `/api/v1/plugins` | viewer | Every plugin discovered on this node: manifest, health, origin, which option keys are set |
+| `GET` | `/api/v1/plugins/mirror` | viewer | What the mirror engine is carrying — per-source counters, drops by reason, example unresolved vendor addresses |
+| `GET` | `/api/v1/plugins/{name}` | viewer | One plugin in detail |
+| `POST` | `/api/v1/plugins/reload` | administrator | Re-read plugin configuration. Requires a reason |
+
+Every plugin reports one of five health states — `ok`, `degraded`,
+`not_configured`, `failed`, `disabled`. `not_configured` and `degraded` produce
+the same empty graph and need opposite responses, which is why there is no
+boolean here. See [Plugins § Health](./plugins.md#5-health-five-states-and-why-not-two).
+
+**Option values are never returned.** A plugin's options carry appliance
+credentials; the API reports which keys are set and nothing more.
+
+`POST /reload` re-reads options, transports, health and mirror sources. It does
+**not** re-mount routes — FastAPI builds routing at startup — and the response
+says so explicitly rather than implying a restart happened.
+
+### Plugin-contributed routes
+
+Everything a plugin serves lives under `/api/v1/ext/<plugin>`. The prefix is
+enforced by the platform, not chosen by the plugin, so a third-party integration
+can never define, shadow or reorder a core route.
+
+The shipped NetBotz plugin contributes five:
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/api/v1/ext/netbotz` | Integration status, transport, mirror sources |
+| `GET` | `/api/v1/ext/netbotz/sensor-types` | How each NetBotz sensor type maps to canonical points, including the ones deliberately not mapped |
+| `GET` | `/api/v1/ext/netbotz/enclosures` | Appliances the transport can see |
+| `GET` | `/api/v1/ext/netbotz/readings` | Raw vendor readings, before any mapping |
+| `GET` | `/api/v1/ext/netbotz/bindings` | Which registry rows make NetBotz readings mean something — the commissioning view |
+
+---
+
+## 12. Surface size
+
+**87 core operations under `/api/v1`**, plus five contributed by the shipped
+NetBotz plugin under `/api/v1/ext`, plus the platform's own `/health`. Everything
 the design document named exists, and the implementation goes further.
 
 Write endpoints carry authorization, an audit reason, an idempotency key and an
@@ -370,11 +413,15 @@ decision.
 
 ---
 
-## 12. Not in the API
+## 13. Not in the API
 
 Nothing here polls SNMP or Modbus, renders a map over a basemap, integrates a
 home-automation platform, forecasts anything, or exposes Prometheus metrics. See
 [Architecture § Status summary](./architecture.md#8-status-summary).
+
+The [plugin system](./plugins.md) is where a vendor poller *would* live, and the
+NetBotz plugin is the worked example — but its transport is an honest stub, so
+the platform still speaks to no vendor system over the network.
 
 In the container deployment, Grafana reads PostgreSQL directly rather than going
 through this API — it is a read path, and putting a dashboard's query load
@@ -382,7 +429,7 @@ through the control plane buys nothing.
 
 ---
 
-## 13. Related reading
+## 14. Related reading
 
 | Document | Why |
 |---|---|
@@ -391,3 +438,4 @@ through the control plane buys nothing.
 | [Alarms](./alarms.md) | The alarm model behind section 9 |
 | [Commissioning](./commissioning.md) | What section 10 is enforcing |
 | [Network and trust boundaries](./network-and-trust-boundaries.md) | Who may reach this API at all |
+| [Plugins](./plugins.md) | Third-party integrations, and why their routes live under `/ext` |
