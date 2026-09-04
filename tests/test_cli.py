@@ -51,6 +51,7 @@ SUBCOMMANDS = (
     "retention",
     "backup",
     "status",
+    "plugins",
     "export",
 )
 
@@ -190,6 +191,63 @@ def test_secondary_node_status_notes_that_the_ems_is_suppressed(initialised_db, 
     assert payload["node_role"] == "secondary"
     assert payload["ems_enabled"] is False
     assert any("secondary" in note for note in payload["notes"])
+
+
+# ---------------------------------------------------------------------------
+# plugins
+# ---------------------------------------------------------------------------
+
+
+def test_plugins_lists_the_builtin_integration(capsys):
+    """Discovery only: no database, no broker, no vendor system contacted."""
+    assert run("plugins") == cli.EXIT_OK
+    out = capsys.readouterr().out
+    assert "netbotz" in out
+    assert "/api/v1/ext/netbotz" in out
+
+
+def test_plugins_json_is_machine_readable(capsys):
+    assert run("plugins", "--json") == cli.EXIT_OK
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["discovered"] >= 1
+    names = {entry["name"] for entry in payload["plugins"]}
+    assert "netbotz" in names
+
+
+def test_plugins_reports_the_honest_health_of_the_shipped_transport(capsys):
+    assert run("plugins", "--json") == cli.EXIT_OK
+    payload = json.loads(capsys.readouterr().out)
+    netbotz = next(entry for entry in payload["plugins"] if entry["name"] == "netbotz")
+    assert netbotz["health"]["state"] == "not_configured"
+
+
+def test_plugins_never_prints_an_option_value(capsys, monkeypatch):
+    """The listing goes in support tickets; options hold appliance credentials."""
+    monkeypatch.setenv("CHAOS_PLUGIN_NETBOTZ_PASSWORD", "hunter2")
+    assert run("plugins") == cli.EXIT_OK
+    out = capsys.readouterr().out
+    assert "password" in out
+    assert "hunter2" not in out
+
+
+def test_plugins_respects_the_disabled_list(capsys, monkeypatch):
+    """One environment variable takes a misbehaving integration out of the platform."""
+    from chaos.config import get_settings
+
+    monkeypatch.setenv("CHAOS_PLUGINS_DISABLED", "netbotz")
+    # Settings are process-cached so the CLI observes the same environment as
+    # the service. Clear it either side so this test reads its own environment
+    # and leaves nothing behind for the next one.
+    get_settings.cache_clear()
+    try:
+        assert run("plugins", "--json") == cli.EXIT_OK
+    finally:
+        get_settings.cache_clear()
+
+    payload = json.loads(capsys.readouterr().out)
+    netbotz = next(entry for entry in payload["plugins"] if entry["name"] == "netbotz")
+    assert netbotz["loaded"] is False
+    assert netbotz["health"]["state"] == "disabled"
 
 
 # ---------------------------------------------------------------------------

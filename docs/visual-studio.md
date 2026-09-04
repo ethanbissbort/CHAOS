@@ -365,7 +365,7 @@ not part of `CHAOS.sln`.
 
 ### Its tests
 
-**2128 tests**, all against SQLite and an in-memory message bus — no PostgreSQL,
+**2250 tests**, all against SQLite and an in-memory message bus — no PostgreSQL,
 no broker, no hardware. That is deliberate: it is step 1 of the twelve-step
 commissioning sequence ("bench test"), and it means the whole platform is
 exercisable end to end from a laptop.
@@ -440,5 +440,5 @@ that, and only if an endpoint backs it.
 | [Getting started](./getting-started.md) | What the launcher and setup screens should show |
 | [The desktop shell](./desktop-shell.md) | Every window the shell opens and what it decides |
 | [Architecture](./architecture.md) | Why the gateway, backend and shell are split this way |
-| [API reference](./api.md) | The gateway's own routes and the platform's 83 endpoints |
+| [API reference](./api.md) | The gateway's own routes and the platform's 87 endpoints |
 | [Windows packaging](./advanced-windows-packaging.md) | The embedded runtime, the build scripts and the MSI |

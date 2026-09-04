@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from chaos.config import Settings, get_settings
 from chaos.db import get_session_factory
 from chaos.mqtt import MessageBus
+from chaos.plugins.manager import PluginManager
 
 #: SDD section 15.2 role model, least privilege first.
 ROLES = ("viewer", "operator", "maintainer", "administrator")
@@ -48,6 +49,19 @@ def get_bus(request: Request) -> MessageBus:
 
 def get_app_settings(request: Request) -> Settings:
     return getattr(request.app.state, "settings", None) or get_settings()
+
+
+def get_plugins(request: Request) -> PluginManager:
+    """The plugin set this application discovered.
+
+    Built in :func:`chaos.api.app.create_app`. An application assembled without
+    one gets an empty manager rather than a 503: "no plugins are loaded" is a
+    real and common answer, and the plugins endpoint should be able to say it.
+    """
+    manager = getattr(request.app.state, "plugins", None)
+    if manager is None:
+        return PluginManager(get_app_settings(request))
+    return manager
 
 
 def get_principal(
@@ -87,6 +101,7 @@ def require_role(minimum: str):
 DbSession = Annotated[Session, Depends(get_db)]
 Bus = Annotated[MessageBus, Depends(get_bus)]
 AppSettings = Annotated[Settings, Depends(get_app_settings)]
+Plugins = Annotated[PluginManager, Depends(get_plugins)]
 CurrentPrincipal = Annotated[Principal, Depends(get_principal)]
 OperatorPrincipal = Annotated[Principal, Depends(require_role("operator"))]
 MaintainerPrincipal = Annotated[Principal, Depends(require_role("maintainer"))]

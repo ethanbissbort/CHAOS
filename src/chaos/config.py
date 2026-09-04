@@ -81,6 +81,22 @@ class Settings(BaseSettings):
     alarm_engine_enabled: bool = True
     notification_backends: str = "log"  # comma separated: log,email,push,voice
 
+    # --- Plugins --------------------------------------------------------
+    # Third-party integrations (SDD 26.2 vendor bindings) load through
+    # chaos.plugins. Enablement is explicit and cheap to reason about:
+    # "*" means every plugin found, a comma-separated list means only those,
+    # and the disabled list always wins -- so one line in the environment takes
+    # a misbehaving vendor integration out of the platform without a rebuild.
+    plugins_enabled: str = "*"
+    plugins_disabled: str = ""
+    #: JSON object keyed by plugin name, e.g. {"netbotz": {"host": "10.10.10.40"}}.
+    #: Per-key environment variables (CHAOS_PLUGIN_<NAME>_<KEY>) override it,
+    #: which is where credentials belong.
+    plugin_options: str = ""
+    #: The mirror engine turns plugin readings into canonical telemetry. It is
+    #: a bus producer, so it is only useful where the bus is running.
+    plugin_mirror_enabled: bool = True
+
     @property
     def is_secondary(self) -> bool:
         return self.node_role.lower() == "secondary"
@@ -88,6 +104,15 @@ class Settings(BaseSettings):
     @property
     def notification_backend_list(self) -> list[str]:
         return [b.strip() for b in self.notification_backends.split(",") if b.strip()]
+
+    @property
+    def enabled_plugin_list(self) -> list[str]:
+        """The plugin names this node will load, or ``["*"]`` for all of them."""
+        return [p.strip().lower() for p in self.plugins_enabled.split(",") if p.strip()]
+
+    @property
+    def disabled_plugin_list(self) -> list[str]:
+        return [p.strip().lower() for p in self.plugins_disabled.split(",") if p.strip()]
 
 
 @lru_cache(maxsize=1)

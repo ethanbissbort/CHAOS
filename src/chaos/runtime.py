@@ -4,17 +4,25 @@ Every long-running subsystem (MQTT ingest, EMS, alarm engine, maintenance
 scheduler) implements :class:`BackgroundService`. The API lifespan starts them
 on the primary node; the secondary control node starts a reduced set so it can
 keep alerting and bridging when the power container is lost (SDD section 16.1).
+
+Plugins participate on exactly the same terms. A plugin's own services and the
+mirror engine that carries plugin readings are registered last and are started,
+stopped and failure-isolated by the same :class:`ServiceManager` as everything
+else: a vendor integration is not privileged, and it is not exempt.
 """
 
 from __future__ import annotations
 
 import logging
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from sqlalchemy.orm import Session, sessionmaker
 
 from chaos.config import Settings
 from chaos.mqtt import MessageBus
+
+if TYPE_CHECKING:  # pragma: no cover - imports for typing only
+    from chaos.plugins.manager import PluginManager
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +80,7 @@ def build_services(
     settings: Settings,
     session_factory: sessionmaker[Session],
     bus: MessageBus,
+    plugins: PluginManager | None = None,
 ) -> ServiceManager:
     """Construct the service set appropriate for this node role.
 
@@ -129,4 +138,46 @@ def build_services(
         except Exception:
             logger.exception("Maintenance scheduler unavailable")
 
+    if plugins is not None:
+        _register_plugin_services(manager, settings, session_factory, bus, plugins)
+
     return manager
+
+
+def _register_plugin_services(
+    manager: ServiceManager,
+    settings: Settings,
+    session_factory: sessionmaker[Session],
+    bus: MessageBus,
+    plugins: PluginManager,
+) -> None:
+    """Register plugin-contributed services and the mirror engine.
+
+    Registered after the core subsystems so that a plugin service starts once
+    the platform it depends on is already up, and stops first on the way down
+    (``ServiceManager`` stops in reverse order).
+    """
+    for service in plugins.services():
+        try:
+            manager.register(service)
+        except Exception:
+            logger.exception("Could not register plugin service %r", getattr(service, "name", service))
+
+    if not settings.plugin_mirror_enabled:
+        logger.info("Plugin mirroring disabled by configuration")
+        return
+
+    try:
+        sources = plugins.mirror_sources()
+    except Exception:
+        logger.exception("Could not collect plugin mirror sources")
+        return
+    if not sources:
+        return
+
+    try:
+        from chaos.plugins.mirror import MirrorService
+
+        manager.register(MirrorService(session_factory, bus, settings, sources))
+    except Exception:
+        logger.exception("Plugin mirror engine unavailable")

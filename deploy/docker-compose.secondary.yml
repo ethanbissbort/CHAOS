@@ -142,6 +142,12 @@ services:
       # mitigation 4: essential alerts can originate independently).
       CHAOS_ALARM_ENGINE_ENABLED: "true"
       CHAOS_NOTIFICATION_BACKENDS: ${SECONDARY_NOTIFICATION_BACKENDS:-log}
+      # A plugin loads here only if its manifest names the secondary role.
+      # Environmental monitoring does: the NetBotz 500 is mounted in the power
+      # container this node exists to outlive (SDD 16.1).
+      CHAOS_PLUGINS_ENABLED: ${SECONDARY_PLUGINS_ENABLED:-*}
+      CHAOS_PLUGINS_DISABLED: ${SECONDARY_PLUGINS_DISABLED:-}
+      CHAOS_PLUGIN_MIRROR_ENABLED: ${SECONDARY_PLUGIN_MIRROR_ENABLED:-true}
 
       CHAOS_HISTORIAN_BACKEND: sql
       # Shorter raw retention: this is a low-power node with limited storage.

@@ -1060,6 +1060,62 @@ def cmd_status(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def cmd_plugins(args: argparse.Namespace) -> int:
+    """List third-party integrations and whether each one is actually working.
+
+    Discovery only. Nothing is started, no socket is opened and no plugin
+    ``read()`` runs, so this is safe on a node that is not the primary and on a
+    database that has not been created -- which is exactly when somebody is
+    asking why an integration is not delivering data.
+    """
+    settings = build_settings(args)
+    manager = resolve_subsystem(
+        "chaos.plugins.manager",
+        ("PluginManager",),
+        subsystem="Plugin system",
+        hint="The plugin system ships with the platform; reinstall if chaos.plugins is missing.",
+    ).discover(settings)
+
+    summary = manager.summary()
+    if args.json:
+        sys.stdout.write(_dumps(summary, "json"))
+        return EXIT_OK if not args.strict or summary["states"].get("failed", 0) == 0 else EXIT_ERROR
+
+    print(
+        f"Plugins on this {settings.node_role} node: {summary['loaded']} loaded of {summary['discovered']} discovered"
+    )
+    if not summary["plugins"]:
+        print("  (none found -- built-in plugins live in chaos/plugins/, installed ones")
+        print("   advertise the 'chaos.plugins' entry-point group)")
+        return EXIT_OK
+
+    for entry in summary["plugins"]:
+        health = entry["health"]
+        manifest = entry["manifest"] or {}
+        print()
+        print(f"  {entry['name']}  [{health['state']}]")
+        if manifest:
+            vendor = f" -- {manifest['vendor']}" if manifest.get("vendor") else ""
+            print(f"    {manifest['summary']}{vendor}")
+            print(
+                f"    version {manifest['version']}   capabilities: {', '.join(manifest['capabilities']) or 'none'}"
+            )
+        print(f"    origin  : {entry['origin']} ({entry['module']})")
+        if entry["loaded"]:
+            print(f"    mounted : /api/v1/ext/{entry['name']}")
+        # Key names only. Option values hold appliance credentials.
+        keys = entry["configured_option_keys"]
+        print(f"    options : {', '.join(keys) if keys else '(none set)'}")
+        print(f"    detail  : {health['detail']}")
+
+    failed = summary["states"].get("failed", 0)
+    if failed:
+        print(f"\n{failed} plugin(s) failed to load. Their contributions are not present.")
+        if args.strict:
+            return EXIT_ERROR
+    return EXIT_OK
+
+
 def cmd_export(args: argparse.Namespace) -> int:
     """Export registry and historical data in an open format (SDD FR-010)."""
     settings = build_settings(args)
@@ -1316,6 +1372,25 @@ def build_parser() -> argparse.ArgumentParser:
     )
     status.add_argument("--json", action="store_true", help="Emit machine-readable JSON.")
     status.set_defaults(func=cmd_status)
+
+    # --- plugins --------------------------------------------------------
+    plugins = subparsers.add_parser(
+        "plugins",
+        help="List third-party integrations and whether each one is working.",
+        description=(
+            "Discover plugins and report each one's health. Discovery only: nothing is "
+            "started and no vendor system is contacted, so this is safe to run at any "
+            "time. Built-in plugins are packages under chaos/plugins/; installed ones "
+            "advertise the 'chaos.plugins' entry-point group."
+        ),
+    )
+    plugins.add_argument("--json", action="store_true", help="Emit machine-readable JSON.")
+    plugins.add_argument(
+        "--strict",
+        action="store_true",
+        help="Exit non-zero if any plugin failed to load (for commissioning checks).",
+    )
+    plugins.set_defaults(func=cmd_plugins)
 
     # --- export ---------------------------------------------------------
     export = subparsers.add_parser(

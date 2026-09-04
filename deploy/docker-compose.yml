@@ -124,6 +124,14 @@ services:
       CHAOS_EMS_ENABLED: ${CHAOS_EMS_ENABLED:-true}
       CHAOS_ALARM_ENGINE_ENABLED: ${CHAOS_ALARM_ENGINE_ENABLED:-true}
       CHAOS_NOTIFICATION_BACKENDS: ${CHAOS_NOTIFICATION_BACKENDS:-log}
+      # Third-party integrations (docs/plugins.md). The disabled list always
+      # wins, so one entry here removes a misbehaving vendor plugin from a
+      # running deployment without rebuilding the image.
+      CHAOS_PLUGINS_ENABLED: ${CHAOS_PLUGINS_ENABLED:-*}
+      CHAOS_PLUGINS_DISABLED: ${CHAOS_PLUGINS_DISABLED:-}
+      CHAOS_PLUGIN_MIRROR_ENABLED: ${CHAOS_PLUGIN_MIRROR_ENABLED:-true}
+      CHAOS_PLUGIN_NETBOTZ_TRANSPORT: ${CHAOS_PLUGIN_NETBOTZ_TRANSPORT:-none}
+      CHAOS_PLUGIN_NETBOTZ_HOST: ${CHAOS_PLUGIN_NETBOTZ_HOST:-}
       CHAOS_API_HOST: 0.0.0.0
       CHAOS_API_PORT: 8000
     volumes:
